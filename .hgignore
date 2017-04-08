@@ -1,0 +1,4 @@
+syntax: glob
+.settings
+.classpath
+.project
