@@ -1,5 +1,6 @@
 package sourceafis;
 
+import java.util.*;
 import sourceafis.collections.*;
 import sourceafis.scalars.*;
 
@@ -13,7 +14,7 @@ public class FingerprintTemplate {
 		if (Math.abs(dpi - 500) > dpiTolerance)
 			image = scaleImage(image, dpi);
 		BlockMap blocks = new BlockMap(image.width, image.height, blockSize);
-		Histogram histogram = computeHistogram(blocks, image);
+		Histogram histogram = histogram(blocks, image);
 		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
@@ -48,15 +49,15 @@ public class FingerprintTemplate {
 		}
 		return output;
 	}
-	static Histogram computeHistogram(BlockMap blocks, DoubleMap image) {
-		final int histogramDepth = 100;
+	static Histogram histogram(BlockMap blocks, DoubleMap image) {
+		final int histogramDepth = 256;
 		Histogram histogram = new Histogram(blocks.blockCount.y, blocks.blockCount.x, histogramDepth);
 		for (Cell block : blocks.blockCount) {
 			Block area = blocks.blockAreas.get(block);
 			for (int y = area.bottom(); y < area.top(); ++y)
 				for (int x = area.left(); x < area.right(); ++x) {
 					int depth = (int)(image.get(x, y) * histogram.depth);
-					histogram.increment(block.x, block.y, Math.max(0, Math.min(histogram.depth - 1, depth)));
+					histogram.increment(block, histogram.constrain(depth));
 				}
 		}
 		return histogram;
@@ -69,10 +70,67 @@ public class FingerprintTemplate {
 				Cell block = corner.plus(relative);
 				if (blocks.blockCount.contains(block)) {
 					for (int i = 0; i < input.depth; ++i)
-						output.add(corner.x, corner.y, i, input.get(block.x, block.y, i));
+						output.add(corner, i, input.get(block, i));
 				}
 			}
 		}
 		return output;
+	}
+	static DoubleMap clipContrast(BlockMap blocks, Histogram histogram) {
+		final double clipFraction = 0.08;
+		DoubleMap result = new DoubleMap(blocks.blockCount);
+		for (Cell block : blocks.blockCount) {
+			int volume = 0;
+			for (int i = 0; i < histogram.depth; ++i)
+				volume += histogram.get(block, i);
+			int clipLimit = (int)Math.round(volume * clipFraction);
+			int accumulator = 0;
+			int lowerBound = histogram.depth - 1;
+			for (int i = 0; i < histogram.depth; ++i) {
+				accumulator += histogram.get(block, i);
+				if (accumulator > clipLimit) {
+					lowerBound = i;
+					break;
+				}
+			}
+			accumulator = 0;
+			int upperBound = 0;
+			for (int i = histogram.depth - 1; i >= 0; --i) {
+				accumulator += histogram.get(block, i);
+				if (accumulator > clipLimit) {
+					upperBound = i;
+					break;
+				}
+			}
+			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.depth - 1)));
+		}
+		return result;
+	}
+	static BooleanMap filterAbsoluteContrast(DoubleMap contrast) {
+		final int limit = 17;
+		BooleanMap result = new BooleanMap(contrast.size());
+		for (Cell block : contrast.size())
+			if (contrast.get(block) < limit)
+				result.set(block, true);
+		return result;
+	}
+	static BooleanMap filterRelativeContrast(DoubleMap contrast, BlockMap blocks) {
+		final int sampleSize = 168568;
+		final double sampleFraction = 0.49;
+		final double relativeLimit = 0.34;
+		List<Double> sortedContrast = new ArrayList<>();
+		for (Cell block : contrast.size())
+			sortedContrast.add(contrast.get(block));
+		sortedContrast.sort(Comparator.<Double> naturalOrder().reversed());
+		int pixelsPerBlock = blocks.pixelCount.area() / blocks.blockCount.area();
+		int sampleCount = Math.min(sortedContrast.size(), sampleSize / pixelsPerBlock);
+		int consideredBlocks = Math.max((int)Math.round(sampleCount * sampleFraction), 1);
+		double averageContrast = sortedContrast.stream().mapToDouble(n -> n).limit(consideredBlocks).average().getAsDouble();
+		double limit = averageContrast * relativeLimit;
+		BooleanMap result = new BooleanMap(blocks.blockCount);
+		for (Cell block : blocks.blockCount)
+			if (contrast.get(block) < limit)
+				result.set(block, true);
+		return result;
 	}
 }
