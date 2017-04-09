@@ -10,6 +10,12 @@ public class Angle {
 		double angle = Math.atan2(vector.y, vector.x);
 		return angle >= 0 ? angle : angle + PI2;
 	}
+	public static double atan(Cell vector) {
+		return atan(vector.toPoint());
+	}
+	public static double atan(Cell center, Cell point) {
+		return atan(point.minus(center));
+	}
 	public static double toOrientation(double angle) {
 		return angle < Math.PI ? 2 * angle : 2 * (angle - Math.PI);
 	}
@@ -34,5 +40,12 @@ public class Angle {
 			return resolution - 1;
 		else
 			return result;
+	}
+	public static double opposite(double angle) {
+		return angle < Math.PI ? angle + Math.PI : angle - Math.PI;
+	}
+	public static double distance(double first, double second) {
+		double delta = Math.abs(first - second);
+		return delta <= Math.PI ? delta : PI2 - delta;
 	}
 }

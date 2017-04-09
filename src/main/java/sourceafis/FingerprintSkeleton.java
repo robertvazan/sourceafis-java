@@ -14,6 +14,8 @@ class FingerprintSkeleton {
 		Map<Cell, List<Cell>> linking = linkNeighboringMinutiae(minutiaPoints);
 		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
 		traceRidges(thinned, minutiaMap);
+		fixLinkingGaps();
+		filter();
 	}
 	enum NeighborhoodType {
 		Skeleton,
@@ -142,7 +144,7 @@ class FingerprintSkeleton {
 					sum = sum.plus(linkedPos);
 				Cell center = new Cell(sum.x / linkedMinutiae.size(), sum.y / linkedMinutiae.size());
 				SkeletonMinutia minutia = new SkeletonMinutia(center);
-				AddMinutia(minutia);
+				addMinutia(minutia);
 				centers.put(primaryPos, minutia);
 			}
 			centers.put(currentPos, centers.get(primaryPos));
@@ -180,7 +182,195 @@ class FingerprintSkeleton {
 			}
 		}
 	}
-	void AddMinutia(SkeletonMinutia minutia) {
+	void fixLinkingGaps() {
+		for (SkeletonMinutia minutia : minutiae) {
+			for (SkeletonRidge ridge : minutia.ridges) {
+				if (!ridge.points.get(0).equals(minutia.position)) {
+					Cell[] filling = ridge.points.get(0).lineTo(minutia.position);
+					for (int i = 1; i < filling.length; ++i)
+						ridge.reversed.points.add(filling[i]);
+				}
+			}
+		}
+	}
+	void filter() {
+		removeDots();
+		removePores();
+		removeGaps();
+		removeTails();
+		removeFragments();
+		disableBranchMinutiae();
+	}
+	void removeDots() {
+		List<SkeletonMinutia> removed = new ArrayList<>();
+		for (SkeletonMinutia minutia : minutiae)
+			if (minutia.ridges.isEmpty())
+				removed.add(minutia);
+		for (SkeletonMinutia minutia : removed)
+			removeMinutia(minutia);
+	}
+	void removePores() {
+		final int maxArmLength = 41;
+		for (SkeletonMinutia minutia : minutiae) {
+			if (minutia.ridges.size() == 3) {
+				for (int exit = 0; exit < 3; ++exit) {
+					SkeletonRidge exitRidge = minutia.ridges.get(exit);
+					SkeletonRidge arm1 = minutia.ridges.get((exit + 1) % 3);
+					SkeletonRidge arm2 = minutia.ridges.get((exit + 2) % 3);
+					if (arm1.end() == arm2.end() && exitRidge.end() != arm1.end() && arm1.end() != minutia && exitRidge.end() != minutia) {
+						SkeletonMinutia end = arm1.end();
+						if (end.ridges.size() == 3 && arm1.points.size() <= maxArmLength && arm2.points.size() <= maxArmLength) {
+							arm1.detach();
+							arm2.detach();
+							SkeletonRidge merged = new SkeletonRidge();
+							merged.start(minutia);
+							merged.end(end);
+							for (Cell point : minutia.position.lineTo(end.position))
+								merged.points.add(point);
+						}
+						break;
+					}
+				}
+			}
+		}
+		removeKnots();
+	}
+	static class Gap implements Comparable<Gap> {
+		int distance;
+		SkeletonMinutia end1;
+		SkeletonMinutia end2;
+		@Override public int compareTo(Gap other) {
+			return Integer.compare(distance, other.distance);
+		}
+	}
+	void removeGaps() {
+		final int minEndingLength = 7;
+		PriorityQueue<Gap> queue = new PriorityQueue<>();
+		for (SkeletonMinutia end1 : minutiae)
+			if (end1.ridges.size() == 1 && end1.ridges.get(0).points.size() >= minEndingLength)
+				for (SkeletonMinutia end2 : minutiae)
+					if (end2 != end1 && end2.ridges.size() == 1 && end1.ridges.get(0).end() != end2
+						&& end2.ridges.get(0).points.size() >= minEndingLength && isWithinGapLimits(end1, end2)) {
+						Gap gap = new Gap();
+						gap.distance = end1.position.minus(end2.position).lengthSq();
+						gap.end1 = end1;
+						gap.end2 = end2;
+						queue.add(gap);
+					}
+		BooleanMap shadow = shadow();
+		while (!queue.isEmpty()) {
+			Gap gap = queue.remove();
+			if (gap.end1.ridges.size() == 1 && gap.end2.ridges.size() == 1) {
+				Cell[] line = gap.end1.position.lineTo(gap.end2.position);
+				if (!isRidgeOverlapping(line, shadow))
+					addGapRidge(shadow, gap, line);
+			}
+		}
+		removeKnots();
+	}
+	static boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
+		final int ruptureSize = 5;
+		final int gapSize = 20;
+		final double gapAngle = Math.toRadians(45);
+		int distanceSq = end1.position.minus(end2.position).lengthSq();
+		if (distanceSq <= Integers.sq(ruptureSize))
+			return true;
+		if (distanceSq > Integers.sq(gapSize))
+			return false;
+		double gapDirection = Angle.atan(end1.position, end2.position);
+		double direction1 = Angle.atan(end1.position, angleSampleForGapRemoval(end1));
+		if (Angle.distance(direction1, Angle.opposite(gapDirection)) > gapAngle)
+			return false;
+		double direction2 = Angle.atan(end2.position, angleSampleForGapRemoval(end2));
+		if (Angle.distance(direction2, gapDirection) > gapAngle)
+			return false;
+		return true;
+	}
+	static Cell angleSampleForGapRemoval(SkeletonMinutia minutia) {
+		final int angleSampleOffset = 22;
+		SkeletonRidge ridge = minutia.ridges.get(0);
+		if (angleSampleOffset < ridge.points.size())
+			return ridge.points.get(angleSampleOffset);
+		else
+			return ridge.end().position;
+	}
+	static boolean isRidgeOverlapping(Cell[] line, BooleanMap shadow) {
+		final int toleratedOverlapLength = 2;
+		for (int i = toleratedOverlapLength; i < line.length - toleratedOverlapLength; ++i)
+			if (shadow.get(line[i]))
+				return true;
+		return false;
+	}
+	static void addGapRidge(BooleanMap shadow, Gap gap, Cell[] line) {
+		SkeletonRidge ridge = new SkeletonRidge();
+		for (Cell point : line)
+			ridge.points.add(point);
+		ridge.start(gap.end1);
+		ridge.end(gap.end2);
+		for (Cell point : line)
+			shadow.set(point, true);
+	}
+	void removeTails() {
+		final int minTailLength = 21;
+		for (SkeletonMinutia minutia : minutiae) {
+			if (minutia.ridges.size() == 1 && minutia.ridges.get(0).end().ridges.size() >= 3)
+				if (minutia.ridges.get(0).points.size() < minTailLength)
+					minutia.ridges.get(0).detach();
+		}
+		removeDots();
+		removeKnots();
+	}
+	void removeFragments() {
+		final int minFragmentLength = 22;
+		for (SkeletonMinutia minutia : minutiae)
+			if (minutia.ridges.size() == 1) {
+				SkeletonRidge ridge = minutia.ridges.get(0);
+				if (ridge.end().ridges.size() == 1 && ridge.points.size() < minFragmentLength)
+					ridge.detach();
+			}
+		removeDots();
+	}
+	void removeKnots() {
+		for (SkeletonMinutia minutia : minutiae) {
+			if (minutia.ridges.size() == 2 && minutia.ridges.get(0).reversed != minutia.ridges.get(1)) {
+				SkeletonRidge extended = minutia.ridges.get(0).reversed;
+				SkeletonRidge removed = minutia.ridges.get(1);
+				if (extended.points.size() < removed.points.size()) {
+					SkeletonRidge tmp = extended;
+					extended = removed;
+					removed = tmp;
+					extended = extended.reversed;
+					removed = removed.reversed;
+				}
+				extended.points.remove(extended.points.size() - 1);
+				for (Cell point : removed.points)
+					extended.points.add(point);
+				extended.end(removed.end());
+				removed.detach();
+			}
+		}
+		removeDots();
+	}
+	void disableBranchMinutiae() {
+		for (SkeletonMinutia minutia : minutiae)
+			if (minutia.ridges.size() > 2)
+				minutia.considered = false;
+	}
+	void addMinutia(SkeletonMinutia minutia) {
 		minutiae.add(minutia);
+	}
+	void removeMinutia(SkeletonMinutia minutia) {
+		minutiae.remove(minutia);
+	}
+	BooleanMap shadow() {
+		BooleanMap shadow = new BooleanMap(size);
+		for (SkeletonMinutia minutia : minutiae) {
+			shadow.set(minutia.position, true);
+			for (SkeletonRidge ridge : minutia.ridges)
+				if (ridge.start().position.y <= ridge.end().position.y)
+					for (Cell point : ridge.points)
+						shadow.set(point, true);
+		}
+		return shadow;
 	}
 }

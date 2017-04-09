@@ -4,6 +4,7 @@ import java.util.*;
 import sourceafis.scalars.*;
 
 class SkeletonMinutia {
+	boolean considered = true;
 	final Cell position;
 	final List<SkeletonRidge> ridges = new ArrayList<>();
 	SkeletonMinutia(Cell position) {

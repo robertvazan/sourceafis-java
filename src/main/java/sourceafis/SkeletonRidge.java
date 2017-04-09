@@ -42,4 +42,8 @@ class SkeletonRidge {
 			reversed.start(value);
 		}
 	}
+	void detach() {
+		start(null);
+		end(null);
+	}
 }
