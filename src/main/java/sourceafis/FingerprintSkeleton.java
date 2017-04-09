@@ -13,6 +13,7 @@ class FingerprintSkeleton {
 		List<Cell> minutiaPoints = findMinutiae(thinned);
 		Map<Cell, List<Cell>> linking = linkNeighboringMinutiae(minutiaPoints);
 		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
+		traceRidges(thinned, minutiaMap);
 	}
 	enum NeighborhoodType {
 		Skeleton,
@@ -147,6 +148,37 @@ class FingerprintSkeleton {
 			centers.put(currentPos, centers.get(primaryPos));
 		}
 		return centers;
+	}
+	static void traceRidges(BooleanMap thinned, Map<Cell, SkeletonMinutia> minutiaePoints) {
+		Map<Cell, SkeletonRidge> leads = new HashMap<>();
+		for (Cell minutiaPoint : minutiaePoints.keySet()) {
+			for (Cell startRelative : Cell.cornerNeighbors) {
+				Cell start = minutiaPoint.plus(startRelative);
+				if (thinned.get(start, false) && !minutiaePoints.containsKey(start) && !leads.containsKey(start)) {
+					SkeletonRidge ridge = new SkeletonRidge();
+					ridge.points.add(minutiaPoint);
+					ridge.points.add(start);
+					Cell previous = minutiaPoint;
+					Cell current = start;
+					do {
+						Cell next = Cell.zero;
+						for (Cell nextRelative : Cell.cornerNeighbors) {
+							next = current.plus(nextRelative);
+							if (thinned.get(next, false) && !next.equals(previous))
+								break;
+						}
+						previous = current;
+						current = next;
+						ridge.points.add(current);
+					} while (!minutiaePoints.containsKey(current));
+					Cell end = current;
+					ridge.start(minutiaePoints.get(minutiaPoint));
+					ridge.end(minutiaePoints.get(end));
+					leads.put(ridge.points.get(1), ridge);
+					leads.put(ridge.reversed.points.get(1), ridge);
+				}
+			}
+		}
 	}
 	void AddMinutia(SkeletonMinutia minutia) {
 		minutiae.add(minutia);
