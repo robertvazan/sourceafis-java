@@ -4,12 +4,15 @@ import java.util.*;
 import sourceafis.collections.*;
 import sourceafis.scalars.*;
 
-public class FingerprintSkeleton {
-	public final Cell size;
-	public FingerprintSkeleton(BooleanMap binary) {
+class FingerprintSkeleton {
+	final Cell size;
+	final List<SkeletonMinutia> minutiae = new ArrayList<>();
+	FingerprintSkeleton(BooleanMap binary) {
 		size = binary.size();
 		BooleanMap thinned = thin(binary);
 		List<Cell> minutiaPoints = findMinutiae(thinned);
+		Map<Cell, List<Cell>> linking = linkNeighboringMinutiae(minutiaPoints);
+		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
 	}
 	enum NeighborhoodType {
 		Skeleton,
@@ -101,5 +104,51 @@ public class FingerprintSkeleton {
 					result.add(at);
 			}
 		return result;
+	}
+	static Map<Cell, List<Cell>> linkNeighboringMinutiae(List<Cell> minutiae) {
+		Map<Cell, List<Cell>> linking = new HashMap<>();
+		for (Cell minutiaPos : minutiae) {
+			List<Cell> ownLinks = null;
+			for (Cell neighborRelative : Cell.cornerNeighbors) {
+				Cell neighborPos = minutiaPos.plus(neighborRelative);
+				if (linking.containsKey(neighborPos)) {
+					List<Cell> neighborLinks = linking.get(neighborPos);
+					if (neighborLinks != ownLinks) {
+						if (ownLinks != null) {
+							neighborLinks.addAll(ownLinks);
+							for (Cell mergedPos : ownLinks)
+								linking.put(mergedPos, neighborLinks);
+						}
+						ownLinks = neighborLinks;
+					}
+				}
+			}
+			if (ownLinks == null)
+				ownLinks = new ArrayList<>();
+			ownLinks.add(minutiaPos);
+			linking.put(minutiaPos, ownLinks);
+		}
+		return linking;
+	}
+	Map<Cell, SkeletonMinutia> minutiaCenters(Map<Cell, List<Cell>> linking) {
+		Map<Cell, SkeletonMinutia> centers = new HashMap<>();
+		for (Cell currentPos : linking.keySet()) {
+			List<Cell> linkedMinutiae = linking.get(currentPos);
+			Cell primaryPos = linkedMinutiae.get(0);
+			if (!centers.containsKey(primaryPos)) {
+				Cell sum = Cell.zero;
+				for (Cell linkedPos : linkedMinutiae)
+					sum = sum.plus(linkedPos);
+				Cell center = new Cell(sum.x / linkedMinutiae.size(), sum.y / linkedMinutiae.size());
+				SkeletonMinutia minutia = new SkeletonMinutia(center);
+				AddMinutia(minutia);
+				centers.put(primaryPos, minutia);
+			}
+			centers.put(currentPos, centers.get(primaryPos));
+		}
+		return centers;
+	}
+	void AddMinutia(SkeletonMinutia minutia) {
+		minutiae.add(minutia);
 	}
 }
