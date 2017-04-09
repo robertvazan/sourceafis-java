@@ -23,6 +23,14 @@ public class BooleanMap {
 	public boolean get(Cell at) {
 		return get(at.x, at.y);
 	}
+	public boolean get(int x, int y, boolean fallback) {
+		if (x < 0 || y < 0 || x >= width || y >= height)
+			return fallback;
+		return array[y * width + x];
+	}
+	public boolean get(Cell at, boolean fallback) {
+		return get(at.x, at.y, fallback);
+	}
 	public void set(int x, int y, boolean value) {
 		array[y * width + x] = value;
 	}

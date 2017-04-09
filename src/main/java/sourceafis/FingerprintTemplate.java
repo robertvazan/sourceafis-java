@@ -17,6 +17,7 @@ public class FingerprintTemplate {
 		Histogram histogram = histogram(blocks, image);
 		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMap mask = mask(blocks, histogram);
+		DoubleMap equalized = equalize(blocks, image, smoothHistogram, mask);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -93,9 +94,7 @@ public class FingerprintTemplate {
 		final double clipFraction = 0.08;
 		DoubleMap result = new DoubleMap(blocks.blockCount);
 		for (Cell block : blocks.blockCount) {
-			int volume = 0;
-			for (int i = 0; i < histogram.depth; ++i)
-				volume += histogram.get(block, i);
+			int volume = histogram.sum(block);
 			int clipLimit = (int)Math.round(volume * clipFraction);
 			int accumulator = 0;
 			int lowerBound = histogram.depth - 1;
@@ -182,5 +181,60 @@ public class FingerprintTemplate {
 	}
 	static BooleanMap filterBlockErrors(BooleanMap input) {
 		return vote(input, new VotingParameters().majority(0.7).borderDist(4));
+	}
+	static DoubleMap equalize(BlockMap blocks, DoubleMap image, Histogram histogram, BooleanMap blockMask) {
+		final double maxScaling = 3.99;
+		final double minScaling = 0.25;
+		final double rangeMin = -1;
+		final double rangeMax = 1;
+		final double rangeSize = rangeMax - rangeMin;
+		final double widthMax = rangeSize / 256 * maxScaling;
+		final double widthMin = rangeSize / 256 * minScaling;
+		double[] limitedMin = new double[histogram.depth];
+		double[] limitedMax = new double[histogram.depth];
+		double[] dequantized = new double[histogram.depth];
+		for (int i = 0; i < histogram.depth; ++i) {
+			limitedMin[i] = Math.max(i * widthMin + rangeMin, rangeMax - (histogram.depth - 1 - i) * widthMax);
+			limitedMax[i] = Math.min(i * widthMax + rangeMin, rangeMax - (histogram.depth - 1 - i) * widthMin);
+			dequantized[i] = i / (double)(histogram.depth - 1);
+		}
+		Map<Cell, double[]> mappings = new HashMap<>();
+		for (Cell corner : blocks.cornerCount) {
+			double[] mapping = new double[histogram.depth];
+			mappings.put(corner, mapping);
+			if (blockMask.get(corner, false) || blockMask.get(corner.x - 1, corner.y, false)
+				|| blockMask.get(corner.x, corner.y - 1, false) || blockMask.get(corner.x - 1, corner.y - 1, false)) {
+				double step = rangeSize / histogram.sum(corner);
+				double top = rangeMin;
+				for (int i = 0; i < histogram.depth; ++i) {
+					double band = histogram.get(corner, i) * step;
+					double equalized = top + dequantized[i] * band;
+					top += band;
+					if (equalized < limitedMin[i])
+						equalized = limitedMin[i];
+					if (equalized > limitedMax[i])
+						equalized = limitedMax[i];
+					mapping[i] = equalized;
+				}
+			}
+		}
+		DoubleMap result = new DoubleMap(blocks.pixelCount);
+		for (Cell block : blocks.blockCount) {
+			if (blockMask.get(block)) {
+				Block area = blocks.blockAreas.get(block);
+				double[] bottomleft = mappings.get(block);
+				double[] bottomright = mappings.get(new Cell(block.x + 1, block.y));
+				double[] topleft = mappings.get(new Cell(block.x, block.y + 1));
+				double[] topright = mappings.get(new Cell(block.x + 1, block.y + 1));
+				for (int y = area.bottom(); y < area.top(); ++y)
+					for (int x = area.left(); x < area.right(); ++x) {
+						int depth = histogram.constrain((int)(image.get(x, y) * histogram.depth));
+						double rx = (x - area.x + 0.5) / area.width;
+						double ry = (y - area.y + 0.5) / area.height;
+						result.set(x, y, Doubles.interpolate(topleft[depth], topright[depth], bottomleft[depth], bottomright[depth], rx, ry));
+					}
+			}
+		}
+		return result;
 	}
 }

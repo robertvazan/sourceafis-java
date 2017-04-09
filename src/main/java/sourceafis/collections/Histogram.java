@@ -22,6 +22,15 @@ public class Histogram {
 	public int get(Cell at, int z) {
 		return get(at.x, at.y, z);
 	}
+	public int sum(int x, int y) {
+		int sum = 0;
+		for (int i = 0; i < depth; ++i)
+			sum += get(x, y, i);
+		return sum;
+	}
+	public int sum(Cell at) {
+		return sum(at.x, at.y);
+	}
 	public void set(int x, int y, int z, int value) {
 		array[(y * width + x) * depth + z] = value;
 	}
