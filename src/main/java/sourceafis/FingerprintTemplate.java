@@ -7,6 +7,7 @@ import sourceafis.scalars.*;
 
 public class FingerprintTemplate {
 	List<FingerprintMinutia> minutiae = new ArrayList<>();
+	NeighborEdge[][] edgeTable;
 	public FingerprintTemplate(DoubleMap image) {
 		this(image, 500);
 	}
@@ -36,6 +37,7 @@ public class FingerprintTemplate {
 		removeMinutiaClouds();
 		limitTemplateSize();
 		shuffleMinutiae();
+		buildEdgeTable();
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -546,5 +548,31 @@ public class FingerprintTemplate {
 		for (FingerprintMinutia minutia : minutiae)
 			seed += minutia.direction + minutia.position.x + minutia.position.y + minutia.type.ordinal();
 		Collections.shuffle(minutiae, new Random(seed));
+	}
+	void buildEdgeTable() {
+		final int maxDistance = 490;
+		final int maxNeighbors = 9;
+		edgeTable = new NeighborEdge[minutiae.size()][];
+		List<NeighborEdge> edges = new ArrayList<>();
+		int[] allSqDistances = new int[minutiae.size()];
+		for (int reference = 0; reference < edgeTable.length; ++reference) {
+			Cell referencePosition = minutiae.get(reference).position;
+			int sqMaxDistance = Integers.sq(maxDistance);
+			if (minutiae.size() - 1 > maxNeighbors) {
+				for (int neighbor = 0; neighbor < minutiae.size(); ++neighbor)
+					allSqDistances[neighbor] = referencePosition.minus(minutiae.get(neighbor).position).lengthSq();
+				Arrays.sort(allSqDistances);
+				sqMaxDistance = allSqDistances[maxNeighbors];
+			}
+			for (int neighbor = 0; neighbor < minutiae.size(); ++neighbor) {
+				if (neighbor != reference && referencePosition.minus(minutiae.get(neighbor).position).lengthSq() <= sqMaxDistance)
+					edges.add(new NeighborEdge(new EdgeShape(this, reference, neighbor), neighbor));
+			}
+			edges.sort(Comparator.<NeighborEdge> comparingInt(e -> e.edge.length).thenComparingInt(e -> e.neighbor));
+			while (edges.size() > maxNeighbors)
+				edges.remove(edges.size() - 1);
+			edgeTable[reference] = edges.toArray(new NeighborEdge[edges.size()]);
+			edges.clear();
+		}
 	}
 }
