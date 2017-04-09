@@ -51,6 +51,9 @@ public class Block implements Iterable<Cell> {
 			new Cell(Math.max(left(), other.left()), Math.max(bottom(), other.bottom())),
 			new Cell(Math.min(right(), other.right()), Math.min(top(), other.top())));
 	}
+	public Block move(Cell delta) {
+		return new Block(x + delta.x, y + delta.y, width, height);
+	}
 	@Override public Iterator<Cell> iterator() {
 		return new BlockIterator();
 	}

@@ -2,6 +2,7 @@ package sourceafis.scalars;
 
 public class Angle {
 	public static final double PI2 = 2 * Math.PI;
+	static final double invPI2 = 1.0 / PI2;
 	public static Point toVector(double angle) {
 		return new Point(Math.cos(angle), Math.sin(angle));
 	}
@@ -15,5 +16,23 @@ public class Angle {
 	public static double add(double start, double delta) {
 		double angle = start + delta;
 		return angle < PI2 ? angle : angle - PI2;
+	}
+	public static double bucketStart(int bucket, int resolution) {
+		return PI2 * bucket / resolution;
+	}
+	public static double bucketEnd(int bucket, int resolution) {
+		return PI2 * (bucket + 1) / resolution;
+	}
+	public static double bucketCenter(int bucket, int resolution) {
+		return PI2 * (2 * bucket + 1) / (2 * resolution);
+	}
+	public static int quantize(double angle, int resolution) {
+		int result = (int)(angle * invPI2 * resolution);
+		if (result < 0)
+			return 0;
+		else if (result >= resolution)
+			return resolution - 1;
+		else
+			return result;
 	}
 }

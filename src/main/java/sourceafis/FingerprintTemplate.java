@@ -19,6 +19,8 @@ public class FingerprintTemplate {
 		BooleanMap mask = mask(blocks, histogram);
 		DoubleMap equalized = equalize(blocks, image, smoothHistogram, mask);
 		DoubleMap orientation = orientationMap(equalized, mask, blocks);
+		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, orientedLines(new OrientedLineParams().step(1.59)));
+		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orientedLines(new OrientedLineParams().resolution(11).radius(4).step(1.11)));
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -345,5 +347,60 @@ public class FingerprintTemplate {
 			if (mask.get(block))
 				angles.set(block, Angle.atan(vectors.get(block)));
 		return angles;
+	}
+	static class OrientedLineParams {
+		int resolution = 32;
+		int radius = 7;
+		double step = 1.5;
+		public OrientedLineParams resolution(int resolution) {
+			this.resolution = resolution;
+			return this;
+		}
+		public OrientedLineParams radius(int radius) {
+			this.radius = radius;
+			return this;
+		}
+		public OrientedLineParams step(double step) {
+			this.step = step;
+			return this;
+		}
+	}
+	Cell[][] orientedLines(OrientedLineParams args) {
+		Cell[][] result = new Cell[args.resolution][];
+		for (int orientationIndex = 0; orientationIndex < args.resolution; ++orientationIndex) {
+			List<Cell> line = new ArrayList<>();
+			line.add(Cell.zero);
+			Point direction = Angle.toVector(Angle.bucketCenter(orientationIndex, 2 * args.resolution));
+			for (double r = args.radius; r >= 0.5; r /= args.step) {
+				Cell sample = direction.multiply(r).round();
+				if (!line.contains(sample)) {
+					line.add(sample);
+					line.add(sample.negate());
+				}
+			}
+			result[orientationIndex] = line.toArray(new Cell[line.size()]);
+		}
+		return result;
+	}
+	static DoubleMap smoothRidges(DoubleMap input, DoubleMap orientation, BooleanMap mask, BlockMap blocks, double angle, Cell[][] lines) {
+		DoubleMap output = new DoubleMap(input.size());
+		for (Cell block : blocks.blockCount) {
+			if (mask.get(block)) {
+				Cell[] line = lines[Angle.quantize(Angle.add(orientation.get(block), angle), lines.length)];
+				for (Cell linePoint : line) {
+					Block target = blocks.blockAreas.get(block);
+					Block source = target.move(linePoint).intersect(new Block(blocks.pixelCount));
+					target = source.move(linePoint.negate());
+					for (int y = target.bottom(); y < target.top(); ++y)
+						for (int x = target.left(); x < target.right(); ++x)
+							output.add(x, y, input.get(x + linePoint.x, y + linePoint.y));
+				}
+				Block blockArea = blocks.blockAreas.get(block);
+				for (int y = blockArea.bottom(); y < blockArea.top(); ++y)
+					for (int x = blockArea.left(); x < blockArea.right(); ++x)
+						output.multiply(x, y, 1.0 / line.length);
+			}
+		}
+		return output;
 	}
 }

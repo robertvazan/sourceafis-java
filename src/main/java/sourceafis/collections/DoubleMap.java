@@ -29,6 +29,18 @@ public class DoubleMap {
 	public void set(Cell at, double value) {
 		set(at.x, at.y, value);
 	}
+	public void add(int x, int y, double value) {
+		array[offset(x, y)] += value;
+	}
+	public void add(Cell at, double value) {
+		add(at.x, at.y, value);
+	}
+	public void multiply(int x, int y, double value) {
+		array[offset(x, y)] *= value;
+	}
+	public void multiply(Cell at, double value) {
+		multiply(at.x, at.y, value);
+	}
 	int offset(int x, int y) {
 		return y * width + x;
 	}
