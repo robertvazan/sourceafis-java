@@ -14,6 +14,11 @@ public class BooleanMap {
 	public BooleanMap(Cell size) {
 		this(size.x, size.y);
 	}
+	public BooleanMap(BooleanMap other) {
+		this(other.size());
+		for (int i = 0; i < array.length; ++i)
+			array[i] = other.array[i];
+	}
 	public Cell size() {
 		return new Cell(width, height);
 	}

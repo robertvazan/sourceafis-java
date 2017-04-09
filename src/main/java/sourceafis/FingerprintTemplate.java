@@ -21,6 +21,10 @@ public class FingerprintTemplate {
 		DoubleMap orientation = orientationMap(equalized, mask, blocks);
 		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, orientedLines(new OrientedLineParams().step(1.59)));
 		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orientedLines(new OrientedLineParams().resolution(11).radius(4).step(1.11)));
+		BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
+		cleanupBinarized(binary);
+		BooleanMap pixelMask = fillBlocks(mask, blocks);
+		BooleanMap inverted = invert(binary, pixelMask);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -402,5 +406,65 @@ public class FingerprintTemplate {
 			}
 		}
 		return output;
+	}
+	static BooleanMap binarize(DoubleMap input, DoubleMap baseline, BooleanMap mask, BlockMap blocks) {
+		Cell size = input.size();
+		BooleanMap binarized = new BooleanMap(size);
+		for (Cell block : blocks.blockCount)
+			if (mask.get(block)) {
+				Block rect = blocks.blockAreas.get(block);
+				for (int y = rect.bottom(); y < rect.top(); ++y)
+					for (int x = rect.left(); x < rect.right(); ++x)
+						if (input.get(x, y) - baseline.get(x, y) > 0)
+							binarized.set(x, y, true);
+			}
+		return binarized;
+	}
+	static void cleanupBinarized(BooleanMap binary) {
+		Cell size = binary.size();
+		BooleanMap inverted = new BooleanMap(binary);
+		inverted.invert();
+		BooleanMap islands = filterBinarized(inverted);
+		BooleanMap holes = filterBinarized(binary);
+		for (int y = 0; y < size.y; ++y)
+			for (int x = 0; x < size.x; ++x)
+				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
+		removeCrosses(binary);
+	}
+	static BooleanMap filterBinarized(BooleanMap input) {
+		return vote(input, new VotingParameters().radius(2).majority(0.61).borderDist(17));
+	}
+	static void removeCrosses(BooleanMap input) {
+		Cell size = input.size();
+		boolean any = true;
+		while (any) {
+			any = false;
+			for (int y = 0; y < size.y - 1; ++y)
+				for (int x = 0; x < size.x - 1; ++x)
+					if (input.get(x, y) && input.get(x + 1, y + 1) && !input.get(x, y + 1) && !input.get(x + 1, y)
+						|| input.get(x, y + 1) && input.get(x + 1, y) && !input.get(x, y) && !input.get(x + 1, y + 1)) {
+						input.set(x, y, false);
+						input.set(x, y + 1, false);
+						input.set(x + 1, y, false);
+						input.set(x + 1, y + 1, false);
+						any = true;
+					}
+		}
+	}
+	static BooleanMap fillBlocks(BooleanMap mask, BlockMap blocks) {
+		BooleanMap pixelized = new BooleanMap(blocks.pixelCount);
+		for (Cell block : blocks.blockCount)
+			if (mask.get(block))
+				for (Cell pixel : blocks.blockAreas.get(block))
+					pixelized.set(pixel, true);
+		return pixelized;
+	}
+	static BooleanMap invert(BooleanMap binary, BooleanMap mask) {
+		Cell size = binary.size();
+		BooleanMap inverted = new BooleanMap(size);
+		for (int y = 0; y < size.y; ++y)
+			for (int x = 0; x < size.x; ++x)
+				inverted.set(x, y, !binary.get(x, y) && mask.get(x, y));
+		return inverted;
 	}
 }
