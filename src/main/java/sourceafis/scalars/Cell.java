@@ -3,13 +3,14 @@ package sourceafis.scalars;
 import java.util.*;
 
 public class Cell implements Iterable<Cell> {
-	private static final Cell[] edgeNeighbors = new Cell[] {
+	public static final Cell zero = new Cell(0, 0);
+	public static final Cell[] edgeNeighbors = new Cell[] {
 		new Cell(0, -1),
 		new Cell(-1, 0),
 		new Cell(1, 0),
 		new Cell(0, 1)
 	};
-	private static final Cell[] cornerNeighbors = new Cell[] {
+	public static final Cell[] cornerNeighbors = new Cell[] {
 		new Cell(-1, -1),
 		new Cell(0, -1),
 		new Cell(1, -1),
@@ -42,6 +43,9 @@ public class Cell implements Iterable<Cell> {
 	}
 	public Cell negate() {
 		return new Cell(-x, -y);
+	}
+	public Point toPoint() {
+		return new Point(x, y);
 	}
 	public Cell[] lineTo(Cell to) {
 		Cell[] result;
@@ -83,12 +87,6 @@ public class Cell implements Iterable<Cell> {
 	}
 	@Override public Iterator<Cell> iterator() {
 		return new CellIterator();
-	}
-	public static Cell[] edgeNeighbors() {
-		return edgeNeighbors;
-	}
-	public static Cell[] cornerNeighbors() {
-		return cornerNeighbors;
 	}
 	private class CellIterator implements Iterator<Cell> {
 		int atX;

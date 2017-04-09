@@ -18,6 +18,7 @@ public class FingerprintTemplate {
 		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMap mask = mask(blocks, histogram);
 		DoubleMap equalized = equalize(blocks, image, smoothHistogram, mask);
+		DoubleMap orientation = orientationMap(equalized, mask, blocks);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -167,7 +168,7 @@ public class FingerprintTemplate {
 		Block rect = new Block(args.borderDist, args.borderDist, size.x - 2 * args.borderDist, size.y - 2 * args.borderDist);
 		BooleanMap output = new BooleanMap(size);
 		for (Cell center : rect) {
-			Block neighborhood = new Block(center.x - args.radius, center.y - args.radius, center.x + args.radius, center.y + args.radius).intersect(new Block(size));
+			Block neighborhood = Block.around(center, args.radius).intersect(new Block(size));
 			int ones = 0;
 			for (int ny = neighborhood.bottom(); ny < neighborhood.top(); ++ny)
 				for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
@@ -236,5 +237,113 @@ public class FingerprintTemplate {
 			}
 		}
 		return result;
+	}
+	static DoubleMap orientationMap(DoubleMap image, BooleanMap mask, BlockMap blocks) {
+		PointMap accumulated = pixelwiseOrientation(image, mask, blocks);
+		PointMap byBlock = blockOrientations(accumulated, blocks, mask);
+		PointMap smooth = smoothOrientation(byBlock, mask);
+		return orientationAngles(smooth, mask);
+	}
+	static class ConsideredOrientation {
+		Cell offset;
+		Point orientation;
+	}
+	static ConsideredOrientation[][] planOrientations() {
+		final double minHalfDistance = 2;
+		final double maxHalfDistance = 6;
+		final int orientationListSplit = 50;
+		final int orientationsChecked = 20;
+		Random random = new Random(0);
+		ConsideredOrientation[][] splits = new ConsideredOrientation[orientationListSplit][];
+		for (int i = 0; i < orientationListSplit; ++i) {
+			ConsideredOrientation[] orientations = splits[i] = new ConsideredOrientation[orientationsChecked];
+			for (int j = 0; j < orientationsChecked; ++j) {
+				ConsideredOrientation sample = orientations[j] = new ConsideredOrientation();
+				do {
+					double angle = random.nextDouble() * Math.PI;
+					double distance = Doubles.interpolateExponential(minHalfDistance, maxHalfDistance, random.nextDouble());
+					sample.offset = Angle.toVector(angle).multiply(distance).round();
+				} while (sample.offset.equals(Cell.zero) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
+				sample.orientation = Angle.toVector(Angle.add(Angle.toOrientation(Angle.atan(sample.offset.toPoint())), Math.PI));
+			}
+		}
+		return splits;
+	}
+	static PointMap pixelwiseOrientation(DoubleMap input, BooleanMap mask, BlockMap blocks) {
+		ConsideredOrientation[][] neighbors = planOrientations();
+		PointMap orientation = new PointMap(input.size());
+		for (int blockY = 0; blockY < blocks.blockCount.y; ++blockY) {
+			Range maskRange = maskRange(mask, blockY);
+			if (maskRange.length() > 0) {
+				Range validXRange = new Range(
+					blocks.blockAreas.get(maskRange.start, blockY).left(),
+					blocks.blockAreas.get(maskRange.end - 1, blockY).right());
+				for (int y = blocks.blockAreas.get(0, blockY).bottom(); y < blocks.blockAreas.get(0, blockY).top(); ++y) {
+					for (ConsideredOrientation neighbor : neighbors[y % neighbors.length]) {
+						int radius = Math.max(Math.abs(neighbor.offset.x), Math.abs(neighbor.offset.y));
+						if (y - radius >= 0 && y + radius < input.height) {
+							Range xRange = new Range(Math.max(radius, validXRange.start), Math.min(input.width - radius, validXRange.end));
+							for (int x = xRange.start; x < xRange.end; ++x) {
+								double before = input.get(x - neighbor.offset.x, y - neighbor.offset.y);
+								double at = input.get(x, y);
+								double after = input.get(x + neighbor.offset.x, y + neighbor.offset.y);
+								double strength = at - Math.max(before, after);
+								if (strength > 0)
+									orientation.add(x, y, neighbor.orientation.multiply(strength));
+							}
+						}
+					}
+				}
+			}
+		}
+		return orientation;
+	}
+	static Range maskRange(BooleanMap mask, int y) {
+		int first = -1;
+		int last = -1;
+		for (int x = 0; x < mask.width; ++x)
+			if (mask.get(x, y)) {
+				last = x;
+				if (first < 0)
+					first = x;
+			}
+		if (first >= 0)
+			return new Range(first, last + 1);
+		else
+			return Range.zero;
+	}
+	static PointMap blockOrientations(PointMap orientation, BlockMap blocks, BooleanMap mask) {
+		PointMap sums = new PointMap(blocks.blockCount);
+		for (Cell block : blocks.blockCount) {
+			if (mask.get(block)) {
+				Block area = blocks.blockAreas.get(block);
+				for (int y = area.bottom(); y < area.top(); ++y)
+					for (int x = area.left(); x < area.right(); ++x)
+						sums.add(block, orientation.get(x, y));
+			}
+		}
+		return sums;
+	}
+	static PointMap smoothOrientation(PointMap orientation, BooleanMap mask) {
+		final int radius = 1;
+		Cell size = mask.size();
+		PointMap smoothed = new PointMap(size);
+		for (Cell block : size)
+			if (mask.get(block)) {
+				Block neighbors = Block.around(block, radius).intersect(new Block(size));
+				for (int ny = neighbors.bottom(); ny < neighbors.top(); ++ny)
+					for (int nx = neighbors.left(); nx < neighbors.right(); ++nx)
+						if (mask.get(nx, ny))
+							smoothed.add(block, orientation.get(nx, ny));
+			}
+		return smoothed;
+	}
+	static DoubleMap orientationAngles(PointMap vectors, BooleanMap mask) {
+		Cell size = mask.size();
+		DoubleMap angles = new DoubleMap(size);
+		for (Cell block : size)
+			if (mask.get(block))
+				angles.set(block, Angle.atan(vectors.get(block)));
+		return angles;
 	}
 }

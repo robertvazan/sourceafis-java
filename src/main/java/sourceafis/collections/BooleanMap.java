@@ -18,7 +18,7 @@ public class BooleanMap {
 		return new Cell(width, height);
 	}
 	public boolean get(int x, int y) {
-		return array[y * width + x];
+		return array[offset(x, y)];
 	}
 	public boolean get(Cell at) {
 		return get(at.x, at.y);
@@ -26,13 +26,13 @@ public class BooleanMap {
 	public boolean get(int x, int y, boolean fallback) {
 		if (x < 0 || y < 0 || x >= width || y >= height)
 			return fallback;
-		return array[y * width + x];
+		return array[offset(x, y)];
 	}
 	public boolean get(Cell at, boolean fallback) {
 		return get(at.x, at.y, fallback);
 	}
 	public void set(int x, int y, boolean value) {
-		array[y * width + x] = value;
+		array[offset(x, y)] = value;
 	}
 	public void set(Cell at, boolean value) {
 		set(at.x, at.y, value);
@@ -46,5 +46,8 @@ public class BooleanMap {
 			throw new IllegalArgumentException();
 		for (int i = 0; i < array.length; ++i)
 			array[i] |= other.array[i];
+	}
+	int offset(int x, int y) {
+		return y * width + x;
 	}
 }

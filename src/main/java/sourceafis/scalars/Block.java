@@ -31,8 +31,17 @@ public class Block implements Iterable<Cell> {
 	public int area() {
 		return width * height;
 	}
+	public static Block between(int startX, int startY, int endX, int endY) {
+		return new Block(startX, startY, endX - startX, endY - startY);
+	}
 	public static Block between(Cell start, Cell end) {
-		return new Block(start.x, start.y, end.x - start.x, end.y - start.y);
+		return between(start.x, start.y, end.x, end.y);
+	}
+	public static Block around(int x, int y, int radius) {
+		return between(x - radius, y - radius, x + radius + 1, y + radius + 1);
+	}
+	public static Block around(Cell center, int radius) {
+		return around(center.x, center.y, radius);
 	}
 	public Cell center() {
 		return new Cell((right() + left()) / 2, (bottom() + top()) / 2);

@@ -18,15 +18,18 @@ public class DoubleMap {
 		return new Cell(width, height);
 	}
 	public double get(int x, int y) {
-		return array[y * width + x];
+		return array[offset(x, y)];
 	}
 	public double get(Cell at) {
 		return get(at.x, at.y);
 	}
 	public void set(int x, int y, double value) {
-		array[y * width + x] = value;
+		array[offset(x, y)] = value;
 	}
 	public void set(Cell at, double value) {
 		set(at.x, at.y, value);
+	}
+	int offset(int x, int y) {
+		return y * width + x;
 	}
 }

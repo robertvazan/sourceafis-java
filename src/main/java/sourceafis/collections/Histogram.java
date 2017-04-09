@@ -17,7 +17,7 @@ public class Histogram {
 		return Math.max(0, Math.min(depth - 1, z));
 	}
 	public int get(int x, int y, int z) {
-		return array[(y * width + x) * depth + z];
+		return array[offset(x, y, z)];
 	}
 	public int get(Cell at, int z) {
 		return get(at.x, at.y, z);
@@ -32,13 +32,13 @@ public class Histogram {
 		return sum(at.x, at.y);
 	}
 	public void set(int x, int y, int z, int value) {
-		array[(y * width + x) * depth + z] = value;
+		array[offset(x, y, z)] = value;
 	}
 	public void set(Cell at, int z, int value) {
 		set(at.x, at.y, z, value);
 	}
 	public void add(int x, int y, int z, int value) {
-		array[(y * width + x) * depth + z] += value;
+		array[offset(x, y, z)] += value;
 	}
 	public void add(Cell at, int z, int value) {
 		add(at.x, at.y, z, value);
@@ -48,5 +48,8 @@ public class Histogram {
 	}
 	public void increment(Cell at, int z) {
 		increment(at.x, at.y, z);
+	}
+	int offset(int x, int y, int z) {
+		return (y * width + x) * depth + z;
 	}
 }
