@@ -82,7 +82,7 @@ public class Cell implements Iterable<Cell> {
 		return String.format("[%d,%d]", x, y);
 	}
 	@Override public Iterator<Cell> iterator() {
-		return new PointIterator();
+		return new CellIterator();
 	}
 	public static Cell[] edgeNeighbors() {
 		return edgeNeighbors;
@@ -90,7 +90,7 @@ public class Cell implements Iterable<Cell> {
 	public static Cell[] cornerNeighbors() {
 		return cornerNeighbors;
 	}
-	private class PointIterator implements Iterator<Cell> {
+	private class CellIterator implements Iterator<Cell> {
 		int atX;
 		int atY;
 		@Override public boolean hasNext() {

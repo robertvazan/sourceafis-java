@@ -167,20 +167,16 @@ public class FingerprintTemplate {
 		Cell size = input.size();
 		Block rect = new Block(args.borderDist, args.borderDist, size.x - 2 * args.borderDist, size.y - 2 * args.borderDist);
 		BooleanMap output = new BooleanMap(size);
-		for (int y = rect.bottom(); y < rect.top(); ++y) {
-			for (int x = rect.left(); x < rect.right(); ++x) {
-				Block neighborhood = Block.between(
-					new Cell(Math.max(x - args.radius, 0), Math.max(y - args.radius, 0)),
-					new Cell(Math.min(x + args.radius + 1, size.x), Math.min(y + args.radius + 1, size.y)));
-				int ones = 0;
-				for (int ny = neighborhood.bottom(); ny < neighborhood.top(); ++ny)
-					for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
-						if (input.get(nx, ny))
-							++ones;
-				double voteWeight = 1.0 / neighborhood.area();
-				if (ones * voteWeight >= args.majority)
-					output.set(x, y, true);
-			}
+		for (Cell center : rect) {
+			Block neighborhood = new Block(center.x - args.radius, center.y - args.radius, center.x + args.radius, center.y + args.radius).intersect(new Block(size));
+			int ones = 0;
+			for (int ny = neighborhood.bottom(); ny < neighborhood.top(); ++ny)
+				for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
+					if (input.get(nx, ny))
+						++ones;
+			double voteWeight = 1.0 / neighborhood.area();
+			if (ones * voteWeight >= args.majority)
+				output.set(center, true);
 		}
 		return output;
 	}
