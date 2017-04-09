@@ -23,6 +23,9 @@ public class Block {
 	public int top() {
 		return y + height;
 	}
+	public int area() {
+		return width * height;
+	}
 	public static Block between(Cell start, Cell end) {
 		return new Block(start.x, start.y, end.x - start.x, end.y - start.y);
 	}

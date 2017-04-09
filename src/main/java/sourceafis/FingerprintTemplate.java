@@ -16,6 +16,7 @@ public class FingerprintTemplate {
 		BlockMap blocks = new BlockMap(image.width, image.height, blockSize);
 		Histogram histogram = histogram(blocks, image);
 		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
+		BooleanMap mask = mask(blocks, histogram);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -76,6 +77,18 @@ public class FingerprintTemplate {
 		}
 		return output;
 	}
+	static BooleanMap mask(BlockMap blocks, Histogram histogram) {
+		DoubleMap contrast = clipContrast(blocks, histogram);
+		BooleanMap mask = filterAbsoluteContrast(contrast);
+		mask.merge(filterRelativeContrast(contrast, blocks));
+		mask.merge(vote(mask, new VotingParameters().radius(9).majority(0.86).borderDist(7)));
+		mask.merge(filterBlockErrors(mask));
+		mask.invert();
+		mask.merge(filterBlockErrors(mask));
+		mask.merge(filterBlockErrors(mask));
+		mask.merge(vote(mask, new VotingParameters().radius(7).borderDist(4)));
+		return mask;
+	}
 	static DoubleMap clipContrast(BlockMap blocks, Histogram histogram) {
 		final double clipFraction = 0.08;
 		DoubleMap result = new DoubleMap(blocks.blockCount);
@@ -132,5 +145,46 @@ public class FingerprintTemplate {
 			if (contrast.get(block) < limit)
 				result.set(block, true);
 		return result;
+	}
+	static class VotingParameters {
+		int radius = 1;
+		double majority = 0.51;
+		int borderDist = 0;
+		public VotingParameters radius(int radius) {
+			this.radius = radius;
+			return this;
+		}
+		public VotingParameters majority(double majority) {
+			this.majority = majority;
+			return this;
+		}
+		public VotingParameters borderDist(int borderDist) {
+			this.borderDist = borderDist;
+			return this;
+		}
+	}
+	static BooleanMap vote(BooleanMap input, VotingParameters args) {
+		Cell size = input.size();
+		Block rect = new Block(args.borderDist, args.borderDist, size.x - 2 * args.borderDist, size.y - 2 * args.borderDist);
+		BooleanMap output = new BooleanMap(size);
+		for (int y = rect.bottom(); y < rect.top(); ++y) {
+			for (int x = rect.left(); x < rect.right(); ++x) {
+				Block neighborhood = Block.between(
+					new Cell(Math.max(x - args.radius, 0), Math.max(y - args.radius, 0)),
+					new Cell(Math.min(x + args.radius + 1, size.x), Math.min(y + args.radius + 1, size.y)));
+				int ones = 0;
+				for (int ny = neighborhood.bottom(); ny < neighborhood.top(); ++ny)
+					for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
+						if (input.get(nx, ny))
+							++ones;
+				double voteWeight = 1.0 / neighborhood.area();
+				if (ones * voteWeight >= args.majority)
+					output.set(x, y, true);
+			}
+		}
+		return output;
+	}
+	static BooleanMap filterBlockErrors(BooleanMap input) {
+		return vote(input, new VotingParameters().majority(0.7).borderDist(4));
 	}
 }
