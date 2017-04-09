@@ -1,5 +1,6 @@
 package sourceafis;
 
+import java.util.*;
 import sourceafis.collections.*;
 import sourceafis.scalars.*;
 
@@ -8,6 +9,7 @@ public class FingerprintSkeleton {
 	public FingerprintSkeleton(BooleanMap binary) {
 		size = binary.size();
 		BooleanMap thinned = thin(binary);
+		List<Cell> minutiaPoints = findMinutiae(thinned);
 	}
 	enum NeighborhoodType {
 		Skeleton,
@@ -86,5 +88,18 @@ public class FingerprintSkeleton {
 			}
 		}
 		return false;
+	}
+	List<Cell> findMinutiae(BooleanMap thinned) {
+		List<Cell> result = new ArrayList<>();
+		for (Cell at : size)
+			if (thinned.get(at)) {
+				int count = 0;
+				for (Cell relative : Cell.cornerNeighbors)
+					if (thinned.get(at.plus(relative), false))
+						++count;
+				if (count == 1 || count > 2)
+					result.add(at);
+			}
+		return result;
 	}
 }
