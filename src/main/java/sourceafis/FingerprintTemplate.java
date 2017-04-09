@@ -1,10 +1,12 @@
 package sourceafis;
 
+import static java.util.stream.Collectors.*;
 import java.util.*;
 import sourceafis.collections.*;
 import sourceafis.scalars.*;
 
 public class FingerprintTemplate {
+	List<FingerprintMinutia> minutiae = new ArrayList<>();
 	public FingerprintTemplate(DoubleMap image) {
 		this(image, 500);
 	}
@@ -28,6 +30,12 @@ public class FingerprintTemplate {
 		BooleanMap innerMask = innerMask(pixelMask);
 		FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
 		FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
+		collectMinutiae(ridges, MinutiaType.ENDING);
+		collectMinutiae(valleys, MinutiaType.BIFURCATION);
+		maskMinutiae(innerMask);
+		removeMinutiaClouds();
+		limitTemplateSize();
+		shuffleMinutiae();
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -495,5 +503,48 @@ public class FingerprintTemplate {
 			for (int x = amount; x < size.x - amount; ++x)
 				shrunk.set(x, y, mask.get(x, y - amount) && mask.get(x, y + amount) && mask.get(x - amount, y) && mask.get(x + amount, y));
 		return shrunk;
+	}
+	void collectMinutiae(FingerprintSkeleton skeleton, MinutiaType type) {
+		for (SkeletonMinutia skeletonMinutia : skeleton.minutiae)
+			if (skeletonMinutia.considered && skeletonMinutia.ridges.size() == 1)
+				minutiae.add(new FingerprintMinutia(skeletonMinutia.position, skeletonMinutia.ridges.get(0).direction(), type));
+	}
+	void maskMinutiae(BooleanMap mask) {
+		final double directedExtension = 10.06;
+		minutiae.removeIf(minutia -> {
+			Cell arrow = Angle.toVector(minutia.direction).multiply(-directedExtension).round();
+			return !mask.get(minutia.position.plus(arrow), false);
+		});
+	}
+	void removeMinutiaClouds() {
+		final int radius = 20;
+		final int maxNeighbors = 4;
+		int radiusSq = Integers.sq(radius);
+		Set<FingerprintMinutia> removed = minutiae.stream()
+			.filter(minutia -> minutiae.stream().filter(neighbor -> neighbor.position.minus(minutia.position).lengthSq() <= radiusSq).count() - 1 > maxNeighbors)
+			.collect(toSet());
+		minutiae = minutiae.stream().filter(minutia -> !removed.contains(minutia)).collect(toList());
+	}
+	void limitTemplateSize() {
+		final int maxMinutiae = 100;
+		final int neighborhoodSize = 5;
+		if (minutiae.size() > maxMinutiae) {
+			minutiae = minutiae.stream()
+				.sorted(Comparator.<FingerprintMinutia> comparingInt(
+					minutia -> minutiae.stream()
+						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
+						.sorted()
+						.skip(neighborhoodSize)
+						.findFirst().orElse(Integer.MAX_VALUE))
+					.reversed())
+				.limit(maxMinutiae)
+				.collect(toList());
+		}
+	}
+	void shuffleMinutiae() {
+		int seed = 0;
+		for (FingerprintMinutia minutia : minutiae)
+			seed += minutia.direction + minutia.position.x + minutia.position.y + minutia.type.ordinal();
+		Collections.shuffle(minutiae, new Random(seed));
 	}
 }

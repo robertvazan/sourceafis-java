@@ -46,4 +46,18 @@ class SkeletonRidge {
 		start(null);
 		end(null);
 	}
+	double direction() {
+		final int segmentLength = 21;
+		final int segmentSkip = 1;
+		int first = segmentSkip;
+		int last = segmentSkip + segmentLength - 1;
+		if (last >= points.size()) {
+			int shift = last - points.size() + 1;
+			last -= shift;
+			first -= shift;
+		}
+		if (first < 0)
+			first = 0;
+		return Angle.atan(points.get(first), points.get(last));
+	}
 }
