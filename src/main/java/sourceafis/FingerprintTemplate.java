@@ -26,6 +26,8 @@ public class FingerprintTemplate {
 		BooleanMap pixelMask = fillBlocks(mask, blocks);
 		BooleanMap inverted = invert(binary, pixelMask);
 		BooleanMap innerMask = innerMask(pixelMask);
+		FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
+		FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
