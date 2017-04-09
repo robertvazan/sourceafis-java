@@ -25,6 +25,7 @@ public class FingerprintTemplate {
 		cleanupBinarized(binary);
 		BooleanMap pixelMask = fillBlocks(mask, blocks);
 		BooleanMap inverted = invert(binary, pixelMask);
+		BooleanMap innerMask = innerMask(pixelMask);
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -466,5 +467,31 @@ public class FingerprintTemplate {
 			for (int x = 0; x < size.x; ++x)
 				inverted.set(x, y, !binary.get(x, y) && mask.get(x, y));
 		return inverted;
+	}
+	static BooleanMap innerMask(BooleanMap outer) {
+		final int minBorderDistance = 14;
+		Cell size = outer.size();
+		BooleanMap inner = new BooleanMap(size);
+		for (int y = 1; y < size.y - 1; ++y)
+			for (int x = 1; x < size.x - 1; ++x)
+				inner.set(x, y, outer.get(x, y));
+		if (minBorderDistance >= 1)
+			inner = shrinkMask(inner, 1);
+		int total = 1;
+		for (int step = 1; total + step <= minBorderDistance; step *= 2) {
+			inner = shrinkMask(inner, step);
+			total += step;
+		}
+		if (total < minBorderDistance)
+			inner = shrinkMask(inner, minBorderDistance - total);
+		return inner;
+	}
+	static BooleanMap shrinkMask(BooleanMap mask, int amount) {
+		Cell size = mask.size();
+		BooleanMap shrunk = new BooleanMap(size);
+		for (int y = amount; y < size.y - amount; ++y)
+			for (int x = amount; x < size.x - amount; ++x)
+				shrunk.set(x, y, mask.get(x, y - amount) && mask.get(x, y + amount) && mask.get(x - amount, y) && mask.get(x + amount, y));
+		return shrunk;
 	}
 }
