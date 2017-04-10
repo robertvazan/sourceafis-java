@@ -52,4 +52,7 @@ public class Angle {
 		double angle = first - second;
 		return angle >= 0 ? angle : angle + PI2;
 	}
+	public static double complementary(double angle) {
+		return PI2 - angle;
+	}
 }
