@@ -152,6 +152,7 @@ public class FingerprintMatcher {
 	double tryRoot(MinutiaPair root) {
 		createRootPairing(root);
 		buildPairing();
+		return computeScore();
 	}
 	void createRootPairing(MinutiaPair root) {
 		if (pairsByCandidate == null || pairsByCandidate.length < candidate.minutiae.size())
@@ -239,6 +240,47 @@ public class FingerprintMatcher {
 		pairList[pairCount].pair = edge.neighbor;
 		pairList[pairCount].reference = edge.reference;
 		++pairCount;
+	}
+	double computeScore() {
+		final int minSupportingEdges = 1;
+		final double distanceErrorFlatness = 0.69;
+		final double angleErrorFlatness = 0.27;
+		final double pairCountFactor = 0.032;
+		final double pairFractionFactor = 8.98;
+		final double correctTypeFactor = 0.629;
+		final double supportedCountFactor = 0.193;
+		final double edgeCountFactor = 0.265;
+		final double distanceAccuracyFactor = 9.9;
+		final double angleAccuracyFactor = 2.79;
+		double score = pairCountFactor * pairCount;
+		score += pairFractionFactor * (pairCount / (double)template.minutiae.size() + pairCount / (double)candidate.minutiae.size()) / 2;
+		for (int i = 0; i < pairCount; ++i) {
+			PairInfo pair = pairList[i];
+			if (pair.supportingEdges >= minSupportingEdges)
+				score += supportedCountFactor;
+			score += edgeCountFactor * (pair.supportingEdges + 1);
+			if (template.minutiae.get(pair.pair.probe).type == candidate.minutiae.get(pair.pair.candidate).type)
+				score += correctTypeFactor;
+		}
+		int innerDistanceRadius = (int)Math.round(distanceErrorFlatness * maxDistanceError);
+		int innerAngleRadius = (int)Math.round(angleErrorFlatness * maxAngleError);
+		int distanceErrorSum = 0;
+		int angleErrorSum = 0;
+		for (int i = 1; i < pairCount; ++i) {
+			PairInfo pair = pairList[i];
+			EdgeShape probeEdge = new EdgeShape(template, pair.reference.probe, pair.pair.probe);
+			EdgeShape candidateEdge = new EdgeShape(candidate, pair.reference.candidate, pair.pair.candidate);
+			distanceErrorSum += Math.abs(probeEdge.length - candidateEdge.length);
+			angleErrorSum += Math.max(innerDistanceRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
+			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
+		}
+		if (pairCount >= 2) {
+			double pairedDistanceError = maxDistanceError * (pairCount - 1);
+			score += distanceAccuracyFactor * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
+			double pairedAngleError = maxAngleError * (pairCount - 1) * 2;
+			score += angleAccuracyFactor * (pairedAngleError - angleErrorSum) / pairedAngleError;
+		}
+		return score;
 	}
 	static class MinutiaPair {
 		final int probe;
