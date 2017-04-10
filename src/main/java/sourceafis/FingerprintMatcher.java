@@ -11,6 +11,7 @@ public class FingerprintMatcher {
 	final FingerprintTemplate template;
 	Map<Integer, List<IndexedEdge>> edgeHash = new HashMap<>();
 	FingerprintTemplate candidate;
+	PriorityQueue<EdgePair> pairQueue = new PriorityQueue<>();
 	PairInfo[] pairsByCandidate;
 	PairInfo[] pairsByProbe;
 	PairInfo[] pairList;
@@ -149,11 +150,100 @@ public class FingerprintMatcher {
 		return false;
 	}
 	double tryRoot(MinutiaPair root) {
+		createRootPairing(root);
+		buildPairing();
+	}
+	void createRootPairing(MinutiaPair root) {
+		if (pairsByCandidate == null || pairsByCandidate.length < candidate.minutiae.size())
+			pairsByCandidate = new PairInfo[candidate.minutiae.size()];
+		for (int i = 0; i < pairCount; ++i) {
+			pairList[i].supportingEdges = 0;
+			pairsByProbe[pairList[i].pair.probe] = null;
+			pairsByCandidate[pairList[i].pair.candidate] = null;
+		}
+		pairsByCandidate[root.candidate] = pairsByProbe[root.probe] = pairList[0];
+		pairList[0].pair = root;
+		pairCount = 1;
+	}
+	void buildPairing() {
+		while (true) {
+			collectEdges();
+			skipPaired();
+			if (pairQueue.isEmpty())
+				break;
+			addPair(pairQueue.remove());
+		}
+	}
+	PairInfo lastPair() {
+		return pairList[pairCount - 1];
+	}
+	void collectEdges() {
+		MinutiaPair reference = lastPair().pair;
+		NeighborEdge[] probeNeighbors = template.edgeTable[reference.probe];
+		NeighborEdge[] candidateNeigbors = candidate.edgeTable[reference.candidate];
+		List<MatchingPair> matches = findMatchingPairs(probeNeighbors, candidateNeigbors);
+		for (MatchingPair match : matches) {
+			MinutiaPair neighbor = match.pair;
+			if (pairsByCandidate[neighbor.candidate] == null && pairsByProbe[neighbor.probe] == null)
+				pairQueue.add(new EdgePair(reference, neighbor, match.distance));
+			else if (pairsByProbe[neighbor.probe] != null && pairsByProbe[neighbor.probe].pair.candidate == neighbor.candidate) {
+				++pairsByProbe[reference.probe].supportingEdges;
+				++pairsByProbe[neighbor.probe].supportingEdges;
+			}
+		}
+	}
+	static class MatchingPair {
+		MinutiaPair pair;
+		int distance;
+		MatchingPair(MinutiaPair pair, int distance) {
+			this.pair = pair;
+			this.distance = distance;
+		}
+	}
+	static List<MatchingPair> findMatchingPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
+		double complementaryAngleError = Angle.complementary(maxAngleError);
+		List<MatchingPair> results = new ArrayList<>();
+		int start = 0;
+		int end = 0;
+		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
+			NeighborEdge candidateEdge = candidateStar[candidateIndex];
+			while (start < probeStar.length && probeStar[start].edge.length < candidateEdge.edge.length - maxDistanceError)
+				++start;
+			if (end < start)
+				end = start;
+			while (end < probeStar.length && probeStar[end].edge.length <= candidateEdge.edge.length + maxDistanceError)
+				++end;
+			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
+				NeighborEdge probeEdge = probeStar[probeIndex];
+				double referenceDiff = Angle.difference(probeEdge.edge.referenceAngle, candidateEdge.edge.referenceAngle);
+				if (referenceDiff <= maxAngleError || referenceDiff >= complementaryAngleError) {
+					double neighborDiff = Angle.difference(probeEdge.edge.neighborAngle, candidateEdge.edge.neighborAngle);
+					if (neighborDiff <= maxAngleError || neighborDiff >= complementaryAngleError)
+						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.edge.length));
+				}
+			}
+		}
+		return results;
+	}
+	void skipPaired() {
+		while (!pairQueue.isEmpty() && (pairsByProbe[pairQueue.peek().neighbor.probe] != null || pairsByCandidate[pairQueue.peek().neighbor.candidate] != null)) {
+			EdgePair edge = pairQueue.remove();
+			if (pairsByProbe[edge.neighbor.probe] != null && pairsByProbe[edge.neighbor.probe].pair.candidate == edge.neighbor.candidate) {
+				++pairsByProbe[edge.reference.probe].supportingEdges;
+				++pairsByProbe[edge.neighbor.probe].supportingEdges;
+			}
+		}
+	}
+	void addPair(EdgePair edge) {
+		pairsByCandidate[edge.neighbor.candidate] = pairsByProbe[edge.neighbor.probe] = pairList[pairCount];
+		pairList[pairCount].pair = edge.neighbor;
+		pairList[pairCount].reference = edge.reference;
+		++pairCount;
 	}
 	static class MinutiaPair {
 		final int probe;
 		final int candidate;
-		public MinutiaPair(int probe, int candidate) {
+		MinutiaPair(int probe, int candidate) {
 			this.probe = probe;
 			this.candidate = candidate;
 		}
@@ -162,5 +252,18 @@ public class FingerprintMatcher {
 		MinutiaPair pair;
 		MinutiaPair reference;
 		int supportingEdges;
+	}
+	static class EdgePair implements Comparable<EdgePair> {
+		MinutiaPair reference;
+		MinutiaPair neighbor;
+		int distance;
+		EdgePair(MinutiaPair reference, MinutiaPair neighbor, int distance) {
+			this.reference = reference;
+			this.neighbor = neighbor;
+			this.distance = distance;
+		}
+		@Override public int compareTo(EdgePair other) {
+			return Integer.compare(distance, other.distance);
+		}
 	}
 }
