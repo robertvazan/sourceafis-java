@@ -3,3 +3,4 @@ syntax: glob
 .classpath
 .project
 target
+.stfolder
