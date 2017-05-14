@@ -8,7 +8,7 @@
   <packaging>jar</packaging>
 
   <name>sourceafis-java</name>
-  <url>https://sourceafis.angeloflogic.com</url>
+  <url>https://sourceafis.machinezoo.com</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
