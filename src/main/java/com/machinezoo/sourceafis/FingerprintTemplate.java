@@ -1,10 +1,10 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis;
+package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
 import java.util.*;
-import sourceafis.collections.*;
-import sourceafis.scalars.*;
+import com.machinezoo.sourceafis.collections.*;
+import com.machinezoo.sourceafis.scalars.*;
 
 public class FingerprintTemplate {
 	List<FingerprintMinutia> minutiae = new ArrayList<>();

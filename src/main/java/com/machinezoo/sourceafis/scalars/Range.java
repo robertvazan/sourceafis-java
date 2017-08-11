@@ -1,5 +1,5 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis.scalars;
+package com.machinezoo.sourceafis.scalars;
 
 public class Range {
 	public static final Range zero = new Range(0, 0);

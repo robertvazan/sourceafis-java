@@ -1,7 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis;
+package com.machinezoo.sourceafis;
 
-import sourceafis.scalars.*;
+import com.machinezoo.sourceafis.scalars.*;
 
 class EdgeShape {
 	static final int polarCacheBits = 8;

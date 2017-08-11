@@ -1,7 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis.collections;
+package com.machinezoo.sourceafis.collections;
 
-import sourceafis.scalars.*;
+import com.machinezoo.sourceafis.scalars.*;
 
 public class BlockMap {
 	public final Cell pixelCount;

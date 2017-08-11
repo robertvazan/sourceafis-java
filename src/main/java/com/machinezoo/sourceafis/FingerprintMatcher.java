@@ -1,10 +1,10 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis;
+package com.machinezoo.sourceafis;
 
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
-import sourceafis.scalars.*;
+import com.machinezoo.sourceafis.scalars.*;
 
 public class FingerprintMatcher {
 	static final int maxDistanceError = 13;

@@ -1,5 +1,5 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis.scalars;
+package com.machinezoo.sourceafis.scalars;
 
 public class Angle {
 	public static final double PI2 = 2 * Math.PI;

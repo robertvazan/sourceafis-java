@@ -1,8 +1,8 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package sourceafis;
+package com.machinezoo.sourceafis;
 
 import java.util.*;
-import sourceafis.scalars.*;
+import com.machinezoo.sourceafis.scalars.*;
 
 class SkeletonMinutia {
 	boolean considered = true;
