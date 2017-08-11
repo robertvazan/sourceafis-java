@@ -1,3 +1,4 @@
+// Part of SourceAFIS: https://sourceafis.machinezoo.com
 package sourceafis.collections;
 
 import java.util.*;

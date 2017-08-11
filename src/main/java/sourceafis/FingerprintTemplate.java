@@ -1,3 +1,4 @@
+// Part of SourceAFIS: https://sourceafis.machinezoo.com
 package sourceafis;
 
 import static java.util.stream.Collectors.*;
@@ -153,7 +154,7 @@ public class FingerprintTemplate {
 		List<Double> sortedContrast = new ArrayList<>();
 		for (Cell block : contrast.size())
 			sortedContrast.add(contrast.get(block));
-		sortedContrast.sort(Comparator.<Double> naturalOrder().reversed());
+		sortedContrast.sort(Comparator.<Double>naturalOrder().reversed());
 		int pixelsPerBlock = blocks.pixelCount.area() / blocks.blockCount.area();
 		int sampleCount = Math.min(sortedContrast.size(), sampleSize / pixelsPerBlock);
 		int consideredBlocks = Math.max((int)Math.round(sampleCount * sampleFraction), 1);
@@ -532,7 +533,7 @@ public class FingerprintTemplate {
 		final int neighborhoodSize = 5;
 		if (minutiae.size() > maxMinutiae) {
 			minutiae = minutiae.stream()
-				.sorted(Comparator.<FingerprintMinutia> comparingInt(
+				.sorted(Comparator.<FingerprintMinutia>comparingInt(
 					minutia -> minutiae.stream()
 						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
 						.sorted()
@@ -568,7 +569,7 @@ public class FingerprintTemplate {
 				if (neighbor != reference && referencePosition.minus(minutiae.get(neighbor).position).lengthSq() <= sqMaxDistance)
 					edges.add(new NeighborEdge(new EdgeShape(this, reference, neighbor), neighbor));
 			}
-			edges.sort(Comparator.<NeighborEdge> comparingInt(e -> e.edge.length).thenComparingInt(e -> e.neighbor));
+			edges.sort(Comparator.<NeighborEdge>comparingInt(e -> e.edge.length).thenComparingInt(e -> e.neighbor));
 			while (edges.size() > maxNeighbors)
 				edges.remove(edges.size() - 1);
 			edgeTable[reference] = edges.toArray(new NeighborEdge[edges.size()]);
