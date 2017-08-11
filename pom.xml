@@ -4,7 +4,7 @@
 
 	<groupId>com.machinezoo.sourceafis</groupId>
 	<artifactId>sourceafis-java</artifactId>
-	<version>2.0</version>
+	<version>2.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>SourceAFIS</name>
