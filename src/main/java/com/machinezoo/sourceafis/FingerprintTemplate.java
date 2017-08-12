@@ -2,26 +2,30 @@
 package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
+import java.awt.image.*;
 import java.util.*;
+import org.apache.sanselan.*;
 import com.machinezoo.sourceafis.collections.*;
 import com.machinezoo.sourceafis.scalars.*;
+import lombok.*;
 
 public class FingerprintTemplate {
 	List<FingerprintMinutia> minutiae = new ArrayList<>();
 	NeighborEdge[][] edgeTable;
-	public FingerprintTemplate(DoubleMap image) {
+	public FingerprintTemplate(byte[] image) {
 		this(image, 500);
 	}
-	public FingerprintTemplate(DoubleMap image, double dpi) {
+	public FingerprintTemplate(byte[] image, double dpi) {
 		final int blockSize = 15;
 		final double dpiTolerance = 10;
+		DoubleMap raw = readImage(image);
 		if (Math.abs(dpi - 500) > dpiTolerance)
-			image = scaleImage(image, dpi);
-		BlockMap blocks = new BlockMap(image.width, image.height, blockSize);
-		Histogram histogram = histogram(blocks, image);
+			raw = scaleImage(raw, dpi);
+		BlockMap blocks = new BlockMap(raw.width, raw.height, blockSize);
+		Histogram histogram = histogram(blocks, raw);
 		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMap mask = mask(blocks, histogram);
-		DoubleMap equalized = equalize(blocks, image, smoothHistogram, mask);
+		DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
 		DoubleMap orientation = orientationMap(equalized, mask, blocks);
 		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, orientedLines(new OrientedLineParams().step(1.59)));
 		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orientedLines(new OrientedLineParams().resolution(11).radius(4).step(1.11)));
@@ -39,6 +43,21 @@ public class FingerprintTemplate {
 		limitTemplateSize();
 		shuffleMinutiae();
 		buildEdgeTable();
+	}
+	@SneakyThrows static DoubleMap readImage(byte[] serialized) {
+		BufferedImage buffered = Sanselan.getBufferedImage(serialized);
+		int width = buffered.getWidth();
+		int height = buffered.getHeight();
+		int[] pixels = new int[width * height];
+		buffered.getRGB(0, 0, width, height, pixels, 0, width);
+		DoubleMap map = new DoubleMap(width, height);
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				int pixel = pixels[y * width + x];
+				map.set(x, y, ((pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff)) / 3);
+			}
+		}
+		return map;
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
