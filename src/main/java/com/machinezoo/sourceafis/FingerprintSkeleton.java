@@ -2,8 +2,7 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import com.machinezoo.sourceafis.collections.*;
-import com.machinezoo.sourceafis.scalars.*;
+import com.machinezoo.sourceafis.internal.*;
 
 class FingerprintSkeleton {
 	final Cell size;

@@ -1,5 +1,5 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package com.machinezoo.sourceafis.scalars;
+package com.machinezoo.sourceafis.internal;
 
 public class Point {
 	public static final Point zero = new Point(0, 0);

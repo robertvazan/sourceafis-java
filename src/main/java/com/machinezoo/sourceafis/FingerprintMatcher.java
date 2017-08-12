@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
-import com.machinezoo.sourceafis.scalars.*;
+import com.machinezoo.sourceafis.internal.*;
 
 public class FingerprintMatcher {
 	static final int maxDistanceError = 13;

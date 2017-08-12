@@ -78,6 +78,7 @@
 					<notimestamp>true</notimestamp>
 					<use>false</use>
 					<doctitle>${project.name} API Reference</doctitle>
+					<excludePackageNames>*.internal</excludePackageNames>
 				</configuration>
 				<executions>
 					<execution>

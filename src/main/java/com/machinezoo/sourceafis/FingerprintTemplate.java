@@ -5,8 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.awt.image.*;
 import java.util.*;
 import org.apache.sanselan.*;
-import com.machinezoo.sourceafis.collections.*;
-import com.machinezoo.sourceafis.scalars.*;
+import com.machinezoo.sourceafis.internal.*;
 import lombok.*;
 
 public class FingerprintTemplate {
