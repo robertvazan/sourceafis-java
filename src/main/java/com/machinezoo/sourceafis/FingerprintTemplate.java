@@ -54,7 +54,8 @@ public class FingerprintTemplate {
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x) {
 				int pixel = pixels[y * width + x];
-				map.set(x, y, ((pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff)) / 3);
+				int color = (pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff);
+				map.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
 			}
 		}
 		return map;
