@@ -48,33 +48,4 @@ public class BlockMap {
 		grid.allX[blockCount.x + 1] = pixelCount.x;
 		return new BlockGrid(grid);
 	}
-	public static class CellGrid {
-		public final int[] allX;
-		public final int[] allY;
-		CellGrid(int width, int height) {
-			allX = new int[width];
-			allY = new int[height];
-		}
-		CellGrid(Cell size) {
-			this(size.x, size.y);
-		}
-		public Cell get(int x, int y) {
-			return new Cell(allX[x], allY[y]);
-		}
-		public Cell get(Cell at) {
-			return get(at.x, at.y);
-		}
-	}
-	public static class BlockGrid {
-		public final CellGrid corners;
-		BlockGrid(CellGrid corners) {
-			this.corners = corners;
-		}
-		public Block get(int x, int y) {
-			return Block.between(corners.get(x, y), corners.get(x + 1, y + 1));
-		}
-		public Block get(Cell at) {
-			return get(at.x, at.y);
-		}
-	}
 }
