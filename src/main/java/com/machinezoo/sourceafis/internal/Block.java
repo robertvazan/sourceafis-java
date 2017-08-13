@@ -2,18 +2,13 @@
 package com.machinezoo.sourceafis.internal;
 
 import java.util.*;
+import lombok.*;
 
-public class Block implements Iterable<Cell> {
+@EqualsAndHashCode @AllArgsConstructor public class Block implements Iterable<Cell> {
 	public final int x;
 	public final int y;
 	public final int width;
 	public final int height;
-	public Block(int x, int y, int width, int height) {
-		this.x = x;
-		this.y = y;
-		this.width = width;
-		this.height = height;
-	}
 	public Block(Cell size) {
 		this(0, 0, size.x, size.y);
 	}

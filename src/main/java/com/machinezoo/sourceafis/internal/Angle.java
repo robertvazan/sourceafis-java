@@ -24,12 +24,6 @@ public class Angle {
 		double angle = start + delta;
 		return angle < PI2 ? angle : angle - PI2;
 	}
-	public static double bucketStart(int bucket, int resolution) {
-		return PI2 * bucket / resolution;
-	}
-	public static double bucketEnd(int bucket, int resolution) {
-		return PI2 * (bucket + 1) / resolution;
-	}
 	public static double bucketCenter(int bucket, int resolution) {
 		return PI2 * (2 * bucket + 1) / (2 * resolution);
 	}
@@ -54,6 +48,7 @@ public class Angle {
 		return angle >= 0 ? angle : angle + PI2;
 	}
 	public static double complementary(double angle) {
-		return PI2 - angle;
+		double complement = PI2 - angle;
+		return complement < PI2 ? complement : complement - PI2;
 	}
 }

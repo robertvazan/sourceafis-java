@@ -2,8 +2,9 @@
 package com.machinezoo.sourceafis.internal;
 
 import java.util.*;
+import lombok.*;
 
-public class Cell implements Iterable<Cell> {
+@EqualsAndHashCode @AllArgsConstructor public class Cell implements Iterable<Cell> {
 	public static final Cell zero = new Cell(0, 0);
 	public static final Cell[] edgeNeighbors = new Cell[] {
 		new Cell(0, -1),
@@ -23,10 +24,6 @@ public class Cell implements Iterable<Cell> {
 	};
 	public final int x;
 	public final int y;
-	public Cell(int x, int y) {
-		this.x = x;
-		this.y = y;
-	}
 	public int area() {
 		return x * y;
 	}
@@ -73,15 +70,6 @@ public class Cell implements Iterable<Cell> {
 				result[0] = this;
 		}
 		return result;
-	}
-	public boolean equals(Cell other) {
-		return x == other.x && y == other.y;
-	}
-	@Override public boolean equals(Object obj) {
-		return obj instanceof Cell && equals(obj);
-	}
-	@Override public int hashCode() {
-		return (x << 5) + (y - x);
 	}
 	@Override public String toString() {
 		return String.format("[%d,%d]", x, y);
