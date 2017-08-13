@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis.internal;
 public class DoubleMap {
 	public final int width;
 	public final int height;
-	public final double[] array;
+	private final double[] array;
 	public DoubleMap(int width, int height) {
 		this.width = width;
 		this.height = height;
@@ -40,7 +40,7 @@ public class DoubleMap {
 	public void multiply(Cell at, double value) {
 		multiply(at.x, at.y, value);
 	}
-	int offset(int x, int y) {
+	private int offset(int x, int y) {
 		return y * width + x;
 	}
 }

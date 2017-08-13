@@ -5,7 +5,7 @@ public class Histogram {
 	public final int width;
 	public final int height;
 	public final int depth;
-	public final int[] array;
+	private final int[] array;
 	public Histogram(int width, int height, int depth) {
 		this.width = width;
 		this.height = height;
@@ -48,7 +48,7 @@ public class Histogram {
 	public void increment(Cell at, int z) {
 		increment(at.x, at.y, z);
 	}
-	int offset(int x, int y, int z) {
+	private int offset(int x, int y, int z) {
 		return (y * width + x) * depth + z;
 	}
 }

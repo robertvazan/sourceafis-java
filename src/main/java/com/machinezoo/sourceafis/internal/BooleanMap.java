@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis.internal;
 public class BooleanMap {
 	public final int width;
 	public final int height;
-	public final boolean[] array;
+	private final boolean[] array;
 	public BooleanMap(int width, int height) {
 		this.width = width;
 		this.height = height;
@@ -51,7 +51,7 @@ public class BooleanMap {
 		for (int i = 0; i < array.length; ++i)
 			array[i] |= other.array[i];
 	}
-	int offset(int x, int y) {
+	private int offset(int x, int y) {
 		return y * width + x;
 	}
 }

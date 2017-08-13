@@ -50,6 +50,9 @@ import lombok.*;
 	public Block move(Cell delta) {
 		return new Block(x + delta.x, y + delta.y, width, height);
 	}
+	@Override public String toString() {
+		return String.format("[%d,%d] @ [%d,%d]", width, height, x, y);
+	}
 	@Override public Iterator<Cell> iterator() {
 		return new BlockIterator();
 	}
