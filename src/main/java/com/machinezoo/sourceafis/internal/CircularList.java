@@ -3,48 +3,42 @@ package com.machinezoo.sourceafis.internal;
 
 import java.util.*;
 
-public class CircularArray<T> implements List<T> {
-	Object[] inner;
-	int first;
-	int size;
-	public CircularArray() {
+public class CircularList<T> implements List<T> {
+	private Object[] inner;
+	private int first;
+	private int size;
+	public CircularList() {
 		inner = new Object[16];
 	}
-	int headCount() {
-		return Math.min(size, inner.length - first);
-	}
-	int tailCount() {
-		return Math.max(0, first + size - inner.length);
-	}
-	void checkIndex(int index) {
+	private void validateItemIndex(int index) {
 		if (index < 0 || index >= size)
 			throw new IndexOutOfBoundsException();
 	}
-	void checkCursorIndex(int index) {
+	private void validateCursorIndex(int index) {
 		if (index < 0 || index > size)
 			throw new IndexOutOfBoundsException();
 	}
-	int realIndex(int index) {
+	private int realIndex(int index) {
 		return first + index < inner.length ? first + index : first + index - inner.length;
 	}
-	void incFirst() {
+	private void incFirst() {
 		++first;
 		if (first >= inner.length)
 			first -= inner.length;
 	}
-	void decFirst() {
+	private void decFirst() {
 		--first;
 		if (first < 0)
 			first += inner.length;
 	}
-	void enlarge() {
+	private void enlarge() {
 		Object[] enlarged = new Object[2 * inner.length];
 		for (int i = 0; i < size; ++i)
 			enlarged[i] = inner[realIndex(i)];
 		inner = enlarged;
 		first = 0;
 	}
-	void move(int from, int to, int length) {
+	private void move(int from, int to, int length) {
 		if (from < to) {
 			for (int i = length - 1; i >= 0; --i)
 				inner[realIndex(to + i)] = inner[realIndex(from + i)];
@@ -53,23 +47,23 @@ public class CircularArray<T> implements List<T> {
 				inner[realIndex(to + i)] = inner[realIndex(from + i)];
 		}
 	}
-	void moveForward(int from, int length, int steps) {
+	private void moveForward(int from, int length, int steps) {
 		move(from, from + steps, length);
 	}
-	void moveBackward(int from, int length, int steps) {
+	private void moveBackward(int from, int length, int steps) {
 		move(from, from - steps, length);
 	}
-	void insertSpaceForward(int index, int space) {
+	private void insertSpaceForward(int index, int space) {
 		size += space;
 		moveForward(index, size - index - space, space);
 	}
-	void insertSpaceBackward(int index, int space) {
+	private void insertSpaceBackward(int index, int space) {
 		for (int i = 0; i < space; ++i)
 			decFirst();
 		size += space;
 		moveBackward(space, index, space);
 	}
-	void insertSpace(int index, int space) {
+	private void insertSpace(int index, int space) {
 		while (size + space > inner.length)
 			enlarge();
 		if (index >= size / 2)
@@ -77,17 +71,17 @@ public class CircularArray<T> implements List<T> {
 		else
 			insertSpaceBackward(index, space);
 	}
-	void removeSpaceForward(int index, int space) {
+	private void removeSpaceForward(int index, int space) {
 		moveBackward(index + space, size - index - space, space);
 		size -= space;
 	}
-	void removeSpaceBackward(int index, int space) {
+	private void removeSpaceBackward(int index, int space) {
 		moveForward(0, index, space);
 		for (int i = 0; i < space; ++i)
 			incFirst();
 		size += space;
 	}
-	void removeSpace(int index, int space) {
+	private void removeSpace(int index, int space) {
 		if (index >= size / 2)
 			removeSpaceForward(index, space);
 		else
@@ -101,7 +95,7 @@ public class CircularArray<T> implements List<T> {
 		return true;
 	}
 	@Override public void add(int index, T item) {
-		checkCursorIndex(index);
+		validateCursorIndex(index);
 		insertSpace(index, 1);
 		inner[realIndex(index)] = item;
 	}
@@ -111,7 +105,7 @@ public class CircularArray<T> implements List<T> {
 		return !collection.isEmpty();
 	}
 	@Override public boolean addAll(int index, Collection<? extends T> collection) {
-		checkCursorIndex(index);
+		validateCursorIndex(index);
 		insertSpace(index, collection.size());
 		for (T item : collection) {
 			inner[realIndex(index)] = item;
@@ -147,7 +141,7 @@ public class CircularArray<T> implements List<T> {
 		return true;
 	}
 	@SuppressWarnings("unchecked") @Override public T get(int index) {
-		checkIndex(index);
+		validateItemIndex(index);
 		return (T)inner[realIndex(index)];
 	}
 	@Override public int hashCode() {

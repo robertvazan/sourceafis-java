@@ -10,7 +10,7 @@ class SkeletonRidge {
 	private SkeletonMinutia startMinutia;
 	private SkeletonMinutia endMinutia;
 	SkeletonRidge() {
-		points = new CircularArray<>();
+		points = new CircularList<>();
 		reversed = new SkeletonRidge(this);
 	}
 	SkeletonRidge(SkeletonRidge reversed) {
