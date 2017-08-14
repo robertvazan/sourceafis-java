@@ -84,6 +84,7 @@ public class CircularList<T> implements List<T> {
 		return new ArrayIterator();
 	}
 	@Override public ListIterator<T> listIterator(int index) {
+		inner.validateCursorIndex(index);
 		ArrayIterator iterator = new ArrayIterator();
 		iterator.index = index;
 		return iterator;
@@ -147,7 +148,7 @@ public class CircularList<T> implements List<T> {
 		s.append("]");
 		return s.toString();
 	}
-	class ArrayIterator implements ListIterator<T> {
+	private class ArrayIterator implements ListIterator<T> {
 		int index = 0;
 		@Override public void add(T e) {
 			throw new UnsupportedOperationException();

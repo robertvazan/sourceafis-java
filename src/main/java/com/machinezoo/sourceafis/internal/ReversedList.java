@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis.internal;
 import java.util.*;
 
 public class ReversedList<T> implements List<T> {
-	final List<T> inner;
+	private final List<T> inner;
 	public ReversedList(List<T> inner) {
 		this.inner = inner;
 	}
@@ -48,7 +48,8 @@ public class ReversedList<T> implements List<T> {
 		return inner.hashCode();
 	}
 	@Override public int indexOf(Object item) {
-		return inner.lastIndexOf(item);
+		int index = inner.lastIndexOf(item);
+		return index >= 0 ? size() - index - 1 : -1;
 	}
 	@Override public boolean isEmpty() {
 		return inner.isEmpty();
@@ -57,12 +58,15 @@ public class ReversedList<T> implements List<T> {
 		return new ReversedIterator();
 	}
 	@Override public int lastIndexOf(Object item) {
-		return inner.indexOf(item);
+		int index = inner.indexOf(item);
+		return index >= 0 ? size() - index - 1 : -1;
 	}
 	@Override public ListIterator<T> listIterator() {
 		return new ReversedIterator();
 	}
 	@Override public ListIterator<T> listIterator(int index) {
+		if (index < 0 || index > size())
+			throw new IndexOutOfBoundsException();
 		ReversedIterator iterator = new ReversedIterator();
 		iterator.index = index;
 		return iterator;
@@ -91,7 +95,7 @@ public class ReversedList<T> implements List<T> {
 		return inner.size();
 	}
 	@Override public List<T> subList(int fromIndex, int toIndex) {
-		return inner.subList(size() - toIndex, size() - fromIndex);
+		return new ReversedList<>(inner.subList(size() - toIndex, size() - fromIndex));
 	}
 	@Override public Object[] toArray() {
 		Object[] array = new Object[size()];
@@ -102,7 +106,18 @@ public class ReversedList<T> implements List<T> {
 	@Override public <U> U[] toArray(U[] array) {
 		throw new UnsupportedOperationException();
 	}
-	class ReversedIterator implements ListIterator<T> {
+	@Override public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append("[");
+		for (int i = 0; i < size(); ++i) {
+			if (i > 0)
+				s.append(", ");
+			s.append(Objects.toString(get(i)));
+		}
+		s.append("]");
+		return s.toString();
+	}
+	private class ReversedIterator implements ListIterator<T> {
 		int index = 0;
 		@Override public void add(T e) {
 			throw new UnsupportedOperationException();
