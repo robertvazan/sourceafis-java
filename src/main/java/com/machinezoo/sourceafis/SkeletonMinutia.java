@@ -2,7 +2,7 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import com.machinezoo.sourceafis.internal.*;
+import com.machinezoo.sourceafis.models.*;
 
 class SkeletonMinutia {
 	boolean considered = true;

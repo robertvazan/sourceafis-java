@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 import org.apache.commons.io.*;
 import org.junit.*;
-import com.machinezoo.sourceafis.internal.*;
+import com.machinezoo.sourceafis.models.*;
 import lombok.*;
 
 public class FingerprintTemplateTest {

@@ -1,7 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-import com.machinezoo.sourceafis.internal.*;
+import com.machinezoo.sourceafis.models.*;
 
 class FingerprintMinutia {
 	final Cell position;

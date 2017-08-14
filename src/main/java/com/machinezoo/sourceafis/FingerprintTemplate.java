@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 import javax.imageio.*;
 import org.apache.sanselan.*;
-import com.machinezoo.sourceafis.internal.*;
+import com.machinezoo.sourceafis.models.*;
 import lombok.*;
 
 public class FingerprintTemplate {

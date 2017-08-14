@@ -90,7 +90,7 @@
 					<notimestamp>true</notimestamp>
 					<use>false</use>
 					<doctitle>${project.name} API Reference</doctitle>
-					<excludePackageNames>*.internal</excludePackageNames>
+					<excludePackageNames>com.machinezoo.sourceafis.models</excludePackageNames>
 				</configuration>
 				<executions>
 					<execution>
