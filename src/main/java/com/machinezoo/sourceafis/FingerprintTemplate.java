@@ -3,7 +3,9 @@ package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
 import java.awt.image.*;
+import java.io.*;
 import java.util.*;
+import javax.imageio.*;
 import org.apache.sanselan.*;
 import com.machinezoo.sourceafis.internal.*;
 import lombok.*;
@@ -44,7 +46,9 @@ public class FingerprintTemplate {
 		buildEdgeTable();
 	}
 	@SneakyThrows static DoubleMap readImage(byte[] serialized) {
-		BufferedImage buffered = Sanselan.getBufferedImage(serialized);
+		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
+		if (buffered == null)
+			buffered = Sanselan.getBufferedImage(serialized);
 		int width = buffered.getWidth();
 		int height = buffered.getHeight();
 		int[] pixels = new int[width * height];
