@@ -8,6 +8,18 @@ import com.machinezoo.sourceafis.internal.*;
 import lombok.*;
 
 public class FingerprintTemplateTest {
+	public static FingerprintTemplate probe() {
+		return new FingerprintTemplate(load("probe.png"));
+	}
+	public static FingerprintTemplate matching() {
+		return new FingerprintTemplate(load("matching.png"));
+	}
+	public static FingerprintTemplate nonmatching() {
+		return new FingerprintTemplate(load("nonmatching.png"));
+	}
+	@Test public void constructor() {
+		new FingerprintTemplate(load("probe.png"));
+	}
 	@Test public void readImage_png() {
 		validate(FingerprintTemplate.readImage(load("probe.png")));
 	}
@@ -36,7 +48,7 @@ public class FingerprintTemplateTest {
 		assertTrue(min < 0.1);
 		assertTrue(delta / (map.width * map.height) < 0.01);
 	}
-	@SneakyThrows private byte[] load(String name) {
+	@SneakyThrows private static byte[] load(String name) {
 		try (InputStream input = FingerprintTemplateTest.class.getResourceAsStream("/com/machinezoo/sourceafis/" + name)) {
 			return IOUtils.toByteArray(input);
 		}
