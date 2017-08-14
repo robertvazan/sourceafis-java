@@ -102,4 +102,7 @@ public class CellTest {
 			l[i] = new Cell(p[2 * i], p[2 * i + 1]);
 		assertArrayEquals(l, new Cell(x1, y1).lineTo(new Cell(x2, y2)));
 	}
+	@Test public void toString_readable() {
+		assertEquals("[2,3]", new Cell(2, 3).toString());
+	}
 }

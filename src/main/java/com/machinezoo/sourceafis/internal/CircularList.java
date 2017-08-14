@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis.internal;
 import java.util.*;
 
 public class CircularList<T> implements List<T> {
-	private final CircularArray inner = new CircularArray();
+	private final CircularArray inner = new CircularArray(16);
 	@Override public boolean add(T item) {
 		inner.insert(inner.size, 1);
 		inner.set(inner.size - 1, item);
@@ -135,6 +135,17 @@ public class CircularList<T> implements List<T> {
 	}
 	@Override public <U> U[] toArray(U[] array) {
 		throw new UnsupportedOperationException();
+	}
+	@Override public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append("[");
+		for (int i = 0; i < inner.size; ++i) {
+			if (i > 0)
+				s.append(", ");
+			s.append(Objects.toString(inner.get(i)));
+		}
+		s.append("]");
+		return s.toString();
 	}
 	class ArrayIterator implements ListIterator<T> {
 		int index = 0;

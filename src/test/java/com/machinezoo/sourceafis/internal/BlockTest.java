@@ -74,4 +74,7 @@ public class BlockTest {
 		for (Cell c : new Block(2, 3, 3, -1))
 			fail(c.toString());
 	}
+	@Test public void toString_readable() {
+		assertEquals("[10,20] @ [2,3]", new Block(2, 3, 10, 20).toString());
+	}
 }
