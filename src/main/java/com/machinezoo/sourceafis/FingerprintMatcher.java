@@ -7,8 +7,7 @@ import java.util.stream.*;
 import com.machinezoo.sourceafis.models.*;
 
 public class FingerprintMatcher {
-	static final int maxDistanceError = 13;
-	static final double maxAngleError = Math.toRadians(10);
+	private FingerprintContext context = FingerprintContext.current();
 	final FingerprintTemplate template;
 	Map<Integer, List<IndexedEdge>> edgeHash = new HashMap<>();
 	FingerprintTemplate candidate;
@@ -48,15 +47,15 @@ public class FingerprintMatcher {
 					}
 				}
 	}
-	static List<Integer> shapeCoverage(EdgeShape edge) {
-		int minLengthBin = (edge.length - maxDistanceError) / maxDistanceError;
-		int maxLengthBin = (edge.length + maxDistanceError) / maxDistanceError;
-		int angleBins = (int)Math.ceil(2 * Math.PI / maxAngleError);
-		int minReferenceBin = (int)(Angle.difference(edge.referenceAngle, maxAngleError) / maxAngleError);
-		int maxReferenceBin = (int)(Angle.add(edge.referenceAngle, maxAngleError) / maxAngleError);
+	List<Integer> shapeCoverage(EdgeShape edge) {
+		int minLengthBin = (edge.length - context.maxDistanceError) / context.maxDistanceError;
+		int maxLengthBin = (edge.length + context.maxDistanceError) / context.maxDistanceError;
+		int angleBins = (int)Math.ceil(2 * Math.PI / context.maxAngleError);
+		int minReferenceBin = (int)(Angle.difference(edge.referenceAngle, context.maxAngleError) / context.maxAngleError);
+		int maxReferenceBin = (int)(Angle.add(edge.referenceAngle, context.maxAngleError) / context.maxAngleError);
 		int endReferenceBin = (maxReferenceBin + 1) % angleBins;
-		int minNeighborBin = (int)(Angle.difference(edge.neighborAngle, maxAngleError) / maxAngleError);
-		int maxNeighborBin = (int)(Angle.add(edge.neighborAngle, maxAngleError) / maxAngleError);
+		int minNeighborBin = (int)(Angle.difference(edge.neighborAngle, context.maxAngleError) / context.maxAngleError);
+		int maxNeighborBin = (int)(Angle.add(edge.neighborAngle, context.maxAngleError) / context.maxAngleError);
 		int endNeighborBin = (maxNeighborBin + 1) % angleBins;
 		List<Integer> coverage = new ArrayList<>();
 		for (int lengthBin = minLengthBin; lengthBin <= maxLengthBin; ++lengthBin)
@@ -66,8 +65,7 @@ public class FingerprintMatcher {
 		return coverage;
 	}
 	public double match(FingerprintTemplate candidate) {
-		final int maxTriedRoots = 70;
-		final int maxTriedTriangles = 7538;
+		context = FingerprintContext.current();
 		this.candidate = candidate;
 		int rootIndex = 0;
 		int triangleIndex = 0;
@@ -77,11 +75,11 @@ public class FingerprintMatcher {
 			if (score > bestScore)
 				bestScore = score;
 			++rootIndex;
-			if (rootIndex >= maxTriedRoots)
+			if (rootIndex >= context.maxTriedRoots)
 				break;
 			if (pairCount >= 3) {
 				++triangleIndex;
-				if (triangleIndex >= maxTriedTriangles)
+				if (triangleIndex >= context.maxTriedTriangles)
 					break;
 			}
 		}
@@ -90,11 +88,9 @@ public class FingerprintMatcher {
 	interface ShapeFilter extends Predicate<EdgeShape> {
 	}
 	Stream<MinutiaPair> roots() {
-		final int minEdgeLength = 58;
-		final int maxEdgeLookups = 1633;
 		ShapeFilter[] filters = new ShapeFilter[] {
-			shape -> shape.length >= minEdgeLength,
-			shape -> shape.length < minEdgeLength
+			shape -> shape.length >= context.minRootEdgeLength,
+			shape -> shape.length < context.minRootEdgeLength
 		};
 		class EdgeLookup {
 			EdgeShape candidateEdge;
@@ -120,7 +116,7 @@ public class FingerprintMatcher {
 						}
 						return null;
 					})));
-		return lookups.limit(maxEdgeLookups)
+		return lookups.limit(context.maxRootEdgeLookups)
 			.flatMap(lookup -> {
 				List<IndexedEdge> matches = edgeHash.get(hashShape(lookup.candidateEdge));
 				if (matches != null) {
@@ -131,20 +127,20 @@ public class FingerprintMatcher {
 				return null;
 			});
 	}
-	static int hashShape(EdgeShape edge) {
-		int lengthBin = edge.length / maxDistanceError;
-		int referenceAngleBin = (int)(edge.referenceAngle / maxAngleError);
-		int neighborAngleBin = (int)(edge.neighborAngle / maxAngleError);
+	int hashShape(EdgeShape edge) {
+		int lengthBin = edge.length / context.maxDistanceError;
+		int referenceAngleBin = (int)(edge.referenceAngle / context.maxAngleError);
+		int neighborAngleBin = (int)(edge.neighborAngle / context.maxAngleError);
 		return (referenceAngleBin << 24) + (neighborAngleBin << 16) + lengthBin;
 	}
-	static boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
+	boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
 		int lengthDelta = probe.length - candidate.length;
-		if (lengthDelta >= -maxDistanceError && lengthDelta <= maxDistanceError) {
-			double complementaryAngleError = Angle.complementary(maxAngleError);
+		if (lengthDelta >= -context.maxDistanceError && lengthDelta <= context.maxDistanceError) {
+			double complementaryAngleError = Angle.complementary(context.maxAngleError);
 			double referenceDelta = Angle.difference(probe.referenceAngle, candidate.referenceAngle);
-			if (referenceDelta <= maxAngleError || referenceDelta >= complementaryAngleError) {
+			if (referenceDelta <= context.maxAngleError || referenceDelta >= complementaryAngleError) {
 				double neighborDelta = Angle.difference(probe.neighborAngle, candidate.neighborAngle);
-				if (neighborDelta <= maxAngleError || neighborDelta >= complementaryAngleError)
+				if (neighborDelta <= context.maxAngleError || neighborDelta >= complementaryAngleError)
 					return true;
 			}
 		}
@@ -202,25 +198,25 @@ public class FingerprintMatcher {
 			this.distance = distance;
 		}
 	}
-	static List<MatchingPair> findMatchingPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
-		double complementaryAngleError = Angle.complementary(maxAngleError);
+	List<MatchingPair> findMatchingPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
+		double complementaryAngleError = Angle.complementary(context.maxAngleError);
 		List<MatchingPair> results = new ArrayList<>();
 		int start = 0;
 		int end = 0;
 		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
 			NeighborEdge candidateEdge = candidateStar[candidateIndex];
-			while (start < probeStar.length && probeStar[start].edge.length < candidateEdge.edge.length - maxDistanceError)
+			while (start < probeStar.length && probeStar[start].edge.length < candidateEdge.edge.length - context.maxDistanceError)
 				++start;
 			if (end < start)
 				end = start;
-			while (end < probeStar.length && probeStar[end].edge.length <= candidateEdge.edge.length + maxDistanceError)
+			while (end < probeStar.length && probeStar[end].edge.length <= candidateEdge.edge.length + context.maxDistanceError)
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
 				NeighborEdge probeEdge = probeStar[probeIndex];
 				double referenceDiff = Angle.difference(probeEdge.edge.referenceAngle, candidateEdge.edge.referenceAngle);
-				if (referenceDiff <= maxAngleError || referenceDiff >= complementaryAngleError) {
+				if (referenceDiff <= context.maxAngleError || referenceDiff >= complementaryAngleError) {
 					double neighborDiff = Angle.difference(probeEdge.edge.neighborAngle, candidateEdge.edge.neighborAngle);
-					if (neighborDiff <= maxAngleError || neighborDiff >= complementaryAngleError)
+					if (neighborDiff <= context.maxAngleError || neighborDiff >= complementaryAngleError)
 						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.edge.length));
 				}
 			}
@@ -243,28 +239,18 @@ public class FingerprintMatcher {
 		++pairCount;
 	}
 	double computeScore() {
-		final int minSupportingEdges = 1;
-		final double distanceErrorFlatness = 0.69;
-		final double angleErrorFlatness = 0.27;
-		final double pairCountFactor = 0.032;
-		final double pairFractionFactor = 8.98;
-		final double correctTypeFactor = 0.629;
-		final double supportedCountFactor = 0.193;
-		final double edgeCountFactor = 0.265;
-		final double distanceAccuracyFactor = 9.9;
-		final double angleAccuracyFactor = 2.79;
-		double score = pairCountFactor * pairCount;
-		score += pairFractionFactor * (pairCount / (double)template.minutiae.size() + pairCount / (double)candidate.minutiae.size()) / 2;
+		double score = context.pairCountScore * pairCount;
+		score += context.pairFractionScore * (pairCount / (double)template.minutiae.size() + pairCount / (double)candidate.minutiae.size()) / 2;
 		for (int i = 0; i < pairCount; ++i) {
 			PairInfo pair = pairList[i];
-			if (pair.supportingEdges >= minSupportingEdges)
-				score += supportedCountFactor;
-			score += edgeCountFactor * (pair.supportingEdges + 1);
+			if (pair.supportingEdges >= context.minSupportingEdges)
+				score += context.supportedCountScore;
+			score += context.edgeCountScore * (pair.supportingEdges + 1);
 			if (template.minutiae.get(pair.pair.probe).type == candidate.minutiae.get(pair.pair.candidate).type)
-				score += correctTypeFactor;
+				score += context.correctTypeScore;
 		}
-		int innerDistanceRadius = (int)Math.round(distanceErrorFlatness * maxDistanceError);
-		int innerAngleRadius = (int)Math.round(angleErrorFlatness * maxAngleError);
+		int innerDistanceRadius = (int)Math.round(context.distanceErrorFlatness * context.maxDistanceError);
+		int innerAngleRadius = (int)Math.round(context.angleErrorFlatness * context.maxAngleError);
 		int distanceErrorSum = 0;
 		int angleErrorSum = 0;
 		for (int i = 1; i < pairCount; ++i) {
@@ -276,10 +262,10 @@ public class FingerprintMatcher {
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		if (pairCount >= 2) {
-			double pairedDistanceError = maxDistanceError * (pairCount - 1);
-			score += distanceAccuracyFactor * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
-			double pairedAngleError = maxAngleError * (pairCount - 1) * 2;
-			score += angleAccuracyFactor * (pairedAngleError - angleErrorSum) / pairedAngleError;
+			double pairedDistanceError = context.maxDistanceError * (pairCount - 1);
+			score += context.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
+			double pairedAngleError = context.maxAngleError * (pairCount - 1) * 2;
+			score += context.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
 		return score;
 	}

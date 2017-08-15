@@ -8,6 +8,7 @@ import com.machinezoo.sourceafis.models.*;
 import lombok.*;
 
 public class FingerprintTemplateTest {
+	private static FingerprintTemplate t = new FingerprintTemplate("[]");
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate(load("probe.png"));
 	}
@@ -21,21 +22,21 @@ public class FingerprintTemplateTest {
 		new FingerprintTemplate(load("probe.png"));
 	}
 	@Test public void readImage_png() {
-		readImage_validate(FingerprintTemplate.readImage(load("probe.png")));
+		readImage_validate(t.readImage(load("probe.png")));
 	}
 	@Test public void readImage_jpeg() {
-		readImage_validate(FingerprintTemplate.readImage(load("probe.jpeg")));
+		readImage_validate(t.readImage(load("probe.jpeg")));
 	}
 	@Test public void readImage_bmp() {
-		readImage_validate(FingerprintTemplate.readImage(load("probe.bmp")));
+		readImage_validate(t.readImage(load("probe.bmp")));
 	}
 	@Test public void readImage_tiff() {
-		readImage_validate(FingerprintTemplate.readImage(load("probe.tiff")));
+		readImage_validate(t.readImage(load("probe.tiff")));
 	}
 	private void readImage_validate(DoubleMap map) {
 		assertEquals(388, map.width);
 		assertEquals(374, map.height);
-		DoubleMap reference = FingerprintTemplate.readImage(load("probe.png"));
+		DoubleMap reference = t.readImage(load("probe.png"));
 		double delta = 0, max = -1, min = 1;
 		for (int x = 0; x < map.width; ++x) {
 			for (int y = 0; y < map.height; ++y) {
@@ -49,8 +50,6 @@ public class FingerprintTemplateTest {
 		assertTrue(delta / (map.width * map.height) < 0.01);
 	}
 	@Test public void json_roundTrip() {
-		FingerprintTemplate t = new FingerprintTemplate("[]");
-		assertEquals(0, t.minutiae.size());
 		t.minutiae.add(new FingerprintMinutia(new Cell(100, 200), Math.PI, MinutiaType.BIFURCATION));
 		t.minutiae.add(new FingerprintMinutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING));
 		t = new FingerprintTemplate(t.json());
