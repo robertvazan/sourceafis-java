@@ -21,18 +21,18 @@ public class FingerprintTemplateTest {
 		new FingerprintTemplate(load("probe.png"));
 	}
 	@Test public void readImage_png() {
-		validate(FingerprintTemplate.readImage(load("probe.png")));
+		readImage_validate(FingerprintTemplate.readImage(load("probe.png")));
 	}
 	@Test public void readImage_jpeg() {
-		validate(FingerprintTemplate.readImage(load("probe.jpeg")));
+		readImage_validate(FingerprintTemplate.readImage(load("probe.jpeg")));
 	}
 	@Test public void readImage_bmp() {
-		validate(FingerprintTemplate.readImage(load("probe.bmp")));
+		readImage_validate(FingerprintTemplate.readImage(load("probe.bmp")));
 	}
 	@Test public void readImage_tiff() {
-		validate(FingerprintTemplate.readImage(load("probe.tiff")));
+		readImage_validate(FingerprintTemplate.readImage(load("probe.tiff")));
 	}
-	private void validate(DoubleMap map) {
+	private void readImage_validate(DoubleMap map) {
 		assertEquals(388, map.width);
 		assertEquals(374, map.height);
 		DoubleMap reference = FingerprintTemplate.readImage(load("probe.png"));
@@ -47,6 +47,22 @@ public class FingerprintTemplateTest {
 		assertTrue(max > 0.9);
 		assertTrue(min < 0.1);
 		assertTrue(delta / (map.width * map.height) < 0.01);
+	}
+	@Test public void json_roundTrip() {
+		FingerprintTemplate t = new FingerprintTemplate("[]");
+		assertEquals(0, t.minutiae.size());
+		t.minutiae.add(new FingerprintMinutia(new Cell(100, 200), Math.PI, MinutiaType.BIFURCATION));
+		t.minutiae.add(new FingerprintMinutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING));
+		t = new FingerprintTemplate(t.json());
+		assertEquals(2, t.minutiae.size());
+		FingerprintMinutia a = t.minutiae.get(0);
+		FingerprintMinutia b = t.minutiae.get(1);
+		assertEquals(new Cell(100, 200), a.position);
+		assertEquals(Math.PI, a.direction, 0.0000001);
+		assertEquals(MinutiaType.BIFURCATION, a.type);
+		assertEquals(new Cell(300, 400), b.position);
+		assertEquals(0.5 * Math.PI, b.direction, 0.0000001);
+		assertEquals(MinutiaType.ENDING, b.type);
 	}
 	@SneakyThrows private static byte[] load(String name) {
 		try (InputStream input = FingerprintTemplateTest.class.getResourceAsStream("/com/machinezoo/sourceafis/" + name)) {

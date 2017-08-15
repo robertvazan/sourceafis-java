@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 import javax.imageio.*;
 import org.apache.sanselan.*;
+import com.google.gson.*;
 import com.machinezoo.sourceafis.models.*;
 import lombok.*;
 
@@ -44,6 +45,23 @@ public class FingerprintTemplate {
 		limitTemplateSize();
 		shuffleMinutiae();
 		buildEdgeTable();
+	}
+	public FingerprintTemplate(String json) {
+		minutiae = Arrays.stream(new Gson().fromJson(json, PersistedMinutia[].class))
+			.map(m -> new FingerprintMinutia(new Cell(m.x, m.y), m.direction, m.type.equals("bifurcation") ? MinutiaType.BIFURCATION : MinutiaType.ENDING))
+			.collect(toList());
+		buildEdgeTable();
+	}
+	public String json() {
+		return new Gson().toJson(minutiae.stream()
+			.map(m -> new PersistedMinutia(m.position.x, m.position.y, m.direction, m.type == MinutiaType.BIFURCATION ? "bifurcation" : "ending"))
+			.collect(toList()));
+	}
+	@AllArgsConstructor private static class PersistedMinutia {
+		public int x;
+		public int y;
+		public double direction;
+		public String type;
 	}
 	@SneakyThrows static DoubleMap readImage(byte[] serialized) {
 		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
