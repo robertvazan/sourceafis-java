@@ -1,13 +1,12 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package com.machinezoo.sourceafis;
+package com.machinezoo.sourceafis.models;
 
 import java.util.*;
-import com.machinezoo.sourceafis.models.*;
 
-class FingerprintSkeleton {
-	final Cell size;
-	final List<SkeletonMinutia> minutiae = new ArrayList<>();
-	FingerprintSkeleton(BooleanMap binary) {
+public class FingerprintSkeleton {
+	public final Cell size;
+	public final List<SkeletonMinutia> minutiae = new ArrayList<>();
+	public FingerprintSkeleton(BooleanMap binary) {
 		size = binary.size();
 		BooleanMap thinned = thin(binary);
 		List<Cell> minutiaPoints = findMinutiae(thinned);

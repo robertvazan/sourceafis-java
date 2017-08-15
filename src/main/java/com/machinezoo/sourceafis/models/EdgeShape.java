@@ -1,18 +1,16 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package com.machinezoo.sourceafis;
+package com.machinezoo.sourceafis.models;
 
-import com.machinezoo.sourceafis.models.*;
-
-class EdgeShape {
+public class EdgeShape {
 	static final int polarCacheBits = 8;
 	static final int polarCacheRadius = 1 << polarCacheBits;
 	static final int polarCacheMask = polarCacheRadius - 1;
 	static final int[] polarDistance = new int[Integers.sq(polarCacheRadius)];
 	static final double[] polarAngle = new double[Integers.sq(polarCacheRadius)];
 	static final double HalfPI = 0.5 * Math.PI;
-	final int length;
-	final double referenceAngle;
-	final double neighborAngle;
+	public final int length;
+	public final double referenceAngle;
+	public final double neighborAngle;
 	static {
 		for (int y = 0; y < polarCacheRadius; ++y)
 			for (int x = 0; x < polarCacheRadius; ++x) {
@@ -23,10 +21,8 @@ class EdgeShape {
 					polarAngle[y * polarCacheRadius + x] = 0;
 			}
 	}
-	public EdgeShape(FingerprintTemplate template, int reference, int neighbor) {
-		FingerprintMinutia referenceMinutia = template.minutiae.get(reference);
-		FingerprintMinutia neighborMinutia = template.minutiae.get(neighbor);
-		Cell vector = neighborMinutia.position.minus(referenceMinutia.position);
+	public EdgeShape(FingerprintMinutia reference, FingerprintMinutia neighbor) {
+		Cell vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
 		int x = vector.x;
 		int y = vector.y;
@@ -45,7 +41,7 @@ class EdgeShape {
 		int offset = (y >> shift) * polarCacheRadius + (x >> shift);
 		length = polarDistance[offset] << shift;
 		double angle = polarAngle[offset] + quadrant;
-		referenceAngle = Angle.difference(referenceMinutia.direction, angle);
-		neighborAngle = Angle.difference(neighborMinutia.direction, Angle.opposite(angle));
+		referenceAngle = Angle.difference(reference.direction, angle);
+		neighborAngle = Angle.difference(neighbor.direction, Angle.opposite(angle));
 	}
 }

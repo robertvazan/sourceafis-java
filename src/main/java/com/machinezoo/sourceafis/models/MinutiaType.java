@@ -1,6 +1,6 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package com.machinezoo.sourceafis;
+package com.machinezoo.sourceafis.models;
 
-enum MinutiaType {
+public enum MinutiaType {
 	ENDING, BIFURCATION;
 }

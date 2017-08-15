@@ -1,26 +1,25 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
-package com.machinezoo.sourceafis;
+package com.machinezoo.sourceafis.models;
 
 import java.util.*;
-import com.machinezoo.sourceafis.models.*;
 
-class SkeletonRidge {
-	final List<Cell> points;
-	final SkeletonRidge reversed;
+public class SkeletonRidge {
+	public final List<Cell> points;
+	public final SkeletonRidge reversed;
 	private SkeletonMinutia startMinutia;
 	private SkeletonMinutia endMinutia;
-	SkeletonRidge() {
+	public SkeletonRidge() {
 		points = new CircularList<>();
 		reversed = new SkeletonRidge(this);
 	}
-	SkeletonRidge(SkeletonRidge reversed) {
+	public SkeletonRidge(SkeletonRidge reversed) {
 		points = new ReversedList<>(reversed.points);
 		this.reversed = reversed;
 	}
-	SkeletonMinutia start() {
+	public SkeletonMinutia start() {
 		return startMinutia;
 	}
-	void start(SkeletonMinutia value) {
+	public void start(SkeletonMinutia value) {
 		if (startMinutia != value) {
 			if (startMinutia != null) {
 				SkeletonMinutia detachFrom = startMinutia;
@@ -33,20 +32,20 @@ class SkeletonRidge {
 			reversed.endMinutia = value;
 		}
 	}
-	SkeletonMinutia end() {
+	public SkeletonMinutia end() {
 		return endMinutia;
 	}
-	void end(SkeletonMinutia value) {
+	public void end(SkeletonMinutia value) {
 		if (endMinutia != value) {
 			endMinutia = value;
 			reversed.start(value);
 		}
 	}
-	void detach() {
+	public void detach() {
 		start(null);
 		end(null);
 	}
-	double direction() {
+	public double direction() {
 		final int segmentLength = 21;
 		final int segmentSkip = 1;
 		int first = segmentSkip;

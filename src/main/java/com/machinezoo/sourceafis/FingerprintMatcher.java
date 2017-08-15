@@ -36,10 +36,10 @@ public class FingerprintMatcher {
 		}
 	}
 	void buildEdgeHash() {
-		for (int referenceMinutia = 0; referenceMinutia < template.minutiae.size(); ++referenceMinutia)
-			for (int neighborMinutia = 0; neighborMinutia < template.minutiae.size(); ++neighborMinutia)
-				if (referenceMinutia != neighborMinutia) {
-					IndexedEdge edge = new IndexedEdge(new EdgeShape(template, referenceMinutia, neighborMinutia), referenceMinutia, neighborMinutia);
+		for (int reference = 0; reference < template.minutiae.size(); ++reference)
+			for (int neighbor = 0; neighbor < template.minutiae.size(); ++neighbor)
+				if (reference != neighbor) {
+					IndexedEdge edge = new IndexedEdge(new EdgeShape(template.minutiae.get(reference), template.minutiae.get(neighbor)), reference, neighbor);
 					for (int hash : shapeCoverage(edge.shape)) {
 						List<IndexedEdge> list = edgeHash.get(hash);
 						if (list == null)
@@ -104,18 +104,18 @@ public class FingerprintMatcher {
 			.flatMap(shapeFilter -> IntStream.range(1, candidate.minutiae.size()).boxed()
 				.flatMap(step -> IntStream.range(0, step + 1).boxed()
 					.flatMap(pass -> {
-						List<Integer> candidateReferences = new ArrayList<>();
-						for (int candidateReference = pass; candidateReference < candidate.minutiae.size(); candidateReference += step + 1)
-							candidateReferences.add(candidateReference);
-						return candidateReferences.stream();
+						List<Integer> roots = new ArrayList<>();
+						for (int root = pass; root < candidate.minutiae.size(); root += step + 1)
+							roots.add(root);
+						return roots.stream();
 					})
-					.flatMap(candidateReference -> {
-						int candidateNeighbor = (candidateReference + step) % candidate.minutiae.size();
-						EdgeShape candidateEdge = new EdgeShape(candidate, candidateReference, candidateNeighbor);
+					.flatMap(root -> {
+						int neighbor = (root + step) % candidate.minutiae.size();
+						EdgeShape candidateEdge = new EdgeShape(candidate.minutiae.get(root), candidate.minutiae.get(neighbor));
 						if (shapeFilter.test(candidateEdge)) {
 							EdgeLookup lookup = new EdgeLookup();
 							lookup.candidateEdge = candidateEdge;
-							lookup.candidateReference = candidateReference;
+							lookup.candidateReference = root;
 							return Stream.of(lookup);
 						}
 						return null;
@@ -269,8 +269,8 @@ public class FingerprintMatcher {
 		int angleErrorSum = 0;
 		for (int i = 1; i < pairCount; ++i) {
 			PairInfo pair = pairList[i];
-			EdgeShape probeEdge = new EdgeShape(template, pair.reference.probe, pair.pair.probe);
-			EdgeShape candidateEdge = new EdgeShape(candidate, pair.reference.candidate, pair.pair.candidate);
+			EdgeShape probeEdge = new EdgeShape(template.minutiae.get(pair.reference.probe), template.minutiae.get(pair.pair.probe));
+			EdgeShape candidateEdge = new EdgeShape(candidate.minutiae.get(pair.reference.candidate), candidate.minutiae.get(pair.pair.candidate));
 			distanceErrorSum += Math.abs(probeEdge.length - candidateEdge.length);
 			angleErrorSum += Math.max(innerDistanceRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
