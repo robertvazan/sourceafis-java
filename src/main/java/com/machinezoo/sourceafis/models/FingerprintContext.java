@@ -9,7 +9,7 @@ public class FingerprintContext {
 	public double dpiTolerance = 10;
 	public int histogramDepth = 256;
 	public double clippedContrast = 0.08;
-	public int minAbsoluteContrast = 17;
+	public double minAbsoluteContrast = 17 / 255.0;
 	public double minRelativeContrast = 0.34;
 	public int relativeContrastSample = 168568;
 	public double relativeContrastPercentile = 0.49;
