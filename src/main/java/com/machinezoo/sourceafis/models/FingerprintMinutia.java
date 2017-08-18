@@ -10,4 +10,7 @@ public class FingerprintMinutia {
 		this.direction = direction;
 		this.type = type;
 	}
+	@Override public String toString() {
+		return String.format("%s @ %s angle %f", type.toString(), position.toString(), direction);
+	}
 }

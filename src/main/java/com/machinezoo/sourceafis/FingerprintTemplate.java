@@ -42,7 +42,7 @@ public class FingerprintTemplate {
 		BooleanMap pixelMask = fillBlocks(mask, blocks);
 		context.log("pixel-mask", pixelMask);
 		BooleanMap inverted = invert(binary, pixelMask);
-		context.log("inverted-pixel-mask", inverted);
+		context.log("masked-inverted", inverted);
 		BooleanMap innerMask = innerMask(pixelMask);
 		context.log("skeleton", "ridges");
 		FingerprintSkeleton ridges = new FingerprintSkeleton(binary);

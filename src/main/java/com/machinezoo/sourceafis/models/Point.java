@@ -12,6 +12,9 @@ public class Point {
 	public Point add(Point other) {
 		return new Point(x + other.x, y + other.y);
 	}
+	public Point negate() {
+		return new Point(-x, -y);
+	}
 	public Point multiply(double factor) {
 		return new Point(factor * x, factor * y);
 	}

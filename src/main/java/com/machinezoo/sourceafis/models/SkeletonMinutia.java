@@ -23,4 +23,7 @@ public class SkeletonMinutia {
 				ridge.start(null);
 		}
 	}
+	@Override public String toString() {
+		return String.format("%s*%d%s", position.toString(), ridges.size(), considered ? "" : "(ignored)");
+	}
 }
