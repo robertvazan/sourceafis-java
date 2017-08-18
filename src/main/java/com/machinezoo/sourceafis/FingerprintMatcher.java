@@ -24,16 +24,6 @@ public class FingerprintMatcher {
 		for (int i = 0; i < pairList.length; ++i)
 			pairList[i] = new PairInfo();
 	}
-	static class IndexedEdge {
-		final EdgeShape shape;
-		final int reference;
-		final int neighbor;
-		IndexedEdge(EdgeShape shape, int reference, int neighbor) {
-			this.shape = shape;
-			this.reference = reference;
-			this.neighbor = neighbor;
-		}
-	}
 	void buildEdgeHash() {
 		for (int reference = 0; reference < template.minutiae.size(); ++reference)
 			for (int neighbor = 0; neighbor < template.minutiae.size(); ++neighbor)
@@ -46,6 +36,7 @@ public class FingerprintMatcher {
 						list.add(edge);
 					}
 				}
+		context.log("edge-hash", edgeHash);
 	}
 	List<Integer> shapeCoverage(EdgeShape edge) {
 		int minLengthBin = (edge.length - context.maxDistanceError) / context.maxDistanceError;
