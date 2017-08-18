@@ -593,7 +593,7 @@ public class FingerprintTemplate {
 				if (neighbor != reference && referencePosition.minus(minutiae.get(neighbor).position).lengthSq() <= sqMaxDistance)
 					edges.add(new NeighborEdge(new EdgeShape(minutiae.get(reference), minutiae.get(neighbor)), neighbor));
 			}
-			edges.sort(Comparator.<NeighborEdge>comparingInt(e -> e.edge.length).thenComparingInt(e -> e.neighbor));
+			edges.sort(Comparator.<NeighborEdge>comparingInt(e -> e.shape.length).thenComparingInt(e -> e.neighbor));
 			while (edges.size() > context.edgeTableNeighbors)
 				edges.remove(edges.size() - 1);
 			edgeTable[reference] = edges.toArray(new NeighborEdge[edges.size()]);

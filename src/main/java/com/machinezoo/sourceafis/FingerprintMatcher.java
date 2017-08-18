@@ -205,19 +205,19 @@ public class FingerprintMatcher {
 		int end = 0;
 		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
 			NeighborEdge candidateEdge = candidateStar[candidateIndex];
-			while (start < probeStar.length && probeStar[start].edge.length < candidateEdge.edge.length - context.maxDistanceError)
+			while (start < probeStar.length && probeStar[start].shape.length < candidateEdge.shape.length - context.maxDistanceError)
 				++start;
 			if (end < start)
 				end = start;
-			while (end < probeStar.length && probeStar[end].edge.length <= candidateEdge.edge.length + context.maxDistanceError)
+			while (end < probeStar.length && probeStar[end].shape.length <= candidateEdge.shape.length + context.maxDistanceError)
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
 				NeighborEdge probeEdge = probeStar[probeIndex];
-				double referenceDiff = Angle.difference(probeEdge.edge.referenceAngle, candidateEdge.edge.referenceAngle);
+				double referenceDiff = Angle.difference(probeEdge.shape.referenceAngle, candidateEdge.shape.referenceAngle);
 				if (referenceDiff <= context.maxAngleError || referenceDiff >= complementaryAngleError) {
-					double neighborDiff = Angle.difference(probeEdge.edge.neighborAngle, candidateEdge.edge.neighborAngle);
+					double neighborDiff = Angle.difference(probeEdge.shape.neighborAngle, candidateEdge.shape.neighborAngle);
 					if (neighborDiff <= context.maxAngleError || neighborDiff >= complementaryAngleError)
-						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.edge.length));
+						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.shape.length));
 				}
 			}
 		}

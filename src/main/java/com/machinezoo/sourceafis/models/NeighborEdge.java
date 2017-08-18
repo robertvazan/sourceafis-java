@@ -2,10 +2,10 @@
 package com.machinezoo.sourceafis.models;
 
 public class NeighborEdge {
-	public final EdgeShape edge;
+	public final EdgeShape shape;
 	public final int neighbor;
-	public NeighborEdge(EdgeShape edge, int neighbor) {
-		this.edge = edge;
+	public NeighborEdge(EdgeShape shape, int neighbor) {
+		this.shape = shape;
 		this.neighbor = neighbor;
 	}
 }
