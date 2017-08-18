@@ -127,7 +127,7 @@ public class FingerprintTemplate {
 		return output;
 	}
 	Histogram histogram(BlockMap blocks, DoubleMap image) {
-		Histogram histogram = new Histogram(blocks.blockCount.y, blocks.blockCount.x, context.histogramDepth);
+		Histogram histogram = new Histogram(blocks.blockCount.x, blocks.blockCount.y, context.histogramDepth);
 		for (Cell block : blocks.blockCount) {
 			Block area = blocks.blockAreas.get(block);
 			for (int y = area.bottom(); y < area.top(); ++y)
@@ -141,7 +141,7 @@ public class FingerprintTemplate {
 	}
 	Histogram smoothHistogram(BlockMap blocks, Histogram input) {
 		Cell[] blocksAround = new Cell[] { new Cell(0, 0), new Cell(-1, 0), new Cell(0, -1), new Cell(-1, -1) };
-		Histogram output = new Histogram(blocks.cornerCount.y, blocks.cornerCount.x, input.depth);
+		Histogram output = new Histogram(blocks.cornerCount.x, blocks.cornerCount.y, input.depth);
 		for (Cell corner : blocks.cornerCount) {
 			for (Cell relative : blocksAround) {
 				Cell block = corner.plus(relative);
