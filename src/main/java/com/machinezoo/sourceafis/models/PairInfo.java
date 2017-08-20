@@ -1,6 +1,8 @@
 package com.machinezoo.sourceafis.models;
 
-public class PairInfo {
+import lombok.*;
+
+@NoArgsConstructor @AllArgsConstructor public class PairInfo {
 	public MinutiaPair pair;
 	public MinutiaPair reference;
 	public int supportingEdges;

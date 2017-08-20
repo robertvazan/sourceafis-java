@@ -181,10 +181,8 @@ public class FingerprintMatcher {
 			MinutiaPair neighbor = match.pair;
 			if (pairsByCandidate[neighbor.candidate] == null && pairsByProbe[neighbor.probe] == null)
 				pairQueue.add(new EdgePair(reference, neighbor, match.distance));
-			else if (pairsByProbe[neighbor.probe] != null && pairsByProbe[neighbor.probe].pair.candidate == neighbor.candidate) {
-				++pairsByProbe[reference.probe].supportingEdges;
-				++pairsByProbe[neighbor.probe].supportingEdges;
-			}
+			else if (pairsByProbe[neighbor.probe] != null && pairsByProbe[neighbor.probe].pair.candidate == neighbor.candidate)
+				addSupportingEdge(reference, neighbor);
 		}
 	}
 	static class MatchingPair {
@@ -223,10 +221,8 @@ public class FingerprintMatcher {
 	void skipPaired() {
 		while (!pairQueue.isEmpty() && (pairsByProbe[pairQueue.peek().neighbor.probe] != null || pairsByCandidate[pairQueue.peek().neighbor.candidate] != null)) {
 			EdgePair edge = pairQueue.remove();
-			if (pairsByProbe[edge.neighbor.probe] != null && pairsByProbe[edge.neighbor.probe].pair.candidate == edge.neighbor.candidate) {
-				++pairsByProbe[edge.reference.probe].supportingEdges;
-				++pairsByProbe[edge.neighbor.probe].supportingEdges;
-			}
+			if (pairsByProbe[edge.neighbor.probe] != null && pairsByProbe[edge.neighbor.probe].pair.candidate == edge.neighbor.candidate)
+				addSupportingEdge(edge.reference, edge.neighbor);
 		}
 	}
 	void addPair(EdgePair edge) {
@@ -235,16 +231,25 @@ public class FingerprintMatcher {
 		pairList[pairCount].reference = edge.reference;
 		++pairCount;
 	}
+	void addSupportingEdge(MinutiaPair reference, MinutiaPair neighbor) {
+		++pairsByProbe[reference.probe].supportingEdges;
+		++pairsByProbe[neighbor.probe].supportingEdges;
+		if (context.logging())
+			context.log("supporting-edge", new PairInfo(neighbor, reference, 0));
+	}
 	double computeScore() {
-		double score = context.pairCountScore * pairCount;
-		score += context.pairFractionScore * (pairCount / (double)template.minutiae.size() + pairCount / (double)candidate.minutiae.size()) / 2;
+		double minutiaScore = context.pairCountScore * pairCount;
+		double ratioScore = context.pairFractionScore * (pairCount / (double)template.minutiae.size() + pairCount / (double)candidate.minutiae.size()) / 2;
+		double supportedScore = 0;
+		double edgeScore = 0;
+		double typeScore = 0;
 		for (int i = 0; i < pairCount; ++i) {
 			PairInfo pair = pairList[i];
 			if (pair.supportingEdges >= context.minSupportingEdges)
-				score += context.supportedCountScore;
-			score += context.edgeCountScore * (pair.supportingEdges + 1);
+				supportedScore += context.supportedCountScore;
+			edgeScore += context.edgeCountScore * (pair.supportingEdges + 1);
 			if (template.minutiae.get(pair.pair.probe).type == candidate.minutiae.get(pair.pair.candidate).type)
-				score += context.correctTypeScore;
+				typeScore += context.correctTypeScore;
 		}
 		int innerDistanceRadius = (int)Math.round(context.distanceErrorFlatness * context.maxDistanceError);
 		int innerAngleRadius = (int)Math.round(context.angleErrorFlatness * context.maxAngleError);
@@ -258,11 +263,24 @@ public class FingerprintMatcher {
 			angleErrorSum += Math.max(innerDistanceRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
+		double distanceScore = 0;
+		double angleScore = 0;
 		if (pairCount >= 2) {
 			double pairedDistanceError = context.maxDistanceError * (pairCount - 1);
-			score += context.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
+			distanceScore = context.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
 			double pairedAngleError = context.maxAngleError * (pairCount - 1) * 2;
-			score += context.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
+			angleScore = context.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
+		}
+		double score = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
+		if (context.logging()) {
+			context.log("minutia-score", minutiaScore);
+			context.log("ratio-score", ratioScore);
+			context.log("supported-score", supportedScore);
+			context.log("edge-score", edgeScore);
+			context.log("type-score", typeScore);
+			context.log("distance-score", distanceScore);
+			context.log("angle-score", angleScore);
+			context.log("total-score", score);
 		}
 		return score;
 	}
