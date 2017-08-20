@@ -30,9 +30,6 @@ public class FingerprintTemplateTest {
 	@Test public void readImage_bmp() {
 		readImage_validate(t.readImage(load("probe.bmp")));
 	}
-	@Test public void readImage_tiff() {
-		readImage_validate(t.readImage(load("probe.tiff")));
-	}
 	private void readImage_validate(DoubleMap map) {
 		assertEquals(388, map.width);
 		assertEquals(374, map.height);

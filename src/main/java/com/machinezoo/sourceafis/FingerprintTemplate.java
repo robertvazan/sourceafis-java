@@ -6,7 +6,6 @@ import java.awt.image.*;
 import java.io.*;
 import java.util.*;
 import javax.imageio.*;
-import org.apache.sanselan.*;
 import com.google.gson.*;
 import com.machinezoo.sourceafis.models.*;
 import lombok.*;
@@ -77,7 +76,7 @@ public class FingerprintTemplate {
 	@SneakyThrows DoubleMap readImage(byte[] serialized) {
 		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
 		if (buffered == null)
-			buffered = Sanselan.getBufferedImage(serialized);
+			throw new IllegalArgumentException("Unsupported image format");
 		int width = buffered.getWidth();
 		int height = buffered.getHeight();
 		int[] pixels = new int[width * height];

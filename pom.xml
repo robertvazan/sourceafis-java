@@ -52,11 +52,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.sanselan</groupId>
-			<artifactId>sanselan</artifactId>
-			<version>0.97-incubator</version>
-		</dependency>
-		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<version>2.5</version>
