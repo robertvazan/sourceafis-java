@@ -259,8 +259,8 @@ public class FingerprintMatcher {
 			PairInfo pair = pairList[i];
 			EdgeShape probeEdge = new EdgeShape(template.minutiae.get(pair.reference.probe), template.minutiae.get(pair.pair.probe));
 			EdgeShape candidateEdge = new EdgeShape(candidate.minutiae.get(pair.reference.candidate), candidate.minutiae.get(pair.pair.candidate));
-			distanceErrorSum += Math.abs(probeEdge.length - candidateEdge.length);
-			angleErrorSum += Math.max(innerDistanceRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
+			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
+			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		double distanceScore = 0;
