@@ -62,9 +62,15 @@ public class FingerprintMatcher {
 		int triangleIndex = 0;
 		double bestScore = 0;
 		for (MinutiaPair root : (Iterable<MinutiaPair>)roots()::iterator) {
+			context.log("tried-root", root);
 			double score = tryRoot(root);
-			if (score > bestScore)
+			if (score > bestScore) {
 				bestScore = score;
+				if (context.logging()) {
+					context.log("pair-count", pairCount);
+					context.log("pair-list", pairList);
+				}
+			}
 			++rootIndex;
 			if (rootIndex >= context.maxTriedRoots)
 				break;
@@ -259,19 +265,6 @@ public class FingerprintMatcher {
 			score += context.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
 		return score;
-	}
-	static class MinutiaPair {
-		final int probe;
-		final int candidate;
-		MinutiaPair(int probe, int candidate) {
-			this.probe = probe;
-			this.candidate = candidate;
-		}
-	}
-	static class PairInfo {
-		MinutiaPair pair;
-		MinutiaPair reference;
-		int supportingEdges;
 	}
 	static class EdgePair implements Comparable<EdgePair> {
 		MinutiaPair reference;
