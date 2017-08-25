@@ -80,7 +80,7 @@ public class FingerprintMatcher {
 					break;
 			}
 		}
-		return bestScore;
+		return context.shapedScore ? ScoreShape.shape(bestScore) : bestScore;
 	}
 	interface ShapeFilter extends Predicate<EdgeShape> {
 	}

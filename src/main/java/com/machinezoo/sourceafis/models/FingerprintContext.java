@@ -80,6 +80,7 @@ public class FingerprintContext {
 	public double edgeCountScore = 0.265;
 	public double distanceAccuracyScore = 9.9;
 	public double angleAccuracyScore = 2.79;
+	public boolean shapedScore = true;
 	public BiConsumer<String, Object> logger;
 	public static FingerprintContext current() {
 		FingerprintContext custom = local.get();
