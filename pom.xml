@@ -89,7 +89,7 @@
 					<notree>true</notree>
 					<notimestamp>true</notimestamp>
 					<use>false</use>
-					<doctitle>${project.name} API Reference</doctitle>
+					<doctitle>${project.name} for Java API Reference</doctitle>
 					<excludePackageNames>com.machinezoo.sourceafis.models</excludePackageNames>
 				</configuration>
 				<executions>

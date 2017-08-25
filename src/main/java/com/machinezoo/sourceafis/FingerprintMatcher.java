@@ -6,6 +6,17 @@ import java.util.function.*;
 import java.util.stream.*;
 import com.machinezoo.sourceafis.models.*;
 
+/**
+ * Fingerprint template representation optimized for fast 1:N matching.
+ * {@code FingerprintMatcher} maintains data structures that improve matching speed at the cost of some RAM.
+ * It can efficiently match one probe fingerprint to multiple candidate fingerprints.
+ * <p>
+ * Probe fingerprint template is passed to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
+ * Candidate fingerprint templates are then passed one at a time to {@link #match(FingerprintTemplate)} method.
+ * 
+ * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
+ * @see FingerprintTemplate
+ */
 public class FingerprintMatcher {
 	private FingerprintContext context = FingerprintContext.current();
 	final FingerprintTemplate template;
@@ -16,8 +27,18 @@ public class FingerprintMatcher {
 	PairInfo[] pairsByProbe;
 	PairInfo[] pairList;
 	int pairCount;
-	public FingerprintMatcher(FingerprintTemplate template) {
-		this.template = template;
+	/**
+	 * Create {@code FingerprintMatcher} from probe fingerprint template.
+	 * Constructed {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
+	 * It should be reused for multiple {@link #match(FingerprintTemplate)} calls in 1:N matching.
+	 * 
+	 * @param probe
+	 *            fingerprint template to be matched to candidate fingerprints
+	 * 
+	 * @see #match(FingerprintTemplate)
+	 */
+	public FingerprintMatcher(FingerprintTemplate probe) {
+		this.template = probe;
 		buildEdgeHash();
 		pairsByProbe = new PairInfo[template.minutiae.size()];
 		pairList = new PairInfo[template.minutiae.size()];
@@ -55,6 +76,25 @@ public class FingerprintMatcher {
 					coverage.add((referenceBin << 24) + (neighborBin << 16) + lengthBin);
 		return coverage;
 	}
+	/**
+	 * Match candidate fingerprint template and calculate similarity score.
+	 * Candidate fingerprint is matched to probe fingerprint previously passed to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
+	 * <p>
+	 * Only one thread can call this method. For multi-threaded matching, create one {@code FingerprintMatcher} per thread.
+	 * <p>
+	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
+	 * Application should compare the score to a threshold with expression {@code score >= threshold} to get boolean match/non-match decision.
+	 * Threshold 10 corresponds to FMR (false match rate) of 10%, threshold 20 to FMR 1%, threshold 30 to FMR 0.1%, and so on.
+	 * <p>
+	 * Recommended threshold is 40, which corresponds to FMR 0.01%.
+	 * Correspondence between threshold and FMR is approximate and varies with quality of fingerprints being matched.
+	 * Increasing threshold rapidly reduces FMR, but it also slowly increases FNMR (false non-match rate).
+	 * Threshold must be tailored to the needs of the application.
+	 * 
+	 * @param candidate
+	 *            fingerprint template to be matched with probe fingerprint represented by this {@code FingerprintMatcher}
+	 * @return similarity score between probe and candidate fingerprints
+	 */
 	public double match(FingerprintTemplate candidate) {
 		context = FingerprintContext.current();
 		this.candidate = candidate;
