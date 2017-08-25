@@ -15,15 +15,15 @@ import lombok.*;
  * Fingerprint template holds high-level fingerprint features, specifically ridge endings and bifurcations (minutiae).
  * Original image is not preserved in the fingerprint template and there is no way to reconstruct the original fingerprint from its template.
  * <p>
- * {@code FingerprintTemplate} contains search structures that speed up matching at the cost of some RAM.
- * These search structures do not contain any unique data. They can be recomputed from minutiae.
- * They are therefore excluded from serialized templates.
- * <p>
  * Fingerprint template can be created from fingerprint image by calling {@link #FingerprintTemplate(byte[])}.
  * Since image processing is expensive, applications should cache serialized templates.
  * Serialization is performed by {@link #json()} and deserialization by {@link #FingerprintTemplate(String)}.
  * <p>
  * Matching is performed by constructing {@link FingerprintMatcher} and calling its {@link FingerprintMatcher#match(FingerprintTemplate)} method.
+ * <p>
+ * {@code FingerprintTemplate} contains search structures that speed up matching at the cost of some RAM.
+ * These search structures do not contain any unique data. They can be recomputed from minutiae.
+ * They are therefore excluded from serialized templates.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
  * @see FingerprintMatcher
@@ -38,7 +38,7 @@ public class FingerprintTemplate {
 	 * For images at different DPI, call {@link #FingerprintTemplate(byte[], double)}.
 	 * 
 	 * @param image
-	 *            serialized in one of the formats supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP
+	 *            fingerprint image in a format supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP
 	 * 
 	 * @see #FingerprintTemplate(byte[], double)
 	 */
@@ -52,7 +52,7 @@ public class FingerprintTemplate {
 	 * Check your fingerprint reader specification for correct DPI value.
 	 * 
 	 * @param image
-	 *            serialized in one of the formats supported by Java's {@link ImageIO}
+	 *            fingerprint image in a format supported by Java's {@link ImageIO}
 	 * @param dpi
 	 *            DPI of the image
 	 * 
@@ -115,16 +115,16 @@ public class FingerprintTemplate {
 		buildEdgeTable();
 	}
 	/**
-	 * Serialize the template to JSON string.
+	 * Serialize fingerprint template to JSON string.
 	 * Serialized template can be stored in database or sent over network.
-	 * It can be deserialized by calling {@link #FingerprintTemplate(String)} constructor.
-	 * Persisting templates allows applications to start faster,
-	 * because template deserialization is over 100x faster than re-extraction from raw image.
+	 * It can be deserialized by calling {@link #FingerprintTemplate(String)}.
+	 * Persisting templates alongside fingerprint images allows applications to start faster,
+	 * because template deserialization is more than 100x faster than re-extraction from raw image.
 	 * <p>
 	 * Serialized template excludes search structures that {@code FingerprintTemplate} keeps to speed up matching.
 	 * Serialized template is therefore much smaller than in-memory {@code FingerprintTemplate}.
 	 * <p>
-	 * Serialization format can change with every SourceAFIS version. No backwards compatibility is provided.
+	 * Serialization format can change with every SourceAFIS version. There is no backward compatibility of templates.
 	 * Applications should preserve raw fingerprint images, so that templates can be re-extracted after SourceAFIS upgrade.
 	 * 
 	 * @return serialized fingerprint template in JSON format

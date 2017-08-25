@@ -9,10 +9,10 @@ import com.machinezoo.sourceafis.models.*;
 /**
  * Fingerprint template representation optimized for fast 1:N matching.
  * {@code FingerprintMatcher} maintains data structures that improve matching speed at the cost of some RAM.
- * It can efficiently match one probe fingerprint to multiple candidate fingerprints.
+ * It can efficiently match one probe fingerprint to many candidate fingerprints.
  * <p>
- * Probe fingerprint template is passed to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
- * Candidate fingerprint templates are then passed one at a time to {@link #match(FingerprintTemplate)} method.
+ * Probe fingerprint template is passed to {@link #FingerprintMatcher(FingerprintTemplate)}.
+ * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)}.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
  * @see FingerprintTemplate
@@ -77,13 +77,13 @@ public class FingerprintMatcher {
 		return coverage;
 	}
 	/**
-	 * Match candidate fingerprint template and calculate similarity score.
-	 * Candidate fingerprint is matched to probe fingerprint previously passed to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
+	 * Match candidate fingerprint template to this probe fingerprint and calculate similarity score.
+	 * Candidate fingerprint is matched to probe fingerprint previously passed to {@link #FingerprintMatcher(FingerprintTemplate)}.
 	 * <p>
 	 * Only one thread can call this method. For multi-threaded matching, create one {@code FingerprintMatcher} per thread.
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
-	 * Application should compare the score to a threshold with expression {@code score >= threshold} to get boolean match/non-match decision.
+	 * Application should compare the score to a threshold with expression {@code (score >= threshold)} to arrive at boolean match/non-match decision.
 	 * Threshold 10 corresponds to FMR (false match rate) of 10%, threshold 20 to FMR 1%, threshold 30 to FMR 0.1%, and so on.
 	 * <p>
 	 * Recommended threshold is 40, which corresponds to FMR 0.01%.
