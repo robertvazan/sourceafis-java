@@ -13,5 +13,7 @@ double score = matcher.match(candidate);
 boolean match = score >= 40;
 ```
 
-* [Homepage](https://sourceafis.machinezoo.com/) - Overview, contact.
+* [Homepage](https://sourceafis.machinezoo.com/) - Overview, tutorial, contact.
+* [Download](https://sourceafis.machinezoo.com/download) - Maven package, JAR file, sample fingerprints.
+* [Javadoc](https://sourceafis.machinezoo.com/javadoc/com/machinezoo/sourceafis/package-summary.html) - API reference documentation.
 * [Sources](https://bitbucket.org/robertvazan/sourceafis-java/src) - Primary repository, preferred for pull requests.
