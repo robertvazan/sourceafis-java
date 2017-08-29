@@ -21,6 +21,11 @@ public class EdgeShape {
 					polarAngle[y * polarCacheRadius + x] = 0;
 			}
 	}
+	public EdgeShape(int length, double referenceAngle, double neighborAngle) {
+		this.length = length;
+		this.referenceAngle = referenceAngle;
+		this.neighborAngle = neighborAngle;
+	}
 	public EdgeShape(FingerprintMinutia reference, FingerprintMinutia neighbor) {
 		Cell vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
