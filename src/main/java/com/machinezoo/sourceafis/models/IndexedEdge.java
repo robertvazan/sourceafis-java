@@ -1,10 +1,12 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis.models;
 
-import lombok.*;
-
-@AllArgsConstructor public class IndexedEdge {
-	public final EdgeShape shape;
+public class IndexedEdge extends EdgeShape {
 	public final int reference;
 	public final int neighbor;
+	public IndexedEdge(FingerprintMinutia[] minutiae, int reference, int neighbor) {
+		super(minutiae[reference], minutiae[neighbor]);
+		this.reference = reference;
+		this.neighbor = neighbor;
+	}
 }

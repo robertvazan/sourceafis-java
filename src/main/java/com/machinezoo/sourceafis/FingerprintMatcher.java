@@ -38,8 +38,8 @@ public class FingerprintMatcher {
 		for (int reference = 0; reference < template.minutiae.length; ++reference)
 			for (int neighbor = 0; neighbor < template.minutiae.length; ++neighbor)
 				if (reference != neighbor) {
-					IndexedEdge edge = new IndexedEdge(new EdgeShape(template.minutiae[reference], template.minutiae[neighbor]), reference, neighbor);
-					for (int hash : shapeCoverage(edge.shape)) {
+					IndexedEdge edge = new IndexedEdge(template.minutiae, reference, neighbor);
+					for (int hash : shapeCoverage(edge)) {
 						List<IndexedEdge> list = edgeHash.get(hash);
 						if (list == null)
 							edgeHash.put(hash, list = new ArrayList<>());

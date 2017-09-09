@@ -107,7 +107,7 @@ public class MatchBuffer {
 				List<IndexedEdge> matches = edgeHash.get(hashShape(lookup.candidateEdge));
 				if (matches != null) {
 					return matches.stream()
-						.filter(match -> matchingShapes(match.shape, lookup.candidateEdge))
+						.filter(match -> matchingShapes(match, lookup.candidateEdge))
 						.map(match -> new MinutiaPair(match.reference, lookup.candidateReference));
 				}
 				return null;
