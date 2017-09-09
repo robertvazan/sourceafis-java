@@ -68,7 +68,6 @@ public class FingerprintContext {
 	public int ridgeDirectionSample = 21;
 	public int ridgeDirectionSkip = 1;
 	public int maxTriedRoots = 70;
-	public int maxTriedTriangles = 7538;
 	public int minRootEdgeLength = 58;
 	public int maxRootEdgeLookups = 1633;
 	public int minSupportingEdges = 1;

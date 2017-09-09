@@ -2,8 +2,6 @@
 package com.machinezoo.sourceafis.models;
 
 import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
 import gnu.trove.map.hash.*;
 
 public class MatchBuffer {
@@ -21,6 +19,7 @@ public class MatchBuffer {
 	private MinutiaPair[] tree;
 	private MinutiaPair[] byProbe;
 	private MinutiaPair[] byCandidate;
+	private MinutiaPair[] roots;
 	public static MatchBuffer current() {
 		return local.get();
 	}
@@ -44,80 +43,61 @@ public class MatchBuffer {
 	public double match() {
 		try {
 			context = FingerprintContext.current();
-			int rootIndex = 0;
-			int triangleIndex = 0;
-			double bestScore = 0;
-			for (MinutiaPair root : (Iterable<MinutiaPair>)roots()::iterator) {
+			int totalRoots = enumerateRoots();
+			double high = 0;
+			for (int i = 0; i < totalRoots; ++i) {
+				MinutiaPair root = roots[i];
 				context.log("tried-root", root);
 				double score = tryRoot(root);
-				if (score > bestScore) {
-					bestScore = score;
+				if (score > high) {
+					high = score;
 					if (context.logging()) {
 						context.log("pair-count", count);
 						context.log("pair-list", tree);
 					}
 				}
-				++rootIndex;
-				if (rootIndex >= context.maxTriedRoots)
-					break;
-				if (count >= 3) {
-					++triangleIndex;
-					if (triangleIndex >= context.maxTriedTriangles)
-						break;
-				}
 			}
-			return context.shapedScore ? ScoreShape.shape(bestScore) : bestScore;
+			return context.shapedScore ? ScoreShape.shape(high) : high;
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
 		}
 	}
-	private interface ShapeFilter extends Predicate<EdgeShape> {
-	}
-	private Stream<MinutiaPair> roots() {
-		ShapeFilter[] filters = new ShapeFilter[] {
-			shape -> shape.length >= context.minRootEdgeLength,
-			shape -> shape.length < context.minRootEdgeLength
-		};
-		class EdgeLookup {
-			EdgeShape candidateEdge;
-			int candidateReference;
-		}
-		Stream<EdgeLookup> lookups = Arrays.stream(filters)
-			.flatMap(shapeFilter -> IntStream.range(1, candidateMinutiae.length).boxed()
-				.flatMap(step -> IntStream.range(0, step + 1).boxed()
-					.flatMap(pass -> {
-						List<Integer> roots = new ArrayList<>();
-						for (int root = pass; root < candidateMinutiae.length; root += step + 1)
-							roots.add(root);
-						return roots.stream();
-					})
-					.flatMap(root -> {
-						int neighbor = (root + step) % candidateMinutiae.length;
-						EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[root], candidateMinutiae[neighbor]);
-						if (shapeFilter.test(candidateEdge)) {
-							EdgeLookup lookup = new EdgeLookup();
-							lookup.candidateEdge = candidateEdge;
-							lookup.candidateReference = root;
-							return Stream.of(lookup);
+	private int enumerateRoots() {
+		if (roots == null || roots.length < context.maxTriedRoots)
+			roots = new MinutiaPair[context.maxTriedRoots];
+		int totalLookups = 0;
+		int totalRoots = 0;
+		for (boolean shortEdges : new boolean[] { false, true }) {
+			for (int period = 1; period < candidateMinutiae.length; ++period) {
+				for (int phase = 0; phase <= period; ++phase) {
+					for (int candidateReference = phase; candidateReference < candidateMinutiae.length; candidateReference += period + 1) {
+						int candidateNeighbor = (candidateReference + period) % candidateMinutiae.length;
+						EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[candidateReference], candidateMinutiae[candidateNeighbor]);
+						if ((candidateEdge.length >= context.minRootEdgeLength) ^ shortEdges) {
+							List<IndexedEdge> matches = edgeHash.get(hashShape(candidateEdge));
+							if (matches != null) {
+								for (IndexedEdge match : matches) {
+									if (matchingShapes(match, candidateEdge)) {
+										MinutiaPair pair = allocate();
+										pair.probe = match.reference;
+										pair.candidate = candidateReference;
+										roots[totalRoots] = pair;
+										++totalRoots;
+										if (totalRoots >= context.maxTriedRoots)
+											return totalRoots;
+									}
+								}
+							}
+							++totalLookups;
+							if (totalLookups >= context.maxRootEdgeLookups)
+								return totalRoots;
 						}
-						return null;
-					})));
-		return lookups.limit(context.maxRootEdgeLookups)
-			.flatMap(lookup -> {
-				List<IndexedEdge> matches = edgeHash.get(hashShape(lookup.candidateEdge));
-				if (matches != null) {
-					return matches.stream()
-						.filter(match -> matchingShapes(match, lookup.candidateEdge))
-						.map(match -> {
-							MinutiaPair pair = allocate();
-							pair.probe = match.reference;
-							pair.candidate = lookup.candidateReference;
-							return pair;
-						});
+					}
 				}
-				return null;
-			});
+			}
+		}
+		return totalRoots;
 	}
 	private int hashShape(EdgeShape edge) {
 		int lengthBin = edge.length / context.maxDistanceError;
