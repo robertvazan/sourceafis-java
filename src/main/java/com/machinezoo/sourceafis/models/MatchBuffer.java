@@ -14,22 +14,22 @@ public class MatchBuffer {
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
 	private FingerprintMinutia[] candidateMinutiae;
 	private NeighborEdge[][] candidateEdges;
-	private PriorityQueue<EdgePair> pairQueue = new PriorityQueue<>();
-	private PairInfo[] pairsByCandidate;
-	private PairInfo[] pairsByProbe;
-	private PairInfo[] pairList;
-	private int pairCount;
+	private MinutiaPair[] pool = new MinutiaPair[1];
+	private int pooled;
+	private PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
+	private int count;
+	private MinutiaPair[] tree;
+	private MinutiaPair[] byProbe;
+	private MinutiaPair[] byCandidate;
 	public static MatchBuffer current() {
 		return local.get();
 	}
 	public void selectProbe(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {
 		probeMinutiae = minutiae;
 		probeEdges = edges;
-		if (pairList == null || minutiae.length > pairList.length) {
-			pairList = new PairInfo[minutiae.length];
-			for (int i = 0; i < pairList.length; ++i)
-				pairList[i] = new PairInfo();
-			pairsByProbe = new PairInfo[minutiae.length];
+		if (tree == null || minutiae.length > tree.length) {
+			tree = new MinutiaPair[minutiae.length];
+			byProbe = new MinutiaPair[minutiae.length];
 		}
 	}
 	public void selectMatcher(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
@@ -38,8 +38,8 @@ public class MatchBuffer {
 	public void selectCandidate(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {
 		candidateMinutiae = minutiae;
 		candidateEdges = edges;
-		if (pairsByCandidate == null || pairsByCandidate.length < minutiae.length)
-			pairsByCandidate = new PairInfo[minutiae.length];
+		if (byCandidate == null || byCandidate.length < minutiae.length)
+			byCandidate = new MinutiaPair[minutiae.length];
 	}
 	public double match() {
 		try {
@@ -53,14 +53,14 @@ public class MatchBuffer {
 				if (score > bestScore) {
 					bestScore = score;
 					if (context.logging()) {
-						context.log("pair-count", pairCount);
-						context.log("pair-list", pairList);
+						context.log("pair-count", count);
+						context.log("pair-list", tree);
 					}
 				}
 				++rootIndex;
 				if (rootIndex >= context.maxTriedRoots)
 					break;
-				if (pairCount >= 3) {
+				if (count >= 3) {
 					++triangleIndex;
 					if (triangleIndex >= context.maxTriedTriangles)
 						break;
@@ -72,9 +72,9 @@ public class MatchBuffer {
 			throw e;
 		}
 	}
-	interface ShapeFilter extends Predicate<EdgeShape> {
+	private interface ShapeFilter extends Predicate<EdgeShape> {
 	}
-	Stream<MinutiaPair> roots() {
+	private Stream<MinutiaPair> roots() {
 		ShapeFilter[] filters = new ShapeFilter[] {
 			shape -> shape.length >= context.minRootEdgeLength,
 			shape -> shape.length < context.minRootEdgeLength
@@ -109,18 +109,23 @@ public class MatchBuffer {
 				if (matches != null) {
 					return matches.stream()
 						.filter(match -> matchingShapes(match, lookup.candidateEdge))
-						.map(match -> new MinutiaPair(match.reference, lookup.candidateReference));
+						.map(match -> {
+							MinutiaPair pair = allocate();
+							pair.probe = match.reference;
+							pair.candidate = lookup.candidateReference;
+							return pair;
+						});
 				}
 				return null;
 			});
 	}
-	int hashShape(EdgeShape edge) {
+	private int hashShape(EdgeShape edge) {
 		int lengthBin = edge.length / context.maxDistanceError;
 		int referenceAngleBin = (int)(edge.referenceAngle / context.maxAngleError);
 		int neighborAngleBin = (int)(edge.neighborAngle / context.maxAngleError);
 		return (referenceAngleBin << 24) + (neighborAngleBin << 16) + lengthBin;
 	}
-	boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
+	private boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
 		int lengthDelta = probe.length - candidate.length;
 		if (lengthDelta >= -context.maxDistanceError && lengthDelta <= context.maxDistanceError) {
 			double complementaryAngleError = Angle.complementary(context.maxAngleError);
@@ -133,64 +138,45 @@ public class MatchBuffer {
 		}
 		return false;
 	}
-	double tryRoot(MinutiaPair root) {
-		createRootPairing(root);
-		buildPairing();
+	private double tryRoot(MinutiaPair root) {
+		queue.add(root);
+		do {
+			addPair(queue.remove());
+			collectEdges();
+			skipPaired();
+		} while (!queue.isEmpty());
 		double score = computeScore();
 		clearPairing();
 		return score;
 	}
-	void createRootPairing(MinutiaPair root) {
-		pairsByCandidate[root.candidate] = pairsByProbe[root.probe] = pairList[0];
-		pairList[0].pair = root;
-		pairCount = 1;
-	}
-	void clearPairing() {
-		for (int i = 0; i < pairCount; ++i) {
-			pairsByProbe[pairList[i].pair.probe] = null;
-			pairsByCandidate[pairList[i].pair.candidate] = null;
-			pairList[i].pair = null;
-			pairList[i].reference = null;
-			pairList[i].supportingEdges = 0;
+	private void clearPairing() {
+		for (int i = 0; i < count; ++i) {
+			byProbe[tree[i].probe] = null;
+			byCandidate[tree[i].candidate] = null;
+			release(tree[i]);
+			tree[i] = null;
 		}
-		pairCount = 0;
+		count = 0;
 	}
-	void buildPairing() {
-		while (true) {
-			collectEdges();
-			skipPaired();
-			if (pairQueue.isEmpty())
-				break;
-			addPair(pairQueue.remove());
-		}
-	}
-	PairInfo lastPair() {
-		return pairList[pairCount - 1];
-	}
-	void collectEdges() {
-		MinutiaPair reference = lastPair().pair;
+	private void collectEdges() {
+		MinutiaPair reference = tree[count - 1];
 		NeighborEdge[] probeNeighbors = probeEdges[reference.probe];
 		NeighborEdge[] candidateNeigbors = candidateEdges[reference.candidate];
-		List<MatchingPair> matches = findMatchingPairs(probeNeighbors, candidateNeigbors);
-		for (MatchingPair match : matches) {
-			MinutiaPair neighbor = match.pair;
-			if (pairsByCandidate[neighbor.candidate] == null && pairsByProbe[neighbor.probe] == null)
-				pairQueue.add(new EdgePair(reference, neighbor, match.distance));
-			else if (pairsByProbe[neighbor.probe] != null && pairsByProbe[neighbor.probe].pair.candidate == neighbor.candidate)
-				addSupportingEdge(reference, neighbor);
+		for (MinutiaPair pair : matchPairs(probeNeighbors, candidateNeigbors)) {
+			pair.probeRef = reference.probe;
+			pair.candidateRef = reference.candidate;
+			if (byCandidate[pair.candidate] == null && byProbe[pair.probe] == null)
+				queue.add(pair);
+			else {
+				if (byProbe[pair.probe] != null && byProbe[pair.probe].candidate == pair.candidate)
+					addSupportingEdge(pair);
+				release(pair);
+			}
 		}
 	}
-	static class MatchingPair {
-		MinutiaPair pair;
-		int distance;
-		MatchingPair(MinutiaPair pair, int distance) {
-			this.pair = pair;
-			this.distance = distance;
-		}
-	}
-	List<MatchingPair> findMatchingPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
+	private List<MinutiaPair> matchPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
 		double complementaryAngleError = Angle.complementary(context.maxAngleError);
-		List<MatchingPair> results = new ArrayList<>();
+		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
 		int end = 0;
 		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
@@ -206,64 +192,70 @@ public class MatchBuffer {
 				double referenceDiff = Angle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
 				if (referenceDiff <= context.maxAngleError || referenceDiff >= complementaryAngleError) {
 					double neighborDiff = Angle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
-					if (neighborDiff <= context.maxAngleError || neighborDiff >= complementaryAngleError)
-						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.length));
+					if (neighborDiff <= context.maxAngleError || neighborDiff >= complementaryAngleError) {
+						MinutiaPair pair = allocate();
+						pair.probe = probeEdge.neighbor;
+						pair.candidate = candidateEdge.neighbor;
+						pair.distance = candidateEdge.length;
+						results.add(pair);
+					}
 				}
 			}
 		}
 		return results;
 	}
-	void skipPaired() {
-		while (!pairQueue.isEmpty() && (pairsByProbe[pairQueue.peek().neighbor.probe] != null || pairsByCandidate[pairQueue.peek().neighbor.candidate] != null)) {
-			EdgePair edge = pairQueue.remove();
-			if (pairsByProbe[edge.neighbor.probe] != null && pairsByProbe[edge.neighbor.probe].pair.candidate == edge.neighbor.candidate)
-				addSupportingEdge(edge.reference, edge.neighbor);
+	private void skipPaired() {
+		while (!queue.isEmpty() && (byProbe[queue.peek().probe] != null || byCandidate[queue.peek().candidate] != null)) {
+			MinutiaPair pair = queue.remove();
+			if (byProbe[pair.probe] != null && byProbe[pair.probe].candidate == pair.candidate)
+				addSupportingEdge(pair);
+			release(pair);
 		}
 	}
-	void addPair(EdgePair edge) {
-		pairsByCandidate[edge.neighbor.candidate] = pairsByProbe[edge.neighbor.probe] = pairList[pairCount];
-		pairList[pairCount].pair = edge.neighbor;
-		pairList[pairCount].reference = edge.reference;
-		++pairCount;
+	private void addPair(MinutiaPair pair) {
+		tree[count] = pair;
+		byProbe[pair.probe] = pair;
+		byCandidate[pair.candidate] = pair;
+		++count;
 	}
-	void addSupportingEdge(MinutiaPair reference, MinutiaPair neighbor) {
-		++pairsByProbe[reference.probe].supportingEdges;
-		++pairsByProbe[neighbor.probe].supportingEdges;
+	private void addSupportingEdge(MinutiaPair pair) {
+		++byProbe[pair.probe].supportingEdges;
+		++byProbe[pair.probeRef].supportingEdges;
 		if (context.logging())
-			context.log("supporting-edge", new PairInfo(neighbor, reference, 0));
+			context.log("supporting-edge", pair);
 	}
-	double computeScore() {
-		double minutiaScore = context.pairCountScore * pairCount;
-		double ratioScore = context.pairFractionScore * (pairCount / (double)probeMinutiae.length + pairCount / (double)candidateMinutiae.length) / 2;
+	private double computeScore() {
+		double minutiaScore = context.pairCountScore * count;
+		double ratioScore = context.pairFractionScore * (count / (double)probeMinutiae.length + count / (double)candidateMinutiae.length) / 2;
 		double supportedScore = 0;
 		double edgeScore = 0;
 		double typeScore = 0;
-		for (int i = 0; i < pairCount; ++i) {
-			PairInfo pair = pairList[i];
+		for (int i = 0; i < count; ++i) {
+			MinutiaPair pair = tree[i];
 			if (pair.supportingEdges >= context.minSupportingEdges)
 				supportedScore += context.supportedCountScore;
 			edgeScore += context.edgeCountScore * (pair.supportingEdges + 1);
-			if (probeMinutiae[pair.pair.probe].type == candidateMinutiae[pair.pair.candidate].type)
+			if (probeMinutiae[pair.probe].type == candidateMinutiae[pair.candidate].type)
 				typeScore += context.correctTypeScore;
 		}
 		int innerDistanceRadius = (int)Math.round(context.distanceErrorFlatness * context.maxDistanceError);
 		int innerAngleRadius = (int)Math.round(context.angleErrorFlatness * context.maxAngleError);
 		int distanceErrorSum = 0;
 		int angleErrorSum = 0;
-		for (int i = 1; i < pairCount; ++i) {
-			PairInfo pair = pairList[i];
-			EdgeShape probeEdge = new EdgeShape(probeMinutiae[pair.reference.probe], probeMinutiae[pair.pair.probe]);
-			EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[pair.reference.candidate], candidateMinutiae[pair.pair.candidate]);
+		for (int i = 1; i < count; ++i) {
+			MinutiaPair pair = tree[i];
+			EdgeShape probeEdge = new EdgeShape(probeMinutiae[pair.probeRef], probeMinutiae[pair.probe]);
+			EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[pair.candidateRef], candidateMinutiae[pair.candidate]);
 			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		double distanceScore = 0;
 		double angleScore = 0;
-		if (pairCount >= 2) {
-			double pairedDistanceError = context.maxDistanceError * (pairCount - 1);
+		if (count >= 2) {
+			double pairedDistanceError = context.maxDistanceError * (count - 1);
 			distanceScore = context.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
-			double pairedAngleError = context.maxAngleError * (pairCount - 1) * 2;
+			double pairedAngleError = context.maxAngleError * (count - 1) * 2;
 			angleScore = context.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
 		double score = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
@@ -279,17 +271,24 @@ public class MatchBuffer {
 		}
 		return score;
 	}
-	static class EdgePair implements Comparable<EdgePair> {
-		MinutiaPair reference;
-		MinutiaPair neighbor;
-		int distance;
-		EdgePair(MinutiaPair reference, MinutiaPair neighbor, int distance) {
-			this.reference = reference;
-			this.neighbor = neighbor;
-			this.distance = distance;
-		}
-		@Override public int compareTo(EdgePair other) {
-			return Integer.compare(distance, other.distance);
-		}
+	private MinutiaPair allocate() {
+		if (pooled > 0) {
+			--pooled;
+			MinutiaPair pair = pool[pooled];
+			pool[pooled] = null;
+			return pair;
+		} else
+			return new MinutiaPair();
+	}
+	private void release(MinutiaPair pair) {
+		if (pooled >= pool.length)
+			pool = Arrays.copyOf(pool, 2 * pool.length);
+		pair.probe = 0;
+		pair.candidate = 0;
+		pair.probeRef = 0;
+		pair.candidateRef = 0;
+		pair.distance = 0;
+		pair.supportingEdges = 0;
+		pool[pooled] = pair;
 	}
 }
