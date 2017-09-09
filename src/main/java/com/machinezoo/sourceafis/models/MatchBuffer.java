@@ -3,13 +3,14 @@ package com.machinezoo.sourceafis.models;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
+import gnu.trove.map.hash.*;
 
 public class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
 	private FingerprintContext context;
 	private FingerprintMinutia[] probeMinutiae;
 	private NeighborEdge[][] probeEdges;
-	private Map<Integer, List<IndexedEdge>> edgeHash;
+	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
 	private FingerprintMinutia[] candidateMinutiae;
 	private NeighborEdge[][] candidateEdges;
 	private PriorityQueue<EdgePair> pairQueue = new PriorityQueue<>();
@@ -30,7 +31,7 @@ public class MatchBuffer {
 			pairsByProbe = new PairInfo[minutiae.length];
 		}
 	}
-	public void selectMatcher(Map<Integer, List<IndexedEdge>> edgeHash) {
+	public void selectMatcher(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		this.edgeHash = edgeHash;
 	}
 	public void selectCandidate(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {

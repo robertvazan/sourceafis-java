@@ -3,6 +3,7 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 import com.machinezoo.sourceafis.models.*;
+import gnu.trove.map.hash.*;
 
 /**
  * Fingerprint template representation optimized for fast 1:N matching.
@@ -18,7 +19,7 @@ import com.machinezoo.sourceafis.models.*;
 public class FingerprintMatcher {
 	private final FingerprintContext context = FingerprintContext.current();
 	final FingerprintTemplate template;
-	Map<Integer, List<IndexedEdge>> edgeHash = new HashMap<>();
+	TIntObjectHashMap<List<IndexedEdge>> edgeHash = new TIntObjectHashMap<>();
 	/**
 	 * Create {@code FingerprintMatcher} from probe fingerprint template.
 	 * Constructed {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
