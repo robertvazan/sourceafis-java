@@ -1,3 +1,4 @@
+// Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis.models;
 
 import java.util.*;
@@ -194,19 +195,19 @@ public class MatchBuffer {
 		int end = 0;
 		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
 			NeighborEdge candidateEdge = candidateStar[candidateIndex];
-			while (start < probeStar.length && probeStar[start].shape.length < candidateEdge.shape.length - context.maxDistanceError)
+			while (start < probeStar.length && probeStar[start].length < candidateEdge.length - context.maxDistanceError)
 				++start;
 			if (end < start)
 				end = start;
-			while (end < probeStar.length && probeStar[end].shape.length <= candidateEdge.shape.length + context.maxDistanceError)
+			while (end < probeStar.length && probeStar[end].length <= candidateEdge.length + context.maxDistanceError)
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
 				NeighborEdge probeEdge = probeStar[probeIndex];
-				double referenceDiff = Angle.difference(probeEdge.shape.referenceAngle, candidateEdge.shape.referenceAngle);
+				double referenceDiff = Angle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
 				if (referenceDiff <= context.maxAngleError || referenceDiff >= complementaryAngleError) {
-					double neighborDiff = Angle.difference(probeEdge.shape.neighborAngle, candidateEdge.shape.neighborAngle);
+					double neighborDiff = Angle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
 					if (neighborDiff <= context.maxAngleError || neighborDiff >= complementaryAngleError)
-						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.shape.length));
+						results.add(new MatchingPair(new MinutiaPair(probeEdge.neighbor, candidateEdge.neighbor), candidateEdge.length));
 				}
 			}
 		}
