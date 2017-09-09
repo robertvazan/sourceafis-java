@@ -47,12 +47,14 @@ public class FingerprintTemplateTest {
 		assertTrue(delta / (map.width * map.height) < 0.01);
 	}
 	@Test public void json_roundTrip() {
-		t.minutiae.add(new FingerprintMinutia(new Cell(100, 200), Math.PI, MinutiaType.BIFURCATION));
-		t.minutiae.add(new FingerprintMinutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING));
+		t.minutiae = new FingerprintMinutia[] {
+			new FingerprintMinutia(new Cell(100, 200), Math.PI, MinutiaType.BIFURCATION),
+			new FingerprintMinutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
+		};
 		t = new FingerprintTemplate(t.json());
-		assertEquals(2, t.minutiae.size());
-		FingerprintMinutia a = t.minutiae.get(0);
-		FingerprintMinutia b = t.minutiae.get(1);
+		assertEquals(2, t.minutiae.length);
+		FingerprintMinutia a = t.minutiae[0];
+		FingerprintMinutia b = t.minutiae[1];
 		assertEquals(new Cell(100, 200), a.position);
 		assertEquals(Math.PI, a.direction, 0.0000001);
 		assertEquals(MinutiaType.BIFURCATION, a.type);

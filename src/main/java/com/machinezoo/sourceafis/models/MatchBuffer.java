@@ -7,10 +7,10 @@ import java.util.stream.*;
 public class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
 	private FingerprintContext context;
-	private List<FingerprintMinutia> probeMinutiae;
+	private FingerprintMinutia[] probeMinutiae;
 	private NeighborEdge[][] probeEdges;
 	private Map<Integer, List<IndexedEdge>> edgeHash;
-	private List<FingerprintMinutia> candidateMinutiae;
+	private FingerprintMinutia[] candidateMinutiae;
 	private NeighborEdge[][] candidateEdges;
 	private PriorityQueue<EdgePair> pairQueue = new PriorityQueue<>();
 	private PairInfo[] pairsByCandidate;
@@ -20,24 +20,24 @@ public class MatchBuffer {
 	public static MatchBuffer current() {
 		return local.get();
 	}
-	public void selectProbe(List<FingerprintMinutia> minutiae, NeighborEdge[][] edges) {
+	public void selectProbe(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {
 		probeMinutiae = minutiae;
 		probeEdges = edges;
-		if (pairList == null || minutiae.size() > pairList.length) {
-			pairList = new PairInfo[minutiae.size()];
+		if (pairList == null || minutiae.length > pairList.length) {
+			pairList = new PairInfo[minutiae.length];
 			for (int i = 0; i < pairList.length; ++i)
 				pairList[i] = new PairInfo();
-			pairsByProbe = new PairInfo[minutiae.size()];
+			pairsByProbe = new PairInfo[minutiae.length];
 		}
 	}
 	public void selectMatcher(Map<Integer, List<IndexedEdge>> edgeHash) {
 		this.edgeHash = edgeHash;
 	}
-	public void selectCandidate(List<FingerprintMinutia> minutiae, NeighborEdge[][] edges) {
+	public void selectCandidate(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {
 		candidateMinutiae = minutiae;
 		candidateEdges = edges;
-		if (pairsByCandidate == null || pairsByCandidate.length < minutiae.size())
-			pairsByCandidate = new PairInfo[minutiae.size()];
+		if (pairsByCandidate == null || pairsByCandidate.length < minutiae.length)
+			pairsByCandidate = new PairInfo[minutiae.length];
 	}
 	public double match() {
 		try {
@@ -82,17 +82,17 @@ public class MatchBuffer {
 			int candidateReference;
 		}
 		Stream<EdgeLookup> lookups = Arrays.stream(filters)
-			.flatMap(shapeFilter -> IntStream.range(1, candidateMinutiae.size()).boxed()
+			.flatMap(shapeFilter -> IntStream.range(1, candidateMinutiae.length).boxed()
 				.flatMap(step -> IntStream.range(0, step + 1).boxed()
 					.flatMap(pass -> {
 						List<Integer> roots = new ArrayList<>();
-						for (int root = pass; root < candidateMinutiae.size(); root += step + 1)
+						for (int root = pass; root < candidateMinutiae.length; root += step + 1)
 							roots.add(root);
 						return roots.stream();
 					})
 					.flatMap(root -> {
-						int neighbor = (root + step) % candidateMinutiae.size();
-						EdgeShape candidateEdge = new EdgeShape(candidateMinutiae.get(root), candidateMinutiae.get(neighbor));
+						int neighbor = (root + step) % candidateMinutiae.length;
+						EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[root], candidateMinutiae[neighbor]);
 						if (shapeFilter.test(candidateEdge)) {
 							EdgeLookup lookup = new EdgeLookup();
 							lookup.candidateEdge = candidateEdge;
@@ -232,7 +232,7 @@ public class MatchBuffer {
 	}
 	double computeScore() {
 		double minutiaScore = context.pairCountScore * pairCount;
-		double ratioScore = context.pairFractionScore * (pairCount / (double)probeMinutiae.size() + pairCount / (double)candidateMinutiae.size()) / 2;
+		double ratioScore = context.pairFractionScore * (pairCount / (double)probeMinutiae.length + pairCount / (double)candidateMinutiae.length) / 2;
 		double supportedScore = 0;
 		double edgeScore = 0;
 		double typeScore = 0;
@@ -241,7 +241,7 @@ public class MatchBuffer {
 			if (pair.supportingEdges >= context.minSupportingEdges)
 				supportedScore += context.supportedCountScore;
 			edgeScore += context.edgeCountScore * (pair.supportingEdges + 1);
-			if (probeMinutiae.get(pair.pair.probe).type == candidateMinutiae.get(pair.pair.candidate).type)
+			if (probeMinutiae[pair.pair.probe].type == candidateMinutiae[pair.pair.candidate].type)
 				typeScore += context.correctTypeScore;
 		}
 		int innerDistanceRadius = (int)Math.round(context.distanceErrorFlatness * context.maxDistanceError);
@@ -250,8 +250,8 @@ public class MatchBuffer {
 		int angleErrorSum = 0;
 		for (int i = 1; i < pairCount; ++i) {
 			PairInfo pair = pairList[i];
-			EdgeShape probeEdge = new EdgeShape(probeMinutiae.get(pair.reference.probe), probeMinutiae.get(pair.pair.probe));
-			EdgeShape candidateEdge = new EdgeShape(candidateMinutiae.get(pair.reference.candidate), candidateMinutiae.get(pair.pair.candidate));
+			EdgeShape probeEdge = new EdgeShape(probeMinutiae[pair.reference.probe], probeMinutiae[pair.pair.probe]);
+			EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[pair.reference.candidate], candidateMinutiae[pair.pair.candidate]);
 			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));

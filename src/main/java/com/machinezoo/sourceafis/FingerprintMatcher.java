@@ -34,10 +34,10 @@ public class FingerprintMatcher {
 		buildEdgeHash();
 	}
 	void buildEdgeHash() {
-		for (int reference = 0; reference < template.minutiae.size(); ++reference)
-			for (int neighbor = 0; neighbor < template.minutiae.size(); ++neighbor)
+		for (int reference = 0; reference < template.minutiae.length; ++reference)
+			for (int neighbor = 0; neighbor < template.minutiae.length; ++neighbor)
 				if (reference != neighbor) {
-					IndexedEdge edge = new IndexedEdge(new EdgeShape(template.minutiae.get(reference), template.minutiae.get(neighbor)), reference, neighbor);
+					IndexedEdge edge = new IndexedEdge(new EdgeShape(template.minutiae[reference], template.minutiae[neighbor]), reference, neighbor);
 					for (int hash : shapeCoverage(edge.shape)) {
 						List<IndexedEdge> list = edgeHash.get(hash);
 						if (list == null)

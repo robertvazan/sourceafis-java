@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
+import java.util.stream.*;
 import javax.imageio.*;
 import com.google.gson.*;
 import com.machinezoo.sourceafis.models.*;
@@ -30,7 +31,7 @@ import lombok.*;
  */
 public class FingerprintTemplate {
 	private final FingerprintContext context = FingerprintContext.current();
-	List<FingerprintMinutia> minutiae = new ArrayList<>();
+	FingerprintMinutia[] minutiae = new FingerprintMinutia[0];
 	NeighborEdge[][] edgeTable;
 	/**
 	 * Create fingerprint template from raw fingerprint image.
@@ -108,9 +109,7 @@ public class FingerprintTemplate {
 	 * @see #json()
 	 */
 	public FingerprintTemplate(String json) {
-		minutiae = Arrays.stream(new Gson().fromJson(json, PersistedMinutia[].class))
-			.map(m -> new FingerprintMinutia(new Cell(m.x, m.y), m.direction, m.type.equals("bifurcation") ? MinutiaType.BIFURCATION : MinutiaType.ENDING))
-			.collect(toList());
+		minutiae = new Gson().fromJson(json, FingerprintMinutia[].class);
 		context.log("deserialized-minutiae", minutiae);
 		buildEdgeTable();
 	}
@@ -132,15 +131,7 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(String)
 	 */
 	public String json() {
-		return new Gson().toJson(minutiae.stream()
-			.map(m -> new PersistedMinutia(m.position.x, m.position.y, m.direction, m.type == MinutiaType.BIFURCATION ? "bifurcation" : "ending"))
-			.collect(toList()));
-	}
-	@AllArgsConstructor private static class PersistedMinutia {
-		public int x;
-		public int y;
-		public double direction;
-		public String type;
+		return new Gson().toJson(minutiae);
 	}
 	@SneakyThrows DoubleMap readImage(byte[] serialized) {
 		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
@@ -600,40 +591,47 @@ public class FingerprintTemplate {
 		return shrunk;
 	}
 	void collectMinutiae(FingerprintSkeleton skeleton, MinutiaType type) {
-		for (SkeletonMinutia skeletonMinutia : skeleton.minutiae)
-			if (skeletonMinutia.considered && skeletonMinutia.ridges.size() == 1)
-				minutiae.add(new FingerprintMinutia(skeletonMinutia.position, skeletonMinutia.ridges.get(0).direction(context), type));
+		minutiae = Stream.concat(
+			Arrays.stream(minutiae),
+			skeleton.minutiae.stream()
+				.filter(m -> m.considered && m.ridges.size() == 1)
+				.map(m -> new FingerprintMinutia(m.position, m.ridges.get(0).direction(context), type)))
+			.toArray(FingerprintMinutia[]::new);
 		context.log("collected-minutiae", minutiae);
 	}
 	void maskMinutiae(BooleanMap mask) {
-		minutiae.removeIf(minutia -> {
-			Cell arrow = Angle.toVector(minutia.direction).multiply(-context.maskDisplacement).round();
-			return !mask.get(minutia.position.plus(arrow), false);
-		});
+		minutiae = Arrays.stream(minutiae)
+			.filter(minutia -> {
+				Cell arrow = Angle.toVector(minutia.direction).multiply(-context.maskDisplacement).round();
+				return mask.get(minutia.position.plus(arrow), false);
+			})
+			.toArray(FingerprintMinutia[]::new);
 		context.log("masked-minutiae", minutiae);
 	}
 	void removeMinutiaClouds() {
 		int radiusSq = Integers.sq(context.minutiaCloudRadius);
-		Set<FingerprintMinutia> removed = minutiae.stream()
-			.filter(minutia -> context.maxCloudSize < minutiae.stream()
+		Set<FingerprintMinutia> removed = Arrays.stream(minutiae)
+			.filter(minutia -> context.maxCloudSize < Arrays.stream(minutiae)
 				.filter(neighbor -> neighbor.position.minus(minutia.position).lengthSq() <= radiusSq)
 				.count() - 1)
 			.collect(toSet());
-		minutiae = minutiae.stream().filter(minutia -> !removed.contains(minutia)).collect(toList());
+		minutiae = Arrays.stream(minutiae)
+			.filter(minutia -> !removed.contains(minutia))
+			.toArray(FingerprintMinutia[]::new);
 		context.log("removed-minutia-clouds", minutiae);
 	}
 	void limitTemplateSize() {
-		if (minutiae.size() > context.maxMinutiae) {
-			minutiae = minutiae.stream()
+		if (minutiae.length > context.maxMinutiae) {
+			minutiae = Arrays.stream(minutiae)
 				.sorted(Comparator.<FingerprintMinutia>comparingInt(
-					minutia -> minutiae.stream()
+					minutia -> Arrays.stream(minutiae)
 						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
 						.sorted()
 						.skip(context.sortByNeighbor)
 						.findFirst().orElse(Integer.MAX_VALUE))
 					.reversed())
 				.limit(context.maxMinutiae)
-				.collect(toList());
+				.toArray(FingerprintMinutia[]::new);
 		}
 		context.log("template-size-limit", minutiae);
 	}
@@ -641,25 +639,25 @@ public class FingerprintTemplate {
 		int seed = 0;
 		for (FingerprintMinutia minutia : minutiae)
 			seed += minutia.direction + minutia.position.x + minutia.position.y + minutia.type.ordinal();
-		Collections.shuffle(minutiae, new Random(seed));
+		Collections.shuffle(Arrays.asList(minutiae), new Random(seed));
 		context.log("shuffled-minutiae", minutiae);
 	}
 	void buildEdgeTable() {
-		edgeTable = new NeighborEdge[minutiae.size()][];
+		edgeTable = new NeighborEdge[minutiae.length][];
 		List<NeighborEdge> edges = new ArrayList<>();
-		int[] allSqDistances = new int[minutiae.size()];
+		int[] allSqDistances = new int[minutiae.length];
 		for (int reference = 0; reference < edgeTable.length; ++reference) {
-			Cell referencePosition = minutiae.get(reference).position;
+			Cell referencePosition = minutiae[reference].position;
 			int sqMaxDistance = Integers.sq(context.edgeTableRange);
-			if (minutiae.size() - 1 > context.edgeTableNeighbors) {
-				for (int neighbor = 0; neighbor < minutiae.size(); ++neighbor)
-					allSqDistances[neighbor] = referencePosition.minus(minutiae.get(neighbor).position).lengthSq();
+			if (minutiae.length - 1 > context.edgeTableNeighbors) {
+				for (int neighbor = 0; neighbor < minutiae.length; ++neighbor)
+					allSqDistances[neighbor] = referencePosition.minus(minutiae[neighbor].position).lengthSq();
 				Arrays.sort(allSqDistances);
 				sqMaxDistance = allSqDistances[context.edgeTableNeighbors];
 			}
-			for (int neighbor = 0; neighbor < minutiae.size(); ++neighbor) {
-				if (neighbor != reference && referencePosition.minus(minutiae.get(neighbor).position).lengthSq() <= sqMaxDistance)
-					edges.add(new NeighborEdge(new EdgeShape(minutiae.get(reference), minutiae.get(neighbor)), neighbor));
+			for (int neighbor = 0; neighbor < minutiae.length; ++neighbor) {
+				if (neighbor != reference && referencePosition.minus(minutiae[neighbor].position).lengthSq() <= sqMaxDistance)
+					edges.add(new NeighborEdge(new EdgeShape(minutiae[reference], minutiae[neighbor]), neighbor));
 			}
 			edges.sort(Comparator.<NeighborEdge>comparingInt(e -> e.shape.length).thenComparingInt(e -> e.neighbor));
 			while (edges.size() > context.edgeTableNeighbors)
