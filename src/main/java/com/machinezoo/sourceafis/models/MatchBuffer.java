@@ -56,6 +56,7 @@ public class MatchBuffer {
 						context.log("pair-list", tree);
 					}
 				}
+				clearPairing();
 			}
 			return context.shapedScore ? ScoreShape.shape(high) : high;
 		} catch (Throwable e) {
@@ -125,9 +126,7 @@ public class MatchBuffer {
 			collectEdges();
 			skipPaired();
 		} while (!queue.isEmpty());
-		double score = computeScore();
-		clearPairing();
-		return score;
+		return computeScore();
 	}
 	private void clearPairing() {
 		for (int i = 0; i < count; ++i) {
