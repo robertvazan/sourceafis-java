@@ -18,6 +18,15 @@ public class FingerprintTemplateTest {
 	public static FingerprintTemplate nonmatching() {
 		return new FingerprintTemplate(load("nonmatching.png"));
 	}
+	public static FingerprintTemplate probeIso() {
+		return new FingerprintTemplate(load("iso-probe.dat"));
+	}
+	public static FingerprintTemplate matchingIso() {
+		return new FingerprintTemplate(load("iso-matching.dat"));
+	}
+	public static FingerprintTemplate nonmatchingIso() {
+		return new FingerprintTemplate(load("iso-nonmatching.dat"));
+	}
 	@Test public void constructor() {
 		new FingerprintTemplate(load("probe.png"));
 	}

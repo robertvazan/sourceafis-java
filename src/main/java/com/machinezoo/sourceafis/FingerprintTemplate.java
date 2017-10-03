@@ -37,14 +37,18 @@ public class FingerprintTemplate {
 	 * Create fingerprint template from raw fingerprint image.
 	 * Image must contain black fingerprint on white background at 500dpi.
 	 * For images at different DPI, call {@link #FingerprintTemplate(byte[], double)}.
+	 * <p>
+	 * Aside from standard image formats supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP,
+	 * this constructor also accepts ISO 19794-2 templates that carry fingerprint features (endings and bifurcations) without the original image.
+	 * This feature may be removed in the future and developers are encouraged to collect and store raw fingerprint images.
 	 * 
 	 * @param image
-	 *            fingerprint image in a format supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP
+	 *            fingerprint image in {@link ImageIO}-supported format or ISO 19794-2 file
 	 * 
 	 * @see #FingerprintTemplate(byte[], double)
 	 */
 	public FingerprintTemplate(byte[] image) {
-		this(image, 500);
+		this(image, OptionalDouble.empty());
 	}
 	/**
 	 * Create fingerprint template from raw fingerprint image with non-default DPI.
@@ -53,45 +57,51 @@ public class FingerprintTemplate {
 	 * Check your fingerprint reader specification for correct DPI value.
 	 * 
 	 * @param image
-	 *            fingerprint image in a format supported by Java's {@link ImageIO}
+	 *            fingerprint image in {@link ImageIO}-supported format
 	 * @param dpi
 	 *            DPI of the image
 	 * 
 	 * @see #FingerprintTemplate(byte[])
 	 */
 	public FingerprintTemplate(byte[] image, double dpi) {
+		this(image, OptionalDouble.of(dpi));
+	}
+	private FingerprintTemplate(byte[] image, OptionalDouble dpi) {
 		context.log("extracting-features", null);
-		context.log("image-dpi", dpi);
-		context.log("serialized-image", image);
-		DoubleMap raw = readImage(image);
-		if (Math.abs(dpi - 500) > context.dpiTolerance) {
-			raw = scaleImage(raw, dpi);
+		if (isIso(image))
+			minutiae = parseIso(image, dpi);
+		else {
+			context.log("image-dpi", dpi);
+			context.log("serialized-image", image);
+			DoubleMap raw = readImage(image);
+			if (dpi.isPresent() && Math.abs(dpi.getAsDouble() - 500) > context.dpiTolerance)
+				raw = scaleImage(raw, dpi.getAsDouble());
+			BlockMap blocks = new BlockMap(raw.width, raw.height, context.blockSize);
+			context.log("block-map", blocks);
+			Histogram histogram = histogram(blocks, raw);
+			Histogram smoothHistogram = smoothHistogram(blocks, histogram);
+			BooleanMap mask = mask(blocks, histogram);
+			DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
+			DoubleMap orientation = orientationMap(equalized, mask, blocks);
+			DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, orientedLines(context.parallelSmoothinig));
+			context.log("parallel-smoothing", smoothed);
+			DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orientedLines(context.orthogonalSmoothing));
+			context.log("orthogonal-smoothing", orthogonal);
+			BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
+			cleanupBinarized(binary);
+			BooleanMap pixelMask = fillBlocks(mask, blocks);
+			context.log("pixel-mask", pixelMask);
+			BooleanMap inverted = invert(binary, pixelMask);
+			context.log("masked-inverted", inverted);
+			BooleanMap innerMask = innerMask(pixelMask);
+			context.log("skeleton", "ridges");
+			FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
+			context.log("skeleton", "valleys");
+			FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
+			collectMinutiae(ridges, MinutiaType.ENDING);
+			collectMinutiae(valleys, MinutiaType.BIFURCATION);
+			maskMinutiae(innerMask);
 		}
-		BlockMap blocks = new BlockMap(raw.width, raw.height, context.blockSize);
-		context.log("block-map", blocks);
-		Histogram histogram = histogram(blocks, raw);
-		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
-		BooleanMap mask = mask(blocks, histogram);
-		DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
-		DoubleMap orientation = orientationMap(equalized, mask, blocks);
-		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, orientedLines(context.parallelSmoothinig));
-		context.log("parallel-smoothing", smoothed);
-		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orientedLines(context.orthogonalSmoothing));
-		context.log("orthogonal-smoothing", orthogonal);
-		BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
-		cleanupBinarized(binary);
-		BooleanMap pixelMask = fillBlocks(mask, blocks);
-		context.log("pixel-mask", pixelMask);
-		BooleanMap inverted = invert(binary, pixelMask);
-		context.log("masked-inverted", inverted);
-		BooleanMap innerMask = innerMask(pixelMask);
-		context.log("skeleton", "ridges");
-		FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
-		context.log("skeleton", "valleys");
-		FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
-		collectMinutiae(ridges, MinutiaType.ENDING);
-		collectMinutiae(valleys, MinutiaType.BIFURCATION);
-		maskMinutiae(innerMask);
 		removeMinutiaClouds();
 		limitTemplateSize();
 		shuffleMinutiae();
@@ -132,6 +142,74 @@ public class FingerprintTemplate {
 	 */
 	public String json() {
 		return new Gson().toJson(minutiae);
+	}
+	private static boolean isIso(byte[] iso) {
+		return iso.length >= 30 && iso[0] == 'F' && iso[1] == 'M' && iso[2] == 'R' && iso[3] == 0;
+	}
+	private FingerprintMinutia[] parseIso(byte[] iso, OptionalDouble dpi) {
+		try {
+			DataInput in = new DataInputStream(new ByteArrayInputStream(iso));
+			// 4B magic header "FMR\0"
+			// 4B version " 20\0"
+			// 4B template length in bytes (should be 28 + 6 * count + 2 + extra-data)
+			// 2B junk
+			in.skipBytes(14);
+			// image size
+			int width = in.readUnsignedShort();
+			int height = in.readUnsignedShort();
+			context.log("iso-size", new Cell(width, height));
+			// pixels per cm X and Y, assuming 500dpi
+			int xPixelsPerCM = in.readShort();
+			int yPixelsPerCM = in.readShort();
+			double dpiX = xPixelsPerCM * 255 / 100.0;
+			double dpiY = yPixelsPerCM * 255 / 100.0;
+			context.log("iso-dpi", new Point(dpiX, dpiY));
+			if (dpi.isPresent()) {
+				dpiX = dpi.getAsDouble();
+				dpiY = dpi.getAsDouble();
+			}
+			// 1B number of fingerprints in the template (assuming 1)
+			// 1B junk
+			// 1B finger position
+			// 1B junk
+			// 1B fingerprint quality
+			in.skipBytes(5);
+			// minutia count
+			int count = in.readUnsignedByte();
+			List<FingerprintMinutia> minutiae = new ArrayList<>();
+			for (int i = 0; i < count; ++i) {
+				// X position, upper two bits are type
+				int packedX = in.readUnsignedShort();
+				// Y position, upper two bits ignored
+				int packedY = in.readUnsignedShort();
+				// angle, 0..255 equivalent to 0..2pi
+				int angle = in.readUnsignedByte();
+				// 1B minutia quality
+				in.skipBytes(1);
+				// type: 01 ending, 10 bifurcation, 00 other (treated as ending)
+				int type = (packedX >> 14) & 0x3;
+				int x = packedX & 0x3fff;
+				int y = packedY & 0x3fff;
+				if (Math.abs(dpiX - 500) > context.dpiTolerance)
+					x = (int)Math.round(x / dpiX * 500);
+				if (Math.abs(dpiY - 500) > context.dpiTolerance)
+					y = (int)Math.round(y / dpiY * 500);
+				FingerprintMinutia minutia = new FingerprintMinutia(
+					new Cell(x, y),
+					angle * Angle.PI2 / 256.0,
+					type == 2 ? MinutiaType.BIFURCATION : MinutiaType.ENDING);
+				minutiae.add(minutia);
+			}
+			// extra data length
+			int extra = in.readUnsignedShort();
+			// variable-length extra data section
+			in.skipBytes(extra);
+			FingerprintMinutia[] result = minutiae.stream().toArray(FingerprintMinutia[]::new);
+			context.log("iso-minutiae", result);
+			return result;
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Invalid ISO 19794-2 template", e);
+		}
 	}
 	@SneakyThrows DoubleMap readImage(byte[] serialized) {
 		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
