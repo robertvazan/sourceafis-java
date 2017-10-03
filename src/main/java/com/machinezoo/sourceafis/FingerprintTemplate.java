@@ -39,8 +39,8 @@ public class FingerprintTemplate {
 	 * For images at different DPI, call {@link #FingerprintTemplate(byte[], double)}.
 	 * <p>
 	 * Aside from standard image formats supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP,
-	 * this constructor also accepts ISO 19794-2 templates that carry fingerprint features (endings and bifurcations) without the original image.
-	 * This feature may be removed in the future and developers are encouraged to collect and store raw fingerprint images.
+	 * this constructor also accepts legacy ISO 19794-2 templates that carry fingerprint features (endings and bifurcations) without the original image.
+	 * This functionality may be removed in the future and developers are encouraged to collect and store raw fingerprint images.
 	 * 
 	 * @param image
 	 *            fingerprint image in {@link ImageIO}-supported format or ISO 19794-2 file
