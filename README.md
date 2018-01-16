@@ -17,3 +17,5 @@ boolean match = score >= 40;
 * [Download](https://sourceafis.machinezoo.com/download) - Maven package, JAR file, sample fingerprints.
 * [Javadoc](https://sourceafis.machinezoo.com/javadoc/com/machinezoo/sourceafis/package-summary.html) - API reference documentation.
 * [Sources](https://bitbucket.org/robertvazan/sourceafis-java/src) - Primary repository, preferred for pull requests.
+* [License](https://www.apache.org/licenses/LICENSE-2.0) - Distributed under Apache License 2.0.
+
