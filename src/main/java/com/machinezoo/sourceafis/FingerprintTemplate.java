@@ -16,15 +16,15 @@ import lombok.*;
  * Fingerprint template holds high-level fingerprint features, specifically ridge endings and bifurcations (minutiae).
  * Original image is not preserved in the fingerprint template and there is no way to reconstruct the original fingerprint from its template.
  * <p>
- * Fingerprint template can be created from fingerprint image by calling {@link #FingerprintTemplate(byte[])}.
+ * Fingerprint template can be created from fingerprint image by calling {@link #FingerprintTemplate(byte[], double)}.
  * Since image processing is expensive, applications should cache serialized templates.
  * Serialization is performed by {@link #toJson()} and deserialization by {@link #fromJson(String)}.
  * <p>
  * Matching is performed by constructing {@link FingerprintMatcher} and calling its {@link FingerprintMatcher#match(FingerprintTemplate)} method.
  * <p>
- * {@code FingerprintTemplate} contains search structures that speed up matching at the cost of some RAM.
- * These search structures do not contain any unique data. They can be recomputed from minutiae.
- * They are therefore excluded from serialized templates.
+ * {@code FingerprintTemplate} contains two kinds of data: fingerprint features and search data structures.
+ * Search data structures speed up matching at the cost of some RAM.
+ * Only fingerprint features are serialized. Search data structures are recomputed after every deserialization.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
  * @see FingerprintMatcher
@@ -37,13 +37,10 @@ public class FingerprintTemplate {
 	 * Create fingerprint template from raw fingerprint image.
 	 * Image must contain black fingerprint on white background with the specified DPI (dots per inch).
 	 * Check your fingerprint reader specification for correct DPI value.
-	 * <p>
-	 * Aside from standard image formats supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP,
-	 * this constructor also accepts legacy ISO 19794-2 templates that carry fingerprint features (endings and bifurcations) without the original image.
-	 * This functionality may be removed in the future and developers are encouraged to collect and store raw fingerprint images.
+	 * All image formats supported by Java's {@link ImageIO} are accepted, for example JPEG, PNG, or BMP,
 	 * 
 	 * @param image
-	 *            fingerprint image in {@link ImageIO}-supported format or ISO 19794-2 file
+	 *            fingerprint image in {@link ImageIO}-supported format
 	 * @param dpi
 	 *            DPI of the image, usually around 500
 	 * 
@@ -51,42 +48,38 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate(byte[] image, double dpi) {
 		logger.log("extracting-features", null);
-		if (isIso(image))
-			minutiae = parseIso(image, OptionalDouble.of(dpi));
-		else {
-			logger.log("image-dpi", dpi);
-			logger.log("serialized-image", image);
-			DoubleMap raw = readImage(image);
-			if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
-				raw = scaleImage(raw, dpi);
-			BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
-			logger.log("block-map", blocks);
-			Histogram histogram = histogram(blocks, raw);
-			Histogram smoothHistogram = smoothHistogram(blocks, histogram);
-			BooleanMap mask = mask(blocks, histogram);
-			DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
-			DoubleMap orientation = orientationMap(equalized, mask, blocks);
-			DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0,
-				orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep));
-			logger.log("parallel-smoothing", smoothed);
-			DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI,
-				orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep));
-			logger.log("orthogonal-smoothing", orthogonal);
-			BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
-			cleanupBinarized(binary);
-			BooleanMap pixelMask = fillBlocks(mask, blocks);
-			logger.log("pixel-mask", pixelMask);
-			BooleanMap inverted = invert(binary, pixelMask);
-			logger.log("masked-inverted", inverted);
-			BooleanMap innerMask = innerMask(pixelMask);
-			logger.log("skeleton", "ridges");
-			FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
-			logger.log("skeleton", "valleys");
-			FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
-			collectMinutiae(ridges, MinutiaType.ENDING);
-			collectMinutiae(valleys, MinutiaType.BIFURCATION);
-			maskMinutiae(innerMask);
-		}
+		logger.log("image-dpi", dpi);
+		logger.log("serialized-image", image);
+		DoubleMap raw = readImage(image);
+		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
+			raw = scaleImage(raw, dpi);
+		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
+		logger.log("block-map", blocks);
+		Histogram histogram = histogram(blocks, raw);
+		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
+		BooleanMap mask = mask(blocks, histogram);
+		DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
+		DoubleMap orientation = orientationMap(equalized, mask, blocks);
+		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0,
+			orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep));
+		logger.log("parallel-smoothing", smoothed);
+		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI,
+			orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep));
+		logger.log("orthogonal-smoothing", orthogonal);
+		BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
+		cleanupBinarized(binary);
+		BooleanMap pixelMask = fillBlocks(mask, blocks);
+		logger.log("pixel-mask", pixelMask);
+		BooleanMap inverted = invert(binary, pixelMask);
+		logger.log("masked-inverted", inverted);
+		BooleanMap innerMask = innerMask(pixelMask);
+		logger.log("skeleton", "ridges");
+		FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
+		logger.log("skeleton", "valleys");
+		FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
+		collectMinutiae(ridges, MinutiaType.ENDING);
+		collectMinutiae(valleys, MinutiaType.BIFURCATION);
+		maskMinutiae(innerMask);
 		removeMinutiaClouds();
 		limitTemplateSize();
 		shuffleMinutiae();
@@ -100,6 +93,7 @@ public class FingerprintTemplate {
 	 * 
 	 * @param json
 	 *            serialized fingerprint template in JSON format produced by {@link #toJson()}
+	 * @return deserialized fingerprint template
 	 * 
 	 * @see #toJson()
 	 */
@@ -131,17 +125,46 @@ public class FingerprintTemplate {
 	public String toJson() {
 		return new Gson().toJson(minutiae);
 	}
-	private static boolean isIso(byte[] iso) {
-		return iso.length >= 30 && iso[0] == 'F' && iso[1] == 'M' && iso[2] == 'R' && iso[3] == 0;
+	/**
+	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.
+	 * This method can import biometric data from ISO 19794-2 templates,
+	 * which carry fingerprint features (endings and bifurcations) without the original image.
+	 * <p>
+	 * This method is written for ISO 19794-2:2005, but it should be able to handle ISO 19794-2:2011 templates.
+	 * If you believe you have a conforming template, but this method doesn't accept it, mail the template in for analysis.
+	 * No other fingerprint template formats are currently supported.
+	 * <p>
+	 * Note that the use of ISO 19794-2 templates is strongly discouraged
+	 * and support for the format might be removed in future releases.
+	 * This is because ISO is very unfriendly to opensource developers,
+	 * Its "standards" are only available for a high fee and with no redistribution rights.
+	 * There is only one truly open and widely used fingerprint exchange format: fingerprint images.
+	 * Application developers are encouraged to collect, store, and transfer fingerprints as raw images.
+	 * Besides compatibility and simplicity this brings,
+	 * use of raw images allows SourceAFIS to co-tune its feature extractor and matcher for higher accuracy.
+	 * 
+	 * @param iso ISO 19794-2 template to import
+	 * @return converted fingerprint template
+	 * 
+	 * @see #FingerprintTemplate(byte[], double)
+	 * @see #fromJson(String)
+	 * @see #toJson()
+	 */
+	public static FingerprintTemplate convert(byte[] iso) {
+		return new FingerprintTemplate(iso);
 	}
-	private FingerprintMinutia[] parseIso(byte[] iso, OptionalDouble dpi) {
+	private FingerprintTemplate(byte[] iso) {
+		if (iso.length < 30)
+			throw new IllegalArgumentException("Array too small to be an ISO 19794-2 template");
 		try {
 			DataInput in = new DataInputStream(new ByteArrayInputStream(iso));
 			// 4B magic header "FMR\0"
+			if (in.readByte() != 'F' || in.readByte() != 'M' || in.readByte() != 'R' || in.readByte() != 0)
+				throw new IllegalArgumentException("This is not an ISO 19794-2 template");
 			// 4B version " 20\0"
 			// 4B template length in bytes (should be 28 + 6 * count + 2 + extra-data)
 			// 2B junk
-			in.skipBytes(14);
+			in.skipBytes(10);
 			// image size
 			int width = in.readUnsignedShort();
 			int height = in.readUnsignedShort();
@@ -152,10 +175,6 @@ public class FingerprintTemplate {
 			double dpiX = xPixelsPerCM * 255 / 100.0;
 			double dpiY = yPixelsPerCM * 255 / 100.0;
 			logger.log("iso-dpi", new Point(dpiX, dpiY));
-			if (dpi.isPresent()) {
-				dpiX = dpi.getAsDouble();
-				dpiY = dpi.getAsDouble();
-			}
 			// 1B number of fingerprints in the template (assuming 1)
 			// 1B junk
 			// 1B finger position
@@ -164,7 +183,7 @@ public class FingerprintTemplate {
 			in.skipBytes(5);
 			// minutia count
 			int count = in.readUnsignedByte();
-			List<FingerprintMinutia> minutiae = new ArrayList<>();
+			List<FingerprintMinutia> list = new ArrayList<>();
 			for (int i = 0; i < count; ++i) {
 				// X position, upper two bits are type
 				int packedX = in.readUnsignedShort();
@@ -186,18 +205,19 @@ public class FingerprintTemplate {
 					new Cell(x, y),
 					angle * Angle.PI2 / 256.0,
 					type == 2 ? MinutiaType.BIFURCATION : MinutiaType.ENDING);
-				minutiae.add(minutia);
+				list.add(minutia);
 			}
 			// extra data length
 			int extra = in.readUnsignedShort();
 			// variable-length extra data section
 			in.skipBytes(extra);
-			FingerprintMinutia[] result = minutiae.stream().toArray(FingerprintMinutia[]::new);
-			logger.log("iso-minutiae", result);
-			return result;
+			minutiae = list.stream().toArray(FingerprintMinutia[]::new);
+			logger.log("iso-minutiae", minutiae);
 		} catch (IOException e) {
 			throw new IllegalArgumentException("Invalid ISO 19794-2 template", e);
 		}
+		shuffleMinutiae();
+		buildEdgeTable();
 	}
 	@SneakyThrows DoubleMap readImage(byte[] serialized) {
 		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));

@@ -19,13 +19,13 @@ public class FingerprintTemplateTest {
 		return new FingerprintTemplate(load("nonmatching.png"), 500);
 	}
 	public static FingerprintTemplate probeIso() {
-		return new FingerprintTemplate(load("iso-probe.dat"), 500);
+		return FingerprintTemplate.convert(load("iso-probe.dat"));
 	}
 	public static FingerprintTemplate matchingIso() {
-		return new FingerprintTemplate(load("iso-matching.dat"), 500);
+		return FingerprintTemplate.convert(load("iso-matching.dat"));
 	}
 	public static FingerprintTemplate nonmatchingIso() {
-		return new FingerprintTemplate(load("iso-nonmatching.dat"), 500);
+		return FingerprintTemplate.convert(load("iso-nonmatching.dat"));
 	}
 	@Test public void constructor() {
 		new FingerprintTemplate(load("probe.png"), 500);
