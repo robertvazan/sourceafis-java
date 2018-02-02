@@ -35,8 +35,8 @@ public class FingerprintTemplate {
 	NeighborEdge[][] edgeTable;
 	/**
 	 * Create fingerprint template from raw fingerprint image.
-	 * Image must contain black fingerprint on white background at 500dpi.
-	 * For images at different DPI, call {@link #FingerprintTemplate(byte[], double)}.
+	 * Image must contain black fingerprint on white background with the specified DPI (dots per inch).
+	 * Check your fingerprint reader specification for correct DPI value.
 	 * <p>
 	 * Aside from standard image formats supported by Java's {@link ImageIO}, for example JPEG, PNG, or BMP,
 	 * this constructor also accepts legacy ISO 19794-2 templates that carry fingerprint features (endings and bifurcations) without the original image.
@@ -44,38 +44,21 @@ public class FingerprintTemplate {
 	 * 
 	 * @param image
 	 *            fingerprint image in {@link ImageIO}-supported format or ISO 19794-2 file
-	 * 
-	 * @see #FingerprintTemplate(byte[], double)
-	 */
-	public FingerprintTemplate(byte[] image) {
-		this(image, OptionalDouble.empty());
-	}
-	/**
-	 * Create fingerprint template from raw fingerprint image with non-default DPI.
-	 * This constructor's behavior is identical to {@link #FingerprintTemplate(byte[])}
-	 * except that custom DPI (dots per inch) can be specified.
-	 * Check your fingerprint reader specification for correct DPI value.
-	 * 
-	 * @param image
-	 *            fingerprint image in {@link ImageIO}-supported format
 	 * @param dpi
-	 *            DPI of the image
+	 *            DPI of the image, usually around 500
 	 * 
 	 * @see #FingerprintTemplate(byte[])
 	 */
 	public FingerprintTemplate(byte[] image, double dpi) {
-		this(image, OptionalDouble.of(dpi));
-	}
-	private FingerprintTemplate(byte[] image, OptionalDouble dpi) {
 		logger.log("extracting-features", null);
 		if (isIso(image))
-			minutiae = parseIso(image, dpi);
+			minutiae = parseIso(image, OptionalDouble.of(dpi));
 		else {
 			logger.log("image-dpi", dpi);
 			logger.log("serialized-image", image);
 			DoubleMap raw = readImage(image);
-			if (dpi.isPresent() && Math.abs(dpi.getAsDouble() - 500) > Parameters.dpiTolerance)
-				raw = scaleImage(raw, dpi.getAsDouble());
+			if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
+				raw = scaleImage(raw, dpi);
 			BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 			logger.log("block-map", blocks);
 			Histogram histogram = histogram(blocks, raw);

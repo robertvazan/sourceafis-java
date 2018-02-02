@@ -10,25 +10,25 @@ import lombok.*;
 public class FingerprintTemplateTest {
 	private static FingerprintTemplate t = FingerprintTemplate.fromJson("[]");
 	public static FingerprintTemplate probe() {
-		return new FingerprintTemplate(load("probe.png"));
+		return new FingerprintTemplate(load("probe.png"), 500);
 	}
 	public static FingerprintTemplate matching() {
-		return new FingerprintTemplate(load("matching.png"));
+		return new FingerprintTemplate(load("matching.png"), 500);
 	}
 	public static FingerprintTemplate nonmatching() {
-		return new FingerprintTemplate(load("nonmatching.png"));
+		return new FingerprintTemplate(load("nonmatching.png"), 500);
 	}
 	public static FingerprintTemplate probeIso() {
-		return new FingerprintTemplate(load("iso-probe.dat"));
+		return new FingerprintTemplate(load("iso-probe.dat"), 500);
 	}
 	public static FingerprintTemplate matchingIso() {
-		return new FingerprintTemplate(load("iso-matching.dat"));
+		return new FingerprintTemplate(load("iso-matching.dat"), 500);
 	}
 	public static FingerprintTemplate nonmatchingIso() {
-		return new FingerprintTemplate(load("iso-nonmatching.dat"));
+		return new FingerprintTemplate(load("iso-nonmatching.dat"), 500);
 	}
 	@Test public void constructor() {
-		new FingerprintTemplate(load("probe.png"));
+		new FingerprintTemplate(load("probe.png"), 500);
 	}
 	@Test public void readImage_png() {
 		readImage_validate(t.readImage(load("probe.png")));
