@@ -45,9 +45,9 @@ public class SkeletonRidge {
 		start(null);
 		end(null);
 	}
-	public double direction(FingerprintContext context) {
-		int first = context.ridgeDirectionSkip;
-		int last = context.ridgeDirectionSkip + context.ridgeDirectionSample - 1;
+	public double direction() {
+		int first = Parameters.ridgeDirectionSkip;
+		int last = Parameters.ridgeDirectionSkip + Parameters.ridgeDirectionSample - 1;
 		if (last >= points.size()) {
 			int shift = last - points.size() + 1;
 			last -= shift;

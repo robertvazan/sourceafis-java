@@ -6,7 +6,7 @@ import gnu.trove.map.hash.*;
 
 public class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
-	private FingerprintContext context;
+	private DataLogger logger;
 	private FingerprintMinutia[] probeMinutiae;
 	private NeighborEdge[][] probeEdges;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
@@ -42,31 +42,31 @@ public class MatchBuffer {
 	}
 	public double match() {
 		try {
-			context = FingerprintContext.current();
+			logger = DataLogger.current();
 			int totalRoots = enumerateRoots();
 			double high = 0;
 			for (int i = 0; i < totalRoots; ++i) {
 				MinutiaPair root = roots[i];
-				context.log("tried-root", root);
+				logger.log("tried-root", root);
 				double score = tryRoot(root);
 				if (score > high) {
 					high = score;
-					if (context.logging()) {
-						context.log("pair-count", count);
-						context.log("pair-list", tree);
+					if (logger.logging()) {
+						logger.log("pair-count", count);
+						logger.log("pair-list", tree);
 					}
 				}
 				clearPairing();
 			}
-			return context.shapedScore ? ScoreShape.shape(high) : high;
+			return Parameters.shapedScore ? ScoreShape.shape(high) : high;
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
 		}
 	}
 	private int enumerateRoots() {
-		if (roots == null || roots.length < context.maxTriedRoots)
-			roots = new MinutiaPair[context.maxTriedRoots];
+		if (roots == null || roots.length < Parameters.maxTriedRoots)
+			roots = new MinutiaPair[Parameters.maxTriedRoots];
 		int totalLookups = 0;
 		int totalRoots = 0;
 		for (boolean shortEdges : new boolean[] { false, true }) {
@@ -75,7 +75,7 @@ public class MatchBuffer {
 					for (int candidateReference = phase; candidateReference < candidateMinutiae.length; candidateReference += period + 1) {
 						int candidateNeighbor = (candidateReference + period) % candidateMinutiae.length;
 						EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[candidateReference], candidateMinutiae[candidateNeighbor]);
-						if ((candidateEdge.length >= context.minRootEdgeLength) ^ shortEdges) {
+						if ((candidateEdge.length >= Parameters.minRootEdgeLength) ^ shortEdges) {
 							List<IndexedEdge> matches = edgeHash.get(hashShape(candidateEdge));
 							if (matches != null) {
 								for (IndexedEdge match : matches) {
@@ -85,13 +85,13 @@ public class MatchBuffer {
 										pair.candidate = candidateReference;
 										roots[totalRoots] = pair;
 										++totalRoots;
-										if (totalRoots >= context.maxTriedRoots)
+										if (totalRoots >= Parameters.maxTriedRoots)
 											return totalRoots;
 									}
 								}
 							}
 							++totalLookups;
-							if (totalLookups >= context.maxRootEdgeLookups)
+							if (totalLookups >= Parameters.maxRootEdgeLookups)
 								return totalRoots;
 						}
 					}
@@ -101,19 +101,19 @@ public class MatchBuffer {
 		return totalRoots;
 	}
 	private int hashShape(EdgeShape edge) {
-		int lengthBin = edge.length / context.maxDistanceError;
-		int referenceAngleBin = (int)(edge.referenceAngle / context.maxAngleError);
-		int neighborAngleBin = (int)(edge.neighborAngle / context.maxAngleError);
+		int lengthBin = edge.length / Parameters.maxDistanceError;
+		int referenceAngleBin = (int)(edge.referenceAngle / Parameters.maxAngleError);
+		int neighborAngleBin = (int)(edge.neighborAngle / Parameters.maxAngleError);
 		return (referenceAngleBin << 24) + (neighborAngleBin << 16) + lengthBin;
 	}
 	private boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
 		int lengthDelta = probe.length - candidate.length;
-		if (lengthDelta >= -context.maxDistanceError && lengthDelta <= context.maxDistanceError) {
-			double complementaryAngleError = Angle.complementary(context.maxAngleError);
+		if (lengthDelta >= -Parameters.maxDistanceError && lengthDelta <= Parameters.maxDistanceError) {
+			double complementaryAngleError = Angle.complementary(Parameters.maxAngleError);
 			double referenceDelta = Angle.difference(probe.referenceAngle, candidate.referenceAngle);
-			if (referenceDelta <= context.maxAngleError || referenceDelta >= complementaryAngleError) {
+			if (referenceDelta <= Parameters.maxAngleError || referenceDelta >= complementaryAngleError) {
 				double neighborDelta = Angle.difference(probe.neighborAngle, candidate.neighborAngle);
-				if (neighborDelta <= context.maxAngleError || neighborDelta >= complementaryAngleError)
+				if (neighborDelta <= Parameters.maxAngleError || neighborDelta >= complementaryAngleError)
 					return true;
 			}
 		}
@@ -154,24 +154,24 @@ public class MatchBuffer {
 		}
 	}
 	private List<MinutiaPair> matchPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
-		double complementaryAngleError = Angle.complementary(context.maxAngleError);
+		double complementaryAngleError = Angle.complementary(Parameters.maxAngleError);
 		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
 		int end = 0;
 		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
 			NeighborEdge candidateEdge = candidateStar[candidateIndex];
-			while (start < probeStar.length && probeStar[start].length < candidateEdge.length - context.maxDistanceError)
+			while (start < probeStar.length && probeStar[start].length < candidateEdge.length - Parameters.maxDistanceError)
 				++start;
 			if (end < start)
 				end = start;
-			while (end < probeStar.length && probeStar[end].length <= candidateEdge.length + context.maxDistanceError)
+			while (end < probeStar.length && probeStar[end].length <= candidateEdge.length + Parameters.maxDistanceError)
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
 				NeighborEdge probeEdge = probeStar[probeIndex];
 				double referenceDiff = Angle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
-				if (referenceDiff <= context.maxAngleError || referenceDiff >= complementaryAngleError) {
+				if (referenceDiff <= Parameters.maxAngleError || referenceDiff >= complementaryAngleError) {
 					double neighborDiff = Angle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
-					if (neighborDiff <= context.maxAngleError || neighborDiff >= complementaryAngleError) {
+					if (neighborDiff <= Parameters.maxAngleError || neighborDiff >= complementaryAngleError) {
 						MinutiaPair pair = allocate();
 						pair.probe = probeEdge.neighbor;
 						pair.candidate = candidateEdge.neighbor;
@@ -200,25 +200,25 @@ public class MatchBuffer {
 	private void addSupportingEdge(MinutiaPair pair) {
 		++byProbe[pair.probe].supportingEdges;
 		++byProbe[pair.probeRef].supportingEdges;
-		if (context.logging())
-			context.log("supporting-edge", pair);
+		if (logger.logging())
+			logger.log("supporting-edge", pair);
 	}
 	private double computeScore() {
-		double minutiaScore = context.pairCountScore * count;
-		double ratioScore = context.pairFractionScore * (count / (double)probeMinutiae.length + count / (double)candidateMinutiae.length) / 2;
+		double minutiaScore = Parameters.pairCountScore * count;
+		double ratioScore = Parameters.pairFractionScore * (count / (double)probeMinutiae.length + count / (double)candidateMinutiae.length) / 2;
 		double supportedScore = 0;
 		double edgeScore = 0;
 		double typeScore = 0;
 		for (int i = 0; i < count; ++i) {
 			MinutiaPair pair = tree[i];
-			if (pair.supportingEdges >= context.minSupportingEdges)
-				supportedScore += context.supportedCountScore;
-			edgeScore += context.edgeCountScore * (pair.supportingEdges + 1);
+			if (pair.supportingEdges >= Parameters.minSupportingEdges)
+				supportedScore += Parameters.supportedCountScore;
+			edgeScore += Parameters.edgeCountScore * (pair.supportingEdges + 1);
 			if (probeMinutiae[pair.probe].type == candidateMinutiae[pair.candidate].type)
-				typeScore += context.correctTypeScore;
+				typeScore += Parameters.correctTypeScore;
 		}
-		int innerDistanceRadius = (int)Math.round(context.distanceErrorFlatness * context.maxDistanceError);
-		int innerAngleRadius = (int)Math.round(context.angleErrorFlatness * context.maxAngleError);
+		int innerDistanceRadius = (int)Math.round(Parameters.distanceErrorFlatness * Parameters.maxDistanceError);
+		int innerAngleRadius = (int)Math.round(Parameters.angleErrorFlatness * Parameters.maxAngleError);
 		int distanceErrorSum = 0;
 		int angleErrorSum = 0;
 		for (int i = 1; i < count; ++i) {
@@ -232,21 +232,21 @@ public class MatchBuffer {
 		double distanceScore = 0;
 		double angleScore = 0;
 		if (count >= 2) {
-			double pairedDistanceError = context.maxDistanceError * (count - 1);
-			distanceScore = context.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
-			double pairedAngleError = context.maxAngleError * (count - 1) * 2;
-			angleScore = context.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
+			double pairedDistanceError = Parameters.maxDistanceError * (count - 1);
+			distanceScore = Parameters.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
+			double pairedAngleError = Parameters.maxAngleError * (count - 1) * 2;
+			angleScore = Parameters.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
 		double score = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
-		if (context.logging()) {
-			context.log("minutia-score", minutiaScore);
-			context.log("ratio-score", ratioScore);
-			context.log("supported-score", supportedScore);
-			context.log("edge-score", edgeScore);
-			context.log("type-score", typeScore);
-			context.log("distance-score", distanceScore);
-			context.log("angle-score", angleScore);
-			context.log("total-score", score);
+		if (logger.logging()) {
+			logger.log("minutia-score", minutiaScore);
+			logger.log("ratio-score", ratioScore);
+			logger.log("supported-score", supportedScore);
+			logger.log("edge-score", edgeScore);
+			logger.log("type-score", typeScore);
+			logger.log("distance-score", distanceScore);
+			logger.log("angle-score", angleScore);
+			logger.log("total-score", score);
 		}
 		return score;
 	}

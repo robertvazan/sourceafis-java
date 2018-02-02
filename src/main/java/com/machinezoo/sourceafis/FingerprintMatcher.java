@@ -17,7 +17,7 @@ import gnu.trove.map.hash.*;
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
-	private final FingerprintContext context = FingerprintContext.current();
+	private final DataLogger logger = DataLogger.current();
 	final FingerprintTemplate template;
 	TIntObjectHashMap<List<IndexedEdge>> edgeHash = new TIntObjectHashMap<>();
 	/**
@@ -46,17 +46,17 @@ public class FingerprintMatcher {
 						list.add(edge);
 					}
 				}
-		context.log("edge-hash", edgeHash);
+		logger.log("edge-hash", edgeHash);
 	}
 	List<Integer> shapeCoverage(EdgeShape edge) {
-		int minLengthBin = (edge.length - context.maxDistanceError) / context.maxDistanceError;
-		int maxLengthBin = (edge.length + context.maxDistanceError) / context.maxDistanceError;
-		int angleBins = (int)Math.ceil(2 * Math.PI / context.maxAngleError);
-		int minReferenceBin = (int)(Angle.difference(edge.referenceAngle, context.maxAngleError) / context.maxAngleError);
-		int maxReferenceBin = (int)(Angle.add(edge.referenceAngle, context.maxAngleError) / context.maxAngleError);
+		int minLengthBin = (edge.length - Parameters.maxDistanceError) / Parameters.maxDistanceError;
+		int maxLengthBin = (edge.length + Parameters.maxDistanceError) / Parameters.maxDistanceError;
+		int angleBins = (int)Math.ceil(2 * Math.PI / Parameters.maxAngleError);
+		int minReferenceBin = (int)(Angle.difference(edge.referenceAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
+		int maxReferenceBin = (int)(Angle.add(edge.referenceAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
 		int endReferenceBin = (maxReferenceBin + 1) % angleBins;
-		int minNeighborBin = (int)(Angle.difference(edge.neighborAngle, context.maxAngleError) / context.maxAngleError);
-		int maxNeighborBin = (int)(Angle.add(edge.neighborAngle, context.maxAngleError) / context.maxAngleError);
+		int minNeighborBin = (int)(Angle.difference(edge.neighborAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
+		int maxNeighborBin = (int)(Angle.add(edge.neighborAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
 		int endNeighborBin = (maxNeighborBin + 1) % angleBins;
 		List<Integer> coverage = new ArrayList<>();
 		for (int lengthBin = minLengthBin; lengthBin <= maxLengthBin; ++lengthBin)
