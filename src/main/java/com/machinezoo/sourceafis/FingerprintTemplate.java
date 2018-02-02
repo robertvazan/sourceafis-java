@@ -172,8 +172,8 @@ public class FingerprintTemplate {
 			// pixels per cm X and Y, assuming 500dpi
 			int xPixelsPerCM = in.readShort();
 			int yPixelsPerCM = in.readShort();
-			double dpiX = xPixelsPerCM * 255 / 100.0;
-			double dpiY = yPixelsPerCM * 255 / 100.0;
+			double dpiX = xPixelsPerCM * 2.55;
+			double dpiY = yPixelsPerCM * 2.55;
 			logger.log("iso-dpi", new Point(dpiX, dpiY));
 			// 1B number of fingerprints in the template (assuming 1)
 			// 1B junk

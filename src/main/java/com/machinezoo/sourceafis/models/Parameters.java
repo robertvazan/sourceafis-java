@@ -3,7 +3,7 @@ package com.machinezoo.sourceafis.models;
 
 public class Parameters {
 	public static final int blockSize = 15;
-	public static final double dpiTolerance = 10;
+	public static final double dpiTolerance = 5;
 	public static final int histogramDepth = 256;
 	public static final double clippedContrast = 0.08;
 	public static final double minAbsoluteContrast = 17 / 255.0;
