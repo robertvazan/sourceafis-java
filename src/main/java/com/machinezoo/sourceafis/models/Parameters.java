@@ -10,18 +10,15 @@ public class Parameters {
 	public static final double minRelativeContrast = 0.34;
 	public static final int relativeContrastSample = 168568;
 	public static final double relativeContrastPercentile = 0.49;
-	public static final VotingParameters contrastVote = new VotingParameters()
-		.radius(9)
-		.majority(0.86)
-		.borderDist(7);
-	public static final VotingParameters maskVote = new VotingParameters()
-		.radius(7)
-		.majority(0.51)
-		.borderDist(4);
-	public static final VotingParameters blockErrorsVote = new VotingParameters()
-		.radius(1)
-		.majority(0.7)
-		.borderDist(4);
+	public static final int contrastVoteRadius = 9;
+	public static final double contrastVoteMajority = 0.86;
+	public static final int contrastVoteBorderDistance = 7;
+	public static final int maskVoteRadius = 7;
+	public static final double maskVoteMajority = 0.51;
+	public static final int maskVoteBorderDistance = 4;
+	public static final int blockErrorsVoteRadius = 1;
+	public static final double blockErrorsVoteMajority = 0.7;
+	public static final int blockErrorsVoteBorderDistance = 4;
 	public static final double maxEqualizationScaling = 3.99;
 	public static final double minEqualizationScaling = 0.25;
 	public static final double minOrientationRadius = 2;
@@ -29,18 +26,15 @@ public class Parameters {
 	public static final int orientationSplit = 50;
 	public static final int orientationsChecked = 20;
 	public static final int orientationSmoothingRadius = 1;
-	public static final OrientedLineParams parallelSmoothinig = new OrientedLineParams()
-		.resolution(32)
-		.radius(7)
-		.step(1.59);
-	public static final OrientedLineParams orthogonalSmoothing = new OrientedLineParams()
-		.resolution(11)
-		.radius(4)
-		.step(1.11);
-	public static final VotingParameters binarizedVote = new VotingParameters()
-		.radius(2)
-		.majority(0.61)
-		.borderDist(17);
+	public static final int parallelSmoothinigResolution = 32;
+	public static final int parallelSmoothinigRadius = 7;
+	public static final double parallelSmoothinigStep = 1.59;
+	public static final int orthogonalSmoothinigResolution = 11;
+	public static final int orthogonalSmoothinigRadius = 4;
+	public static final double orthogonalSmoothinigStep = 1.11;
+	public static final int binarizedVoteRadius = 2;
+	public static final double binarizedVoteMajority = 0.61;
+	public static final int binarizedVoteBorderDistance = 17;
 	public static final int innerMaskBorderDistance = 14;
 	public static final double maskDisplacement = 10.06;
 	public static final int minutiaCloudRadius = 20;

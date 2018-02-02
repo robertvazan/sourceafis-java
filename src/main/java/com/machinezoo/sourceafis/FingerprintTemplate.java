@@ -83,9 +83,11 @@ public class FingerprintTemplate {
 			BooleanMap mask = mask(blocks, histogram);
 			DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
 			DoubleMap orientation = orientationMap(equalized, mask, blocks);
-			DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, orientedLines(Parameters.parallelSmoothinig));
+			DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0,
+				orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep));
 			logger.log("parallel-smoothing", smoothed);
-			DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orientedLines(Parameters.orthogonalSmoothing));
+			DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI,
+				orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep));
 			logger.log("orthogonal-smoothing", orthogonal);
 			BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
 			cleanupBinarized(binary);
@@ -297,7 +299,7 @@ public class FingerprintTemplate {
 		logger.log("mask-stage", mask);
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		logger.log("mask-stage", mask);
-		mask.merge(vote(mask, "contrast", Parameters.contrastVote));
+		mask.merge(vote(mask, "contrast", Parameters.contrastVoteRadius, Parameters.contrastVoteMajority, Parameters.contrastVoteBorderDistance));
 		logger.log("mask-stage", mask);
 		mask.merge(filterBlockErrors(mask));
 		logger.log("mask-stage", mask);
@@ -307,7 +309,7 @@ public class FingerprintTemplate {
 		logger.log("mask-stage", mask);
 		mask.merge(filterBlockErrors(mask));
 		logger.log("mask-stage", mask);
-		mask.merge(vote(mask, "mask", Parameters.maskVote));
+		mask.merge(vote(mask, "mask", Parameters.maskVoteRadius, Parameters.maskVoteMajority, Parameters.maskVoteBorderDistance));
 		logger.log("final-mask", mask);
 		return mask;
 	}
@@ -364,26 +366,26 @@ public class FingerprintTemplate {
 		logger.log("relative-contrast", result);
 		return result;
 	}
-	BooleanMap vote(BooleanMap input, String label, VotingParameters args) {
+	BooleanMap vote(BooleanMap input, String label, int radius, double majority, int borderDistance) {
 		Cell size = input.size();
-		Block rect = new Block(args.borderDist, args.borderDist, size.x - 2 * args.borderDist, size.y - 2 * args.borderDist);
+		Block rect = new Block(borderDistance, borderDistance, size.x - 2 * borderDistance, size.y - 2 * borderDistance);
 		BooleanMap output = new BooleanMap(size);
 		for (Cell center : rect) {
-			Block neighborhood = Block.around(center, args.radius).intersect(new Block(size));
+			Block neighborhood = Block.around(center, radius).intersect(new Block(size));
 			int ones = 0;
 			for (int ny = neighborhood.bottom(); ny < neighborhood.top(); ++ny)
 				for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
 					if (input.get(nx, ny))
 						++ones;
 			double voteWeight = 1.0 / neighborhood.area();
-			if (ones * voteWeight >= args.majority)
+			if (ones * voteWeight >= majority)
 				output.set(center, true);
 		}
 		logger.log(label + "-vote", output);
 		return output;
 	}
 	BooleanMap filterBlockErrors(BooleanMap input) {
-		return vote(input, "block-errors", Parameters.blockErrorsVote);
+		return vote(input, "block-errors", Parameters.blockErrorsVoteRadius, Parameters.blockErrorsVoteMajority, Parameters.blockErrorsVoteBorderDistance);
 	}
 	DoubleMap equalize(BlockMap blocks, DoubleMap image, Histogram histogram, BooleanMap blockMask) {
 		final double rangeMin = -1;
@@ -545,13 +547,13 @@ public class FingerprintTemplate {
 				angles.set(block, Angle.atan(vectors.get(block)));
 		return angles;
 	}
-	Cell[][] orientedLines(OrientedLineParams args) {
-		Cell[][] result = new Cell[args.resolution][];
-		for (int orientationIndex = 0; orientationIndex < args.resolution; ++orientationIndex) {
+	Cell[][] orientedLines(int resolution, int radius, double step) {
+		Cell[][] result = new Cell[resolution][];
+		for (int orientationIndex = 0; orientationIndex < resolution; ++orientationIndex) {
 			List<Cell> line = new ArrayList<>();
 			line.add(Cell.zero);
-			Point direction = Angle.toVector(Angle.bucketCenter(orientationIndex, 2 * args.resolution));
-			for (double r = args.radius; r >= 0.5; r /= args.step) {
+			Point direction = Angle.toVector(Angle.bucketCenter(orientationIndex, 2 * resolution));
+			for (double r = radius; r >= 0.5; r /= step) {
 				Cell sample = direction.multiply(r).round();
 				if (!line.contains(sample)) {
 					line.add(sample);
@@ -601,8 +603,8 @@ public class FingerprintTemplate {
 		Cell size = binary.size();
 		BooleanMap inverted = new BooleanMap(binary);
 		inverted.invert();
-		BooleanMap islands = vote(inverted, "islands", Parameters.binarizedVote);
-		BooleanMap holes = vote(binary, "holes", Parameters.binarizedVote);
+		BooleanMap islands = vote(inverted, "islands", Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
+		BooleanMap holes = vote(binary, "holes", Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
 		for (int y = 0; y < size.y; ++y)
 			for (int x = 0; x < size.x; ++x)
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
