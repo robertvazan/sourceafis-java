@@ -8,7 +8,7 @@ import com.machinezoo.sourceafis.models.*;
 import lombok.*;
 
 public class FingerprintTemplateTest {
-	private static FingerprintTemplate t = new FingerprintTemplate("[]");
+	private static FingerprintTemplate t = FingerprintTemplate.fromJson("[]");
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate(load("probe.png"));
 	}
@@ -60,7 +60,7 @@ public class FingerprintTemplateTest {
 			new FingerprintMinutia(new Cell(100, 200), Math.PI, MinutiaType.BIFURCATION),
 			new FingerprintMinutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
 		};
-		t = new FingerprintTemplate(t.json());
+		t = FingerprintTemplate.fromJson(t.toJson());
 		assertEquals(2, t.minutiae.length);
 		FingerprintMinutia a = t.minutiae[0];
 		FingerprintMinutia b = t.minutiae[1];

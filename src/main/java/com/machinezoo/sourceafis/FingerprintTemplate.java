@@ -18,7 +18,7 @@ import lombok.*;
  * <p>
  * Fingerprint template can be created from fingerprint image by calling {@link #FingerprintTemplate(byte[])}.
  * Since image processing is expensive, applications should cache serialized templates.
- * Serialization is performed by {@link #json()} and deserialization by {@link #FingerprintTemplate(String)}.
+ * Serialization is performed by {@link #toJson()} and deserialization by {@link #fromJson(String)}.
  * <p>
  * Matching is performed by constructing {@link FingerprintMatcher} and calling its {@link FingerprintMatcher#match(FingerprintTemplate)} method.
  * <p>
@@ -111,16 +111,19 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Deserialize fingerprint template from JSON string.
-	 * This constructor reads JSON string produced by {@link #json()} to reconstruct exact copy of the original fingerprint template.
+	 * This constructor reads JSON string produced by {@link #toJson()} to reconstruct exact copy of the original fingerprint template.
 	 * Templates produced by previous versions of SourceAFIS may fail to deserialize correctly.
 	 * Applications should re-extract all templates from original raw images when upgrading SourceAFIS.
 	 * 
 	 * @param json
-	 *            serialized fingerprint template in JSON format
+	 *            serialized fingerprint template in JSON format produced by {@link #toJson()}
 	 * 
-	 * @see #json()
+	 * @see #toJson()
 	 */
-	public FingerprintTemplate(String json) {
+	public static FingerprintTemplate fromJson(String json) {
+		return new FingerprintTemplate(json);
+	}
+	private FingerprintTemplate(String json) {
 		minutiae = new Gson().fromJson(json, FingerprintMinutia[].class);
 		logger.log("deserialized-minutiae", minutiae);
 		buildEdgeTable();
@@ -128,7 +131,7 @@ public class FingerprintTemplate {
 	/**
 	 * Serialize fingerprint template to JSON string.
 	 * Serialized template can be stored in database or sent over network.
-	 * It can be deserialized by calling {@link #FingerprintTemplate(String)}.
+	 * It can be deserialized by calling {@link #fromJson(String)}.
 	 * Persisting templates alongside fingerprint images allows applications to start faster,
 	 * because template deserialization is more than 100x faster than re-extraction from raw image.
 	 * <p>
@@ -140,9 +143,9 @@ public class FingerprintTemplate {
 	 * 
 	 * @return serialized fingerprint template in JSON format
 	 * 
-	 * @see #FingerprintTemplate(String)
+	 * @see #fromJson(String)
 	 */
-	public String json() {
+	public String toJson() {
 		return new Gson().toJson(minutiae);
 	}
 	private static boolean isIso(byte[] iso) {
