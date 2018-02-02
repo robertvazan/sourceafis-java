@@ -70,5 +70,4 @@ public class Parameters {
 	public static final double edgeCountScore = 0.265;
 	public static final double distanceAccuracyScore = 9.9;
 	public static final double angleAccuracyScore = 2.79;
-	public static final boolean shapedScore = true;
 }

@@ -58,7 +58,7 @@ public class MatchBuffer {
 				}
 				clearPairing();
 			}
-			return Parameters.shapedScore ? ScoreShape.shape(high) : high;
+			return ScoreShape.shape(high);
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
