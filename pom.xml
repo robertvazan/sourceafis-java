@@ -95,7 +95,6 @@
 					<notimestamp>true</notimestamp>
 					<use>false</use>
 					<doctitle>${project.name} for Java API Reference</doctitle>
-					<excludePackageNames>com.machinezoo.sourceafis.models</excludePackageNames>
 				</configuration>
 				<executions>
 					<execution>

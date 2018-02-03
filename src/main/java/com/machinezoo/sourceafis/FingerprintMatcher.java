@@ -2,7 +2,6 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import com.machinezoo.sourceafis.models.*;
 import gnu.trove.map.hash.*;
 
 /**

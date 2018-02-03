@@ -8,7 +8,6 @@ import java.util.*;
 import java.util.stream.*;
 import javax.imageio.*;
 import com.google.gson.*;
-import com.machinezoo.sourceafis.models.*;
 import lombok.*;
 
 /**
@@ -74,9 +73,9 @@ public class FingerprintTemplate {
 		logger.log("masked-inverted", inverted);
 		BooleanMap innerMask = innerMask(pixelMask);
 		logger.log("skeleton", "ridges");
-		FingerprintSkeleton ridges = new FingerprintSkeleton(binary);
+		Skeleton ridges = new Skeleton(binary);
 		logger.log("skeleton", "valleys");
-		FingerprintSkeleton valleys = new FingerprintSkeleton(inverted);
+		Skeleton valleys = new Skeleton(inverted);
 		collectMinutiae(ridges, MinutiaType.ENDING);
 		collectMinutiae(valleys, MinutiaType.BIFURCATION);
 		maskMinutiae(innerMask);
@@ -676,7 +675,7 @@ public class FingerprintTemplate {
 				shrunk.set(x, y, mask.get(x, y - amount) && mask.get(x, y + amount) && mask.get(x - amount, y) && mask.get(x + amount, y));
 		return shrunk;
 	}
-	void collectMinutiae(FingerprintSkeleton skeleton, MinutiaType type) {
+	void collectMinutiae(Skeleton skeleton, MinutiaType type) {
 		minutiae = Stream.concat(
 			Arrays.stream(minutiae),
 			skeleton.minutiae.stream()
