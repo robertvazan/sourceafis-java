@@ -58,7 +58,10 @@ class MatchBuffer {
 				}
 				clearPairing();
 			}
-			return ScoreShape.shape(high);
+			double shaped = shape(high);
+			if (logger.logging())
+				logger.log("shaped-score", shaped);
+			return shaped;
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
@@ -249,6 +252,26 @@ class MatchBuffer {
 			logger.log("total-score", score);
 		}
 		return score;
+	}
+	private static double shape(double raw) {
+		if (raw < Parameters.thresholdMaxFMR)
+			return 0;
+		if (raw < Parameters.thresholdFMR2)
+			return interpolate(raw, Parameters.thresholdMaxFMR, Parameters.thresholdFMR2, 0, 3);
+		if (raw < Parameters.thresholdFMR10)
+			return interpolate(raw, Parameters.thresholdFMR2, Parameters.thresholdFMR10, 3, 7);
+		if (raw < Parameters.thresholdFMR100)
+			return interpolate(raw, Parameters.thresholdFMR10, Parameters.thresholdFMR100, 10, 10);
+		if (raw < Parameters.thresholdFMR1000)
+			return interpolate(raw, Parameters.thresholdFMR100, Parameters.thresholdFMR1000, 20, 10);
+		if (raw < Parameters.thresholdFMR10_000)
+			return interpolate(raw, Parameters.thresholdFMR1000, Parameters.thresholdFMR10_000, 30, 10);
+		if (raw < Parameters.thresholdFMR100_000)
+			return interpolate(raw, Parameters.thresholdFMR10_000, Parameters.thresholdFMR100_000, 40, 10);
+		return (raw - Parameters.thresholdFMR100_000) / (Parameters.thresholdFMR100_000 - Parameters.thresholdFMR100) * 30 + 50;
+	}
+	private static double interpolate(double raw, double min, double max, double start, double length) {
+		return (raw - min) / (max - min) * length + start;
 	}
 	private MinutiaPair allocate() {
 		if (pooled > 0) {

@@ -70,4 +70,11 @@ class Parameters {
 	static final double edgeCountScore = 0.265;
 	static final double distanceAccuracyScore = 9.9;
 	static final double angleAccuracyScore = 2.79;
+	static final double thresholdMaxFMR = 8.48;
+	static final double thresholdFMR2 = 11.12;
+	static final double thresholdFMR10 = 14.15;
+	static final double thresholdFMR100 = 18.22;
+	static final double thresholdFMR1000 = 22.39;
+	static final double thresholdFMR10_000 = 27.24;
+	static final double thresholdFMR100_000 = 32.01;
 }
