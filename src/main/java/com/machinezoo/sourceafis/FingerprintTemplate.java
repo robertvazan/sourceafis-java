@@ -30,6 +30,7 @@ import lombok.*;
  */
 public class FingerprintTemplate {
 	private FingerprintTransparency logger;
+	Cell size;
 	Minutia[] minutiae = new Minutia[0];
 	NeighborEdge[][] edgeTable;
 	/**
@@ -50,6 +51,7 @@ public class FingerprintTemplate {
 		DoubleMap raw = readImage(image);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
+		size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 		logger.logBlockMap(blocks);
 		Histogram histogram = histogram(blocks, raw);
@@ -98,7 +100,9 @@ public class FingerprintTemplate {
 	}
 	private FingerprintTemplate(String json) {
 		logger = FingerprintTransparency.current();
-		minutiae = new Gson().fromJson(json, Minutia[].class);
+		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
+		size = data.size;
+		minutiae = data.minutiae;
 		logger.logMinutiaeDeserialized(minutiae);
 		buildEdgeTable();
 		logger = FingerprintTransparency.none;
@@ -121,7 +125,11 @@ public class FingerprintTemplate {
 	 * @see #fromJson(String)
 	 */
 	public String toJson() {
-		return new Gson().toJson(minutiae);
+		return new Gson().toJson(new JsonTemplate(size, minutiae));
+	}
+	@AllArgsConstructor private static class JsonTemplate {
+		Cell size;
+		Minutia[] minutiae;
 	}
 	/**
 	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.
@@ -168,6 +176,7 @@ public class FingerprintTemplate {
 			// image size
 			int width = in.readUnsignedShort();
 			int height = in.readUnsignedShort();
+			size = new Cell(width, height);
 			// pixels per cm X and Y, assuming 500dpi
 			int xPixelsPerCM = in.readShort();
 			int yPixelsPerCM = in.readShort();

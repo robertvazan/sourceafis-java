@@ -7,7 +7,7 @@ import org.junit.*;
 import lombok.*;
 
 public class FingerprintTemplateTest {
-	private static FingerprintTemplate t = FingerprintTemplate.fromJson("[]");
+	private static FingerprintTemplate t = FingerprintTemplate.fromJson("{\"size\":{\"x\":0,\"y\":0},\"minutiae\":[]}");
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate(load("probe.png"), 500);
 	}
