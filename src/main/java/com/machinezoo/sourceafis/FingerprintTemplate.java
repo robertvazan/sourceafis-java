@@ -46,10 +46,7 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(byte[])
 	 */
 	public FingerprintTemplate(byte[] image, double dpi) {
-		this(image, dpi, FingerprintTransparency.none);
-	}
-	FingerprintTemplate(byte[] image, double dpi, FingerprintTransparency logger) {
-		this.logger = logger;
+		logger = FingerprintTransparency.current();
 		DoubleMap raw = readImage(image);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
@@ -96,10 +93,10 @@ public class FingerprintTemplate {
 	 * @see #toJson()
 	 */
 	public static FingerprintTemplate fromJson(String json) {
-		return new FingerprintTemplate(json, FingerprintTransparency.none);
+		return new FingerprintTemplate(json);
 	}
-	FingerprintTemplate(String json, FingerprintTransparency logger) {
-		this.logger = logger;
+	private FingerprintTemplate(String json) {
+		logger = FingerprintTransparency.current();
 		minutiae = new Gson().fromJson(json, FingerprintMinutia[].class);
 		logger.logMinutiaeDeserialized(minutiae);
 		buildEdgeTable();
@@ -151,10 +148,10 @@ public class FingerprintTemplate {
 	 * @see #toJson()
 	 */
 	public static FingerprintTemplate convert(byte[] iso) {
-		return new FingerprintTemplate(iso, FingerprintTransparency.none);
+		return new FingerprintTemplate(iso);
 	}
-	FingerprintTemplate(byte[] iso, FingerprintTransparency logger) {
-		this.logger = logger;
+	private FingerprintTemplate(byte[] iso) {
+		logger = FingerprintTransparency.current();
 		if (iso.length < 30)
 			throw new IllegalArgumentException("Array too small to be an ISO 19794-2 template");
 		try {

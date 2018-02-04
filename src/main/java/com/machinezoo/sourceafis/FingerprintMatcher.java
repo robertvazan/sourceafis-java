@@ -30,10 +30,7 @@ public class FingerprintMatcher {
 	 * @see #match(FingerprintTemplate)
 	 */
 	public FingerprintMatcher(FingerprintTemplate probe) {
-		this(probe, FingerprintTransparency.none);
-	}
-	FingerprintMatcher(FingerprintTemplate probe, FingerprintTransparency logger) {
-		this.logger = logger;
+		logger = FingerprintTransparency.current();
 		this.template = probe;
 		buildEdgeHash();
 	}
@@ -92,6 +89,6 @@ public class FingerprintMatcher {
 		buffer.selectProbe(template.minutiae, template.edgeTable);
 		buffer.selectMatcher(edgeHash);
 		buffer.selectCandidate(candidate.minutiae, candidate.edgeTable);
-		return buffer.match(logger);
+		return buffer.match();
 	}
 }

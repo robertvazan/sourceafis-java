@@ -40,9 +40,9 @@ class MatchBuffer {
 		if (byCandidate == null || byCandidate.length < minutiae.length)
 			byCandidate = new MinutiaPair[minutiae.length];
 	}
-	double match(FingerprintTransparency logger) {
+	double match() {
 		try {
-			this.logger = logger;
+			logger = FingerprintTransparency.current();
 			int totalRoots = enumerateRoots();
 			double high = 0;
 			for (int i = 0; i < totalRoots; ++i) {
