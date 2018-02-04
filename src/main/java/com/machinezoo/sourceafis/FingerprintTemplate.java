@@ -103,6 +103,7 @@ public class FingerprintTemplate {
 		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
 		size = data.size;
 		minutiae = data.minutiae;
+		logger.logDeserializedSize(size);
 		logger.logMinutiaeDeserialized(minutiae);
 		buildEdgeTable();
 		logger = FingerprintTransparency.none;

@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis;
 import lombok.*;
 
 @RequiredArgsConstructor class BlockGrid {
-	private final CellGrid corners;
+	final CellGrid corners;
 	Block get(int x, int y) {
 		return Block.between(corners.get(x, y), corners.get(x + 1, y + 1));
 	}

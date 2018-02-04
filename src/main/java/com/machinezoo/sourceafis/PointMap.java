@@ -15,6 +15,9 @@ class PointMap {
 	PointMap(Cell size) {
 		this(size.x, size.y);
 	}
+	Cell size() {
+		return new Cell(width, height);
+	}
 	Point get(int x, int y) {
 		int i = offset(x, y);
 		return new Point(arrayX[i], arrayY[i]);
