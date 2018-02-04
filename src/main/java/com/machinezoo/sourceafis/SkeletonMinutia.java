@@ -3,20 +3,20 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 
-public class SkeletonMinutia {
-	public boolean considered = true;
-	public final Cell position;
-	public final List<SkeletonRidge> ridges = new ArrayList<>();
-	public SkeletonMinutia(Cell position) {
+class SkeletonMinutia {
+	boolean considered = true;
+	final Cell position;
+	final List<SkeletonRidge> ridges = new ArrayList<>();
+	SkeletonMinutia(Cell position) {
 		this.position = position;
 	}
-	public void attachStart(SkeletonRidge ridge) {
+	void attachStart(SkeletonRidge ridge) {
 		if (!ridges.contains(ridge)) {
 			ridges.add(ridge);
 			ridge.start(this);
 		}
 	}
-	public void detachStart(SkeletonRidge ridge) {
+	void detachStart(SkeletonRidge ridge) {
 		if (ridges.contains(ridge)) {
 			ridges.remove(ridge);
 			if (ridge.start() == this)

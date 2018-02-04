@@ -1,15 +1,15 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-public class BlockMap {
-	public final Cell pixelCount;
-	public final Cell blockCount;
-	public final Cell cornerCount;
-	public final CellGrid corners;
-	public final BlockGrid blockAreas;
-	public final CellGrid blockCenters;
-	public final BlockGrid cornerAreas;
-	public BlockMap(int width, int height, int maxBlockSize) {
+class BlockMap {
+	final Cell pixelCount;
+	final Cell blockCount;
+	final Cell cornerCount;
+	final CellGrid corners;
+	final BlockGrid blockAreas;
+	final CellGrid blockCenters;
+	final BlockGrid cornerAreas;
+	BlockMap(int width, int height, int maxBlockSize) {
 		pixelCount = new Cell(width, height);
 		blockCount = new Cell(
 			Integers.roundUpDiv(pixelCount.x, maxBlockSize),
@@ -20,7 +20,7 @@ public class BlockMap {
 		blockCenters = initBlockCenters();
 		cornerAreas = initCornerAreas();
 	}
-	CellGrid initCorners() {
+	private CellGrid initCorners() {
 		CellGrid grid = new CellGrid(cornerCount);
 		for (int y = 0; y < cornerCount.y; ++y)
 			grid.allY[y] = y * pixelCount.y / blockCount.y;
@@ -28,7 +28,7 @@ public class BlockMap {
 			grid.allX[x] = x * pixelCount.x / blockCount.x;
 		return grid;
 	}
-	CellGrid initBlockCenters() {
+	private CellGrid initBlockCenters() {
 		CellGrid grid = new CellGrid(blockCount);
 		for (int y = 0; y < blockCount.y; ++y)
 			grid.allY[y] = blockAreas.get(0, y).center().y;
@@ -36,7 +36,7 @@ public class BlockMap {
 			grid.allX[x] = blockAreas.get(x, 0).center().x;
 		return grid;
 	}
-	BlockGrid initCornerAreas() {
+	private BlockGrid initCornerAreas() {
 		CellGrid grid = new CellGrid(cornerCount.x + 1, cornerCount.y + 1);
 		grid.allY[0] = 0;
 		for (int y = 0; y < blockCount.y; ++y)

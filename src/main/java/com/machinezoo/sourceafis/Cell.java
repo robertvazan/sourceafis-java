@@ -4,15 +4,15 @@ package com.machinezoo.sourceafis;
 import java.util.*;
 import lombok.*;
 
-@EqualsAndHashCode @AllArgsConstructor public class Cell implements Iterable<Cell> {
-	public static final Cell zero = new Cell(0, 0);
-	public static final Cell[] edgeNeighbors = new Cell[] {
+@EqualsAndHashCode @AllArgsConstructor class Cell implements Iterable<Cell> {
+	static final Cell zero = new Cell(0, 0);
+	static final Cell[] edgeNeighbors = new Cell[] {
 		new Cell(0, -1),
 		new Cell(-1, 0),
 		new Cell(1, 0),
 		new Cell(0, 1)
 	};
-	public static final Cell[] cornerNeighbors = new Cell[] {
+	static final Cell[] cornerNeighbors = new Cell[] {
 		new Cell(-1, -1),
 		new Cell(0, -1),
 		new Cell(1, -1),
@@ -22,30 +22,30 @@ import lombok.*;
 		new Cell(0, 1),
 		new Cell(1, 1)
 	};
-	public final int x;
-	public final int y;
-	public int area() {
+	final int x;
+	final int y;
+	int area() {
 		return x * y;
 	}
-	public int lengthSq() {
+	int lengthSq() {
 		return Integers.sq(x) + Integers.sq(y);
 	}
-	public boolean contains(Cell other) {
+	boolean contains(Cell other) {
 		return other.x >= 0 && other.y >= 0 && other.x < x && other.y < y;
 	}
-	public Cell plus(Cell other) {
+	Cell plus(Cell other) {
 		return new Cell(x + other.x, y + other.y);
 	}
-	public Cell minus(Cell other) {
+	Cell minus(Cell other) {
 		return new Cell(x - other.x, y - other.y);
 	}
-	public Cell negate() {
+	Cell negate() {
 		return new Cell(-x, -y);
 	}
-	public Point toPoint() {
+	Point toPoint() {
 		return new Point(x, y);
 	}
-	public Cell[] lineTo(Cell to) {
+	Cell[] lineTo(Cell to) {
 		Cell[] result;
 		Cell relative = to.minus(this);
 		if (Math.abs(relative.x) >= Math.abs(relative.y)) {

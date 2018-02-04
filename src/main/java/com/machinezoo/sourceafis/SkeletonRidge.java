@@ -3,23 +3,23 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 
-public class SkeletonRidge {
-	public final List<Cell> points;
-	public final SkeletonRidge reversed;
+class SkeletonRidge {
+	final List<Cell> points;
+	final SkeletonRidge reversed;
 	private SkeletonMinutia startMinutia;
 	private SkeletonMinutia endMinutia;
-	public SkeletonRidge() {
+	SkeletonRidge() {
 		points = new CircularList<>();
 		reversed = new SkeletonRidge(this);
 	}
-	public SkeletonRidge(SkeletonRidge reversed) {
+	SkeletonRidge(SkeletonRidge reversed) {
 		points = new ReversedList<>(reversed.points);
 		this.reversed = reversed;
 	}
-	public SkeletonMinutia start() {
+	SkeletonMinutia start() {
 		return startMinutia;
 	}
-	public void start(SkeletonMinutia value) {
+	void start(SkeletonMinutia value) {
 		if (startMinutia != value) {
 			if (startMinutia != null) {
 				SkeletonMinutia detachFrom = startMinutia;
@@ -32,20 +32,20 @@ public class SkeletonRidge {
 			reversed.endMinutia = value;
 		}
 	}
-	public SkeletonMinutia end() {
+	SkeletonMinutia end() {
 		return endMinutia;
 	}
-	public void end(SkeletonMinutia value) {
+	void end(SkeletonMinutia value) {
 		if (endMinutia != value) {
 			endMinutia = value;
 			reversed.start(value);
 		}
 	}
-	public void detach() {
+	void detach() {
 		start(null);
 		end(null);
 	}
-	public double direction() {
+	double direction() {
 		int first = Parameters.ridgeDirectionSkip;
 		int last = Parameters.ridgeDirectionSkip + Parameters.ridgeDirectionSample - 1;
 		if (last >= points.size()) {

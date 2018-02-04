@@ -1,51 +1,51 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-public class BooleanMap {
-	public final int width;
-	public final int height;
+class BooleanMap {
+	final int width;
+	final int height;
 	private final boolean[] array;
-	public BooleanMap(int width, int height) {
+	BooleanMap(int width, int height) {
 		this.width = width;
 		this.height = height;
 		array = new boolean[width * height];
 	}
-	public BooleanMap(Cell size) {
+	BooleanMap(Cell size) {
 		this(size.x, size.y);
 	}
-	public BooleanMap(BooleanMap other) {
+	BooleanMap(BooleanMap other) {
 		this(other.size());
 		for (int i = 0; i < array.length; ++i)
 			array[i] = other.array[i];
 	}
-	public Cell size() {
+	Cell size() {
 		return new Cell(width, height);
 	}
-	public boolean get(int x, int y) {
+	boolean get(int x, int y) {
 		return array[offset(x, y)];
 	}
-	public boolean get(Cell at) {
+	boolean get(Cell at) {
 		return get(at.x, at.y);
 	}
-	public boolean get(int x, int y, boolean fallback) {
+	boolean get(int x, int y, boolean fallback) {
 		if (x < 0 || y < 0 || x >= width || y >= height)
 			return fallback;
 		return array[offset(x, y)];
 	}
-	public boolean get(Cell at, boolean fallback) {
+	boolean get(Cell at, boolean fallback) {
 		return get(at.x, at.y, fallback);
 	}
-	public void set(int x, int y, boolean value) {
+	void set(int x, int y, boolean value) {
 		array[offset(x, y)] = value;
 	}
-	public void set(Cell at, boolean value) {
+	void set(Cell at, boolean value) {
 		set(at.x, at.y, value);
 	}
-	public void invert() {
+	void invert() {
 		for (int i = 0; i < array.length; ++i)
 			array[i] = !array[i];
 	}
-	public void merge(BooleanMap other) {
+	void merge(BooleanMap other) {
 		if (other.width != width || other.height != height)
 			throw new IllegalArgumentException();
 		for (int i = 0; i < array.length; ++i)

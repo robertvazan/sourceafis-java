@@ -4,8 +4,8 @@ package com.machinezoo.sourceafis;
 class PointMap {
 	final int width;
 	final int height;
-	final double[] arrayX;
-	final double[] arrayY;
+	private final double[] arrayX;
+	private final double[] arrayY;
 	PointMap(int width, int height) {
 		this.width = width;
 		this.height = height;
@@ -44,7 +44,7 @@ class PointMap {
 	void add(Cell at, Point point) {
 		add(at.x, at.y, point);
 	}
-	int offset(int x, int y) {
+	private int offset(int x, int y) {
 		return y * width + x;
 	}
 }

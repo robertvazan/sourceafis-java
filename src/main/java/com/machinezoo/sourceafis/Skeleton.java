@@ -6,7 +6,7 @@ import java.util.*;
 class Skeleton {
 	private final FingerprintTransparency logger;
 	private final SkeletonType type;
-	final Cell size;
+	private final Cell size;
 	final List<SkeletonMinutia> minutiae = new ArrayList<>();
 	Skeleton(BooleanMap binary, SkeletonType type, FingerprintTransparency logger) {
 		this.type = type;
@@ -22,12 +22,12 @@ class Skeleton {
 		logger.logTraced(type, minutiae);
 		filter();
 	}
-	enum NeighborhoodType {
+	private enum NeighborhoodType {
 		Skeleton,
 		Ending,
 		Removable
 	}
-	BooleanMap thin(BooleanMap input) {
+	private BooleanMap thin(BooleanMap input) {
 		NeighborhoodType[] neighborhoodTypes = neighborhoodTypes();
 		BooleanMap partial = new BooleanMap(size);
 		for (int y = 1; y < size.y - 1; ++y)
@@ -62,7 +62,7 @@ class Skeleton {
 		logger.logThinned(type, thinned);
 		return thinned;
 	}
-	static NeighborhoodType[] neighborhoodTypes() {
+	private static NeighborhoodType[] neighborhoodTypes() {
 		NeighborhoodType[] types = new NeighborhoodType[256];
 		for (int mask = 0; mask < 256; ++mask) {
 			boolean TL = (mask & 1) != 0;
@@ -87,7 +87,7 @@ class Skeleton {
 		}
 		return types;
 	}
-	static boolean isFalseEnding(BooleanMap binary, Cell ending) {
+	private static boolean isFalseEnding(BooleanMap binary, Cell ending) {
 		for (Cell relativeNeighbor : Cell.cornerNeighbors) {
 			Cell neighbor = ending.plus(relativeNeighbor);
 			if (binary.get(neighbor)) {
@@ -100,7 +100,7 @@ class Skeleton {
 		}
 		return false;
 	}
-	List<Cell> findMinutiae(BooleanMap thinned) {
+	private List<Cell> findMinutiae(BooleanMap thinned) {
 		List<Cell> result = new ArrayList<>();
 		for (Cell at : size)
 			if (thinned.get(at)) {
@@ -113,7 +113,7 @@ class Skeleton {
 			}
 		return result;
 	}
-	static Map<Cell, List<Cell>> linkNeighboringMinutiae(List<Cell> minutiae) {
+	private static Map<Cell, List<Cell>> linkNeighboringMinutiae(List<Cell> minutiae) {
 		Map<Cell, List<Cell>> linking = new HashMap<>();
 		for (Cell minutiaPos : minutiae) {
 			List<Cell> ownLinks = null;
@@ -138,7 +138,7 @@ class Skeleton {
 		}
 		return linking;
 	}
-	Map<Cell, SkeletonMinutia> minutiaCenters(Map<Cell, List<Cell>> linking) {
+	private Map<Cell, SkeletonMinutia> minutiaCenters(Map<Cell, List<Cell>> linking) {
 		Map<Cell, SkeletonMinutia> centers = new HashMap<>();
 		for (Cell currentPos : linking.keySet()) {
 			List<Cell> linkedMinutiae = linking.get(currentPos);
@@ -156,7 +156,7 @@ class Skeleton {
 		}
 		return centers;
 	}
-	void traceRidges(BooleanMap thinned, Map<Cell, SkeletonMinutia> minutiaePoints) {
+	private void traceRidges(BooleanMap thinned, Map<Cell, SkeletonMinutia> minutiaePoints) {
 		Map<Cell, SkeletonRidge> leads = new HashMap<>();
 		for (Cell minutiaPoint : minutiaePoints.keySet()) {
 			for (Cell startRelative : Cell.cornerNeighbors) {
@@ -187,7 +187,7 @@ class Skeleton {
 			}
 		}
 	}
-	void fixLinkingGaps() {
+	private void fixLinkingGaps() {
 		for (SkeletonMinutia minutia : minutiae) {
 			for (SkeletonRidge ridge : minutia.ridges) {
 				if (!ridge.points.get(0).equals(minutia.position)) {
@@ -198,7 +198,7 @@ class Skeleton {
 			}
 		}
 	}
-	void filter() {
+	private void filter() {
 		removeDots();
 		logger.logRemovedDots(type, minutiae);
 		removePores();
@@ -207,7 +207,7 @@ class Skeleton {
 		removeFragments();
 		disableBranchMinutiae();
 	}
-	void removeDots() {
+	private void removeDots() {
 		List<SkeletonMinutia> removed = new ArrayList<>();
 		for (SkeletonMinutia minutia : minutiae)
 			if (minutia.ridges.isEmpty())
@@ -215,7 +215,7 @@ class Skeleton {
 		for (SkeletonMinutia minutia : removed)
 			removeMinutia(minutia);
 	}
-	void removePores() {
+	private void removePores() {
 		for (SkeletonMinutia minutia : minutiae) {
 			if (minutia.ridges.size() == 3) {
 				for (int exit = 0; exit < 3; ++exit) {
@@ -241,7 +241,7 @@ class Skeleton {
 		removeKnots();
 		logger.logRemovedPores(type, minutiae);
 	}
-	static class Gap implements Comparable<Gap> {
+	private static class Gap implements Comparable<Gap> {
 		int distance;
 		SkeletonMinutia end1;
 		SkeletonMinutia end2;
@@ -249,7 +249,7 @@ class Skeleton {
 			return Integer.compare(distance, other.distance);
 		}
 	}
-	void removeGaps() {
+	private void removeGaps() {
 		PriorityQueue<Gap> queue = new PriorityQueue<>();
 		for (SkeletonMinutia end1 : minutiae)
 			if (end1.ridges.size() == 1 && end1.ridges.get(0).points.size() >= Parameters.shortestJoinedEnding)
@@ -274,7 +274,7 @@ class Skeleton {
 		removeKnots();
 		logger.logRemovedGaps(type, minutiae);
 	}
-	boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
+	private boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
 		int distanceSq = end1.position.minus(end2.position).lengthSq();
 		if (distanceSq <= Integers.sq(Parameters.maxRuptureSize))
 			return true;
@@ -289,20 +289,20 @@ class Skeleton {
 			return false;
 		return true;
 	}
-	Cell angleSampleForGapRemoval(SkeletonMinutia minutia) {
+	private Cell angleSampleForGapRemoval(SkeletonMinutia minutia) {
 		SkeletonRidge ridge = minutia.ridges.get(0);
 		if (Parameters.gapAngleOffset < ridge.points.size())
 			return ridge.points.get(Parameters.gapAngleOffset);
 		else
 			return ridge.end().position;
 	}
-	boolean isRidgeOverlapping(Cell[] line, BooleanMap shadow) {
+	private boolean isRidgeOverlapping(Cell[] line, BooleanMap shadow) {
 		for (int i = Parameters.toleratedGapOverlap; i < line.length - Parameters.toleratedGapOverlap; ++i)
 			if (shadow.get(line[i]))
 				return true;
 		return false;
 	}
-	static void addGapRidge(BooleanMap shadow, Gap gap, Cell[] line) {
+	private static void addGapRidge(BooleanMap shadow, Gap gap, Cell[] line) {
 		SkeletonRidge ridge = new SkeletonRidge();
 		for (Cell point : line)
 			ridge.points.add(point);
@@ -311,7 +311,7 @@ class Skeleton {
 		for (Cell point : line)
 			shadow.set(point, true);
 	}
-	void removeTails() {
+	private void removeTails() {
 		for (SkeletonMinutia minutia : minutiae) {
 			if (minutia.ridges.size() == 1 && minutia.ridges.get(0).end().ridges.size() >= 3)
 				if (minutia.ridges.get(0).points.size() < Parameters.minTailLength)
@@ -321,7 +321,7 @@ class Skeleton {
 		removeKnots();
 		logger.logRemovedTails(type, minutiae);
 	}
-	void removeFragments() {
+	private void removeFragments() {
 		for (SkeletonMinutia minutia : minutiae)
 			if (minutia.ridges.size() == 1) {
 				SkeletonRidge ridge = minutia.ridges.get(0);
@@ -331,7 +331,7 @@ class Skeleton {
 		removeDots();
 		logger.logRemovedFragments(type, minutiae);
 	}
-	void removeKnots() {
+	private void removeKnots() {
 		for (SkeletonMinutia minutia : minutiae) {
 			if (minutia.ridges.size() == 2 && minutia.ridges.get(0).reversed != minutia.ridges.get(1)) {
 				SkeletonRidge extended = minutia.ridges.get(0).reversed;
@@ -352,18 +352,18 @@ class Skeleton {
 		}
 		removeDots();
 	}
-	void disableBranchMinutiae() {
+	private void disableBranchMinutiae() {
 		for (SkeletonMinutia minutia : minutiae)
 			if (minutia.ridges.size() > 2)
 				minutia.considered = false;
 	}
-	void addMinutia(SkeletonMinutia minutia) {
+	private void addMinutia(SkeletonMinutia minutia) {
 		minutiae.add(minutia);
 	}
-	void removeMinutia(SkeletonMinutia minutia) {
+	private void removeMinutia(SkeletonMinutia minutia) {
 		minutiae.remove(minutia);
 	}
-	BooleanMap shadow() {
+	private BooleanMap shadow() {
 		BooleanMap shadow = new BooleanMap(size);
 		for (SkeletonMinutia minutia : minutiae) {
 			shadow.set(minutia.position, true);
