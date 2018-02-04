@@ -25,7 +25,7 @@ class EdgeShape {
 		this.referenceAngle = referenceAngle;
 		this.neighborAngle = neighborAngle;
 	}
-	EdgeShape(FingerprintMinutia reference, FingerprintMinutia neighbor) {
+	EdgeShape(Minutia reference, Minutia neighbor) {
 		Cell vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
 		int x = vector.x;

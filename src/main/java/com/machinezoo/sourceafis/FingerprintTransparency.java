@@ -113,23 +113,23 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	void logRemovedFragments(SkeletonType type, List<SkeletonMinutia> minutiae) {
 	}
-	void logMinutiaeSkeleton(FingerprintMinutia[] minutiae) {
+	void logMinutiaeSkeleton(Minutia[] minutiae) {
 	}
-	void logMinutiaeInner(FingerprintMinutia[] minutiae) {
+	void logMinutiaeInner(Minutia[] minutiae) {
 	}
-	void logMinutiaeRemovedClouds(FingerprintMinutia[] minutiae) {
+	void logMinutiaeRemovedClouds(Minutia[] minutiae) {
 	}
-	void logMinutiaeClipped(FingerprintMinutia[] minutiae) {
+	void logMinutiaeClipped(Minutia[] minutiae) {
 	}
-	void logMinutiaeShuffled(FingerprintMinutia[] minutiae) {
+	void logMinutiaeShuffled(Minutia[] minutiae) {
 	}
 	void logEdgeTable(NeighborEdge[][] table) {
 	}
-	void logMinutiaeDeserialized(FingerprintMinutia[] minutiae) {
+	void logMinutiaeDeserialized(Minutia[] minutiae) {
 	}
 	void logIsoDimensions(int width, int height, int cmPixelsX, int cmPixelsY) {
 	}
-	void logMinutiaeIso(FingerprintMinutia[] minutiae) {
+	void logMinutiaeIso(Minutia[] minutiae) {
 	}
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 	}

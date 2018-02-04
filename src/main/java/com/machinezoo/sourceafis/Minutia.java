@@ -1,11 +1,11 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-class FingerprintMinutia {
+class Minutia {
 	final Cell position;
 	final double direction;
 	final MinutiaType type;
-	FingerprintMinutia(Cell position, double direction, MinutiaType type) {
+	Minutia(Cell position, double direction, MinutiaType type) {
 		this.position = position;
 		this.direction = direction;
 		this.type = type;

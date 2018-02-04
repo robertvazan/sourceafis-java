@@ -7,10 +7,10 @@ import gnu.trove.map.hash.*;
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
 	private FingerprintTransparency logger = FingerprintTransparency.none;
-	private FingerprintMinutia[] probeMinutiae;
+	private Minutia[] probeMinutiae;
 	private NeighborEdge[][] probeEdges;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
-	private FingerprintMinutia[] candidateMinutiae;
+	private Minutia[] candidateMinutiae;
 	private NeighborEdge[][] candidateEdges;
 	private MinutiaPair[] pool = new MinutiaPair[1];
 	private int pooled;
@@ -23,7 +23,7 @@ class MatchBuffer {
 	static MatchBuffer current() {
 		return local.get();
 	}
-	void selectProbe(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {
+	void selectProbe(Minutia[] minutiae, NeighborEdge[][] edges) {
 		probeMinutiae = minutiae;
 		probeEdges = edges;
 		if (tree == null || minutiae.length > tree.length) {
@@ -34,7 +34,7 @@ class MatchBuffer {
 	void selectMatcher(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		this.edgeHash = edgeHash;
 	}
-	void selectCandidate(FingerprintMinutia[] minutiae, NeighborEdge[][] edges) {
+	void selectCandidate(Minutia[] minutiae, NeighborEdge[][] edges) {
 		candidateMinutiae = minutiae;
 		candidateEdges = edges;
 		if (byCandidate == null || byCandidate.length < minutiae.length)
