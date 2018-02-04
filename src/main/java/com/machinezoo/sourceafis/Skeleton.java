@@ -205,7 +205,6 @@ class Skeleton {
 		removeGaps();
 		removeTails();
 		removeFragments();
-		disableBranchMinutiae();
 	}
 	private void removeDots() {
 		List<SkeletonMinutia> removed = new ArrayList<>();
@@ -351,11 +350,6 @@ class Skeleton {
 			}
 		}
 		removeDots();
-	}
-	private void disableBranchMinutiae() {
-		for (SkeletonMinutia minutia : minutiae)
-			if (minutia.ridges.size() > 2)
-				minutia.considered = false;
 	}
 	private void addMinutia(SkeletonMinutia minutia) {
 		minutiae.add(minutia);

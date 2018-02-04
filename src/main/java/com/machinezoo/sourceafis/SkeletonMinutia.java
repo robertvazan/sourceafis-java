@@ -4,7 +4,6 @@ package com.machinezoo.sourceafis;
 import java.util.*;
 
 class SkeletonMinutia {
-	boolean considered = true;
 	final Cell position;
 	final List<SkeletonRidge> ridges = new ArrayList<>();
 	SkeletonMinutia(Cell position) {
@@ -24,6 +23,6 @@ class SkeletonMinutia {
 		}
 	}
 	@Override public String toString() {
-		return String.format("%s*%d%s", position.toString(), ridges.size(), considered ? "" : "(ignored)");
+		return String.format("%s*%d", position.toString(), ridges.size());
 	}
 }

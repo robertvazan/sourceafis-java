@@ -673,7 +673,7 @@ public class FingerprintTemplate {
 		minutiae = Stream.concat(
 			Arrays.stream(minutiae),
 			skeleton.minutiae.stream()
-				.filter(m -> m.considered && m.ridges.size() == 1)
+				.filter(m -> m.ridges.size() == 1)
 				.map(m -> new Minutia(m.position, m.ridges.get(0).direction(), type)))
 			.toArray(Minutia[]::new);
 	}
