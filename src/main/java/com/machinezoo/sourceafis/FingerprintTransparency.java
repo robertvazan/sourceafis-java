@@ -3,25 +3,76 @@ package com.machinezoo.sourceafis;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
+import java.util.zip.*;
 import gnu.trove.map.hash.*;
+import lombok.*;
 
 public abstract class FingerprintTransparency {
+	private static final Pattern nameRe = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_-]*$");
+	private final List<String> names = new ArrayList<>();
+	private final Map<String, FingerprintTemplate> templates = new HashMap<>();
+	private final Map<String, FingerprintMatcher> matchers = new HashMap<>();
+	private String currentTemplate;
+	private String currentCandidate;
 	static final FingerprintTransparency none = new FingerprintTransparency() {
-		@Override protected void log(String path, InputStream json, InputStream binary) {
+		@Override protected void log(String path, Map<String, InputStream> data) {
 		}
 	};
-	protected abstract void log(String path, InputStream json, InputStream binary);
-	public void add(String name, byte[] image, double dpi) {
-		logImageOriginal(image, dpi);
+	protected abstract void log(String path, Map<String, InputStream> data);
+	public static FingerprintTransparency zip(ZipOutputStream zip) {
+		byte[] buffer = new byte[4096];
+		return new FingerprintTransparency() {
+			@Override @SneakyThrows protected void log(String path, Map<String, InputStream> data) {
+				for (String suffix : data.keySet()) {
+					zip.putNextEntry(new ZipEntry(path + suffix));
+					InputStream stream = data.get(suffix);
+					while (true) {
+						int read = stream.read(buffer);
+						if (read <= 0)
+							break;
+						zip.write(buffer, 0, read);
+					}
+					zip.closeEntry();
+				}
+			}
+		};
 	}
-	public void deserialize(String name, String template) {
+	public void add(String name, byte[] image, double dpi) {
+		addName(name);
+		logImageOriginal(image, dpi);
+		templates.put(name, new FingerprintTemplate(image, dpi, this));
+	}
+	public void deserialize(String name, String json) {
+		addName(name);
+		templates.put(name, new FingerprintTemplate(json, this));
 	}
 	public void convert(String name, byte[] iso) {
+		addName(name);
 		logIsoTemplate(iso);
+		templates.put(name, new FingerprintTemplate(iso, this));
 	}
 	public void attach(String name, byte[] image, double dpi) {
+		if (!names.contains(name))
+			throw new IllegalArgumentException("Unknown fingerprint name");
+		logImageAttached(image, dpi);
 	}
 	public void match(String probe, String candidate) {
+		if (!names.contains(probe) || !names.contains(candidate))
+			throw new IllegalArgumentException("Unknown fingerprint name");
+		currentTemplate = probe;
+		if (!matchers.containsKey(probe))
+			matchers.put(probe, new FingerprintMatcher(templates.get(probe), this));
+		currentCandidate = candidate;
+		matchers.get(probe).match(templates.get(candidate));
+	}
+	private void addName(String name) {
+		if (!nameRe.matcher(name).matches())
+			throw new IllegalArgumentException("Invalid fingerprint name");
+		if (names.stream().anyMatch(n -> n.toLowerCase().equals(name.toLowerCase())))
+			throw new IllegalArgumentException("Duplicate fingerprint name");
+		names.add(name);
+		currentTemplate = name;
 	}
 	boolean logging() {
 		return this != none;
@@ -97,6 +148,8 @@ public abstract class FingerprintTransparency {
 	void logEdgeTable(NeighborEdge[][] table) {
 	}
 	void logMinutiaeDeserialized(FingerprintMinutia[] minutiae) {
+	}
+	private void logImageAttached(byte[] image, double dpi) {
 	}
 	private void logIsoTemplate(byte[] iso) {
 	}
