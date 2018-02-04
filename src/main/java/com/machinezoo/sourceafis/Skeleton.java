@@ -4,11 +4,14 @@ package com.machinezoo.sourceafis;
 import java.util.*;
 
 class Skeleton {
-	private final DataLogger logger = DataLogger.current();
+	private final FingerprintTransparency logger;
+	private final SkeletonType type;
 	final Cell size;
 	final List<SkeletonMinutia> minutiae = new ArrayList<>();
-	Skeleton(BooleanMap binary) {
-		logger.log("binary-input", binary);
+	Skeleton(BooleanMap binary, SkeletonType type, FingerprintTransparency logger) {
+		this.type = type;
+		this.logger = logger;
+		logger.logSkeletonBinarized(type, binary);
 		size = binary.size();
 		BooleanMap thinned = thin(binary);
 		List<Cell> minutiaPoints = findMinutiae(thinned);
@@ -16,6 +19,7 @@ class Skeleton {
 		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
 		traceRidges(thinned, minutiaMap);
 		fixLinkingGaps();
+		logger.logTraced(type, minutiae);
 		filter();
 	}
 	enum NeighborhoodType {
@@ -55,7 +59,7 @@ class Skeleton {
 									thinned.set(x, y, true);
 							}
 		}
-		logger.log("thinned", thinned);
+		logger.logThinned(type, thinned);
 		return thinned;
 	}
 	static NeighborhoodType[] neighborhoodTypes() {
@@ -107,7 +111,6 @@ class Skeleton {
 				if (count == 1 || count > 2)
 					result.add(at);
 			}
-		logger.log("found-minutiae", result);
 		return result;
 	}
 	static Map<Cell, List<Cell>> linkNeighboringMinutiae(List<Cell> minutiae) {
@@ -151,7 +154,6 @@ class Skeleton {
 			}
 			centers.put(currentPos, centers.get(primaryPos));
 		}
-		logger.log("minutia-centers", minutiae);
 		return centers;
 	}
 	void traceRidges(BooleanMap thinned, Map<Cell, SkeletonMinutia> minutiaePoints) {
@@ -184,7 +186,6 @@ class Skeleton {
 				}
 			}
 		}
-		logger.log("traced-ridges", minutiae);
 	}
 	void fixLinkingGaps() {
 		for (SkeletonMinutia minutia : minutiae) {
@@ -196,10 +197,10 @@ class Skeleton {
 				}
 			}
 		}
-		logger.log("fixed-gaps", minutiae);
 	}
 	void filter() {
 		removeDots();
+		logger.logRemovedDots(type, minutiae);
 		removePores();
 		removeGaps();
 		removeTails();
@@ -213,7 +214,6 @@ class Skeleton {
 				removed.add(minutia);
 		for (SkeletonMinutia minutia : removed)
 			removeMinutia(minutia);
-		logger.log("removed-dots", minutiae);
 	}
 	void removePores() {
 		for (SkeletonMinutia minutia : minutiae) {
@@ -238,8 +238,8 @@ class Skeleton {
 				}
 			}
 		}
-		logger.log("removed-pores", minutiae);
 		removeKnots();
+		logger.logRemovedPores(type, minutiae);
 	}
 	static class Gap implements Comparable<Gap> {
 		int distance;
@@ -271,8 +271,8 @@ class Skeleton {
 					addGapRidge(shadow, gap, line);
 			}
 		}
-		logger.log("removed-gaps", minutiae);
 		removeKnots();
+		logger.logRemovedGaps(type, minutiae);
 	}
 	boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
 		int distanceSq = end1.position.minus(end2.position).lengthSq();
@@ -317,9 +317,9 @@ class Skeleton {
 				if (minutia.ridges.get(0).points.size() < Parameters.minTailLength)
 					minutia.ridges.get(0).detach();
 		}
-		logger.log("removed-tails", minutiae);
 		removeDots();
 		removeKnots();
+		logger.logRemovedTails(type, minutiae);
 	}
 	void removeFragments() {
 		for (SkeletonMinutia minutia : minutiae)
@@ -328,8 +328,8 @@ class Skeleton {
 				if (ridge.end().ridges.size() == 1 && ridge.points.size() < Parameters.minFragmentLength)
 					ridge.detach();
 			}
-		logger.log("removed-fragments", minutiae);
 		removeDots();
+		logger.logRemovedFragments(type, minutiae);
 	}
 	void removeKnots() {
 		for (SkeletonMinutia minutia : minutiae) {
@@ -350,14 +350,12 @@ class Skeleton {
 				removed.detach();
 			}
 		}
-		logger.log("removed-knots", minutiae);
 		removeDots();
 	}
 	void disableBranchMinutiae() {
 		for (SkeletonMinutia minutia : minutiae)
 			if (minutia.ridges.size() > 2)
 				minutia.considered = false;
-		logger.log("disabled-branch-minutiae", minutiae);
 	}
 	void addMinutia(SkeletonMinutia minutia) {
 		minutiae.add(minutia);

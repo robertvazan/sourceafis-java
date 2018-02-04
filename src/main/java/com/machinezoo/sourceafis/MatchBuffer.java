@@ -6,7 +6,7 @@ import gnu.trove.map.hash.*;
 
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
-	private DataLogger logger;
+	private FingerprintTransparency logger = FingerprintTransparency.none;
 	private FingerprintMinutia[] probeMinutiae;
 	private NeighborEdge[][] probeEdges;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
@@ -40,27 +40,23 @@ class MatchBuffer {
 		if (byCandidate == null || byCandidate.length < minutiae.length)
 			byCandidate = new MinutiaPair[minutiae.length];
 	}
-	double match() {
+	double match(FingerprintTransparency logger) {
 		try {
-			logger = DataLogger.current();
+			this.logger = logger;
 			int totalRoots = enumerateRoots();
 			double high = 0;
 			for (int i = 0; i < totalRoots; ++i) {
 				MinutiaPair root = roots[i];
-				logger.log("tried-root", root);
+				logger.logRoot(root);
 				double score = tryRoot(root);
 				if (score > high) {
 					high = score;
-					if (logger.logging()) {
-						logger.log("pair-count", count);
-						logger.log("pair-list", tree);
-					}
+					logger.logPairing(count, tree);
 				}
 				clearPairing();
 			}
 			double shaped = shape(high);
-			if (logger.logging())
-				logger.log("shaped-score", shaped);
+			logger.logShapedScore(shaped);
 			return shaped;
 		} catch (Throwable e) {
 			local.remove();
@@ -203,8 +199,7 @@ class MatchBuffer {
 	private void addSupportingEdge(MinutiaPair pair) {
 		++byProbe[pair.probe].supportingEdges;
 		++byProbe[pair.probeRef].supportingEdges;
-		if (logger.logging())
-			logger.log("supporting-edge", pair);
+		logger.logSupportingEdge(pair);
 	}
 	private double computeScore() {
 		double minutiaScore = Parameters.pairCountScore * count;
@@ -241,16 +236,7 @@ class MatchBuffer {
 			angleScore = Parameters.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
 		double score = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
-		if (logger.logging()) {
-			logger.log("minutia-score", minutiaScore);
-			logger.log("ratio-score", ratioScore);
-			logger.log("supported-score", supportedScore);
-			logger.log("edge-score", edgeScore);
-			logger.log("type-score", typeScore);
-			logger.log("distance-score", distanceScore);
-			logger.log("angle-score", angleScore);
-			logger.log("total-score", score);
-		}
+		logger.logScore(minutiaScore, ratioScore, supportedScore, edgeScore, typeScore, distanceScore, angleScore, score);
 		return score;
 	}
 	private static double shape(double raw) {
