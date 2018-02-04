@@ -16,7 +16,7 @@ import gnu.trove.map.hash.*;
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
-	private final FingerprintTransparency logger;
+	private FingerprintTransparency logger;
 	final FingerprintTemplate template;
 	TIntObjectHashMap<List<IndexedEdge>> edgeHash = new TIntObjectHashMap<>();
 	/**
@@ -33,6 +33,7 @@ public class FingerprintMatcher {
 		logger = FingerprintTransparency.current();
 		this.template = probe;
 		buildEdgeHash();
+		logger = FingerprintTransparency.none;
 	}
 	void buildEdgeHash() {
 		for (int reference = 0; reference < template.minutiae.length; ++reference)

@@ -29,7 +29,7 @@ import lombok.*;
  * @see FingerprintMatcher
  */
 public class FingerprintTemplate {
-	private final FingerprintTransparency logger;
+	private FingerprintTransparency logger;
 	FingerprintMinutia[] minutiae = new FingerprintMinutia[0];
 	NeighborEdge[][] edgeTable;
 	/**
@@ -79,6 +79,7 @@ public class FingerprintTemplate {
 		limitTemplateSize();
 		shuffleMinutiae();
 		buildEdgeTable();
+		logger = FingerprintTransparency.none;
 	}
 	/**
 	 * Deserialize fingerprint template from JSON string.
@@ -100,6 +101,7 @@ public class FingerprintTemplate {
 		minutiae = new Gson().fromJson(json, FingerprintMinutia[].class);
 		logger.logMinutiaeDeserialized(minutiae);
 		buildEdgeTable();
+		logger = FingerprintTransparency.none;
 	}
 	/**
 	 * Serialize fingerprint template to JSON string.
@@ -215,6 +217,7 @@ public class FingerprintTemplate {
 		}
 		shuffleMinutiae();
 		buildEdgeTable();
+		logger = FingerprintTransparency.none;
 	}
 	@SneakyThrows DoubleMap readImage(byte[] serialized) {
 		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));

@@ -61,6 +61,8 @@ class MatchBuffer {
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
+		} finally {
+			logger = FingerprintTransparency.none;
 		}
 	}
 	private int enumerateRoots() {
