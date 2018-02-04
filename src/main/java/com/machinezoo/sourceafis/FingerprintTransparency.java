@@ -133,7 +133,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 	}
-	void logRoot(MinutiaPair root) {
+	void logRoots(int count, MinutiaPair[] roots) {
 	}
 	void logSupportingEdge(MinutiaPair pair) {
 	}

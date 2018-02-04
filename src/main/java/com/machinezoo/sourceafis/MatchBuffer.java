@@ -44,11 +44,10 @@ class MatchBuffer {
 		try {
 			logger = FingerprintTransparency.current();
 			int totalRoots = enumerateRoots();
+			logger.logRoots(totalRoots, roots);
 			double high = 0;
 			for (int i = 0; i < totalRoots; ++i) {
-				MinutiaPair root = roots[i];
-				logger.logRoot(root);
-				double score = tryRoot(root);
+				double score = tryRoot(roots[i]);
 				if (score > high) {
 					high = score;
 					logger.logPairing(count, tree);
