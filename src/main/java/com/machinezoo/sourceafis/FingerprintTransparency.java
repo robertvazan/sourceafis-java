@@ -139,7 +139,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	void logPairing(int nth, int count, MinutiaPair[] pairs) {
 	}
-	void logScore(double minutia, double ratio, double supported, double edge, double type, double distance, double angle, double total) {
+	void logScore(double minutia, double ratio, double supported, double edge, double type, double distance, double angle, double total, double shaped) {
 	}
 	void logBestPairing(int nth) {
 	}

@@ -56,10 +56,8 @@ class MatchBuffer {
 				}
 				clearPairing();
 			}
-			double shaped = shape(high);
-			logger.logShapedScore(shaped);
 			logger.logBestPairing(best);
-			return shaped;
+			return high;
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
@@ -239,9 +237,10 @@ class MatchBuffer {
 			double pairedAngleError = Parameters.maxAngleError * (count - 1) * 2;
 			angleScore = Parameters.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
-		double score = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
-		logger.logScore(minutiaScore, ratioScore, supportedScore, edgeScore, typeScore, distanceScore, angleScore, score);
-		return score;
+		double total = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
+		double shaped = shape(total);
+		logger.logScore(minutiaScore, ratioScore, supportedScore, edgeScore, typeScore, distanceScore, angleScore, total, shaped);
+		return shaped;
 	}
 	private static double shape(double raw) {
 		if (raw < Parameters.thresholdMaxFMR)
