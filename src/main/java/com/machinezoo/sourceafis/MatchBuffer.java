@@ -46,16 +46,19 @@ class MatchBuffer {
 			int totalRoots = enumerateRoots();
 			logger.logRoots(totalRoots, roots);
 			double high = 0;
+			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
 				double score = tryRoot(roots[i]);
+				logger.logPairing(i, count, tree);
 				if (score > high) {
 					high = score;
-					logger.logPairing(count, tree);
+					best = i;
 				}
 				clearPairing();
 			}
 			double shaped = shape(high);
 			logger.logShapedScore(shaped);
+			logger.logBestPairing(best);
 			return shaped;
 		} catch (Throwable e) {
 			local.remove();
