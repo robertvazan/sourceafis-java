@@ -16,6 +16,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private static final ThreadLocal<FingerprintTransparency> current = new ThreadLocal<>();
 	private FingerprintTransparency outer;
 	private boolean closed;
+	private List<PairingEdge> supportingEdges = new ArrayList<>();
 	static final FingerprintTransparency none = new FingerprintTransparency() {
 		@Override protected void log(String name, Map<String, InputStream> data) {
 		}
@@ -208,16 +209,99 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logMinutiae("minutiae-iso", minutiae);
 	}
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
+		InputStream data = new LazyByteStream() {
+			@Override @SneakyThrows ByteBuffer produce() {
+				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+				DataOutputStream formatter = new DataOutputStream(buffer);
+				int[] keys = edgeHash.keys();
+				Arrays.sort(keys);
+				formatter.writeInt(keys.length);
+				for (int key : keys) {
+					formatter.writeInt(key);
+					List<IndexedEdge> edges = edgeHash.get(key);
+					formatter.writeInt(edges.size());
+					for (IndexedEdge edge : edges) {
+						formatter.writeInt(edge.reference);
+						formatter.writeInt(edge.neighbor);
+						formatter.writeInt(edge.length);
+						formatter.writeDouble(edge.referenceAngle);
+						formatter.writeDouble(edge.neighborAngle);
+					}
+				}
+				formatter.close();
+				return ByteBuffer.wrap(buffer.toByteArray());
+			}
+		};
+		log("edge-hash", ".dat", data);
 	}
 	void logRoots(int count, MinutiaPair[] roots) {
+		log("root-pairs", ".json", streamJson(() -> Arrays.stream(roots).limit(count).map(p -> new RootPair(p.probe, p.candidate)).collect(toList())));
+	}
+	@AllArgsConstructor @SuppressWarnings("unused") private static class RootPair {
+		int probe;
+		int candidate;
 	}
 	void logSupportingEdge(MinutiaPair pair) {
+		supportingEdges.add(new PairingEdge(pair));
 	}
-	void logPairing(int nth, int count, MinutiaPair[] pairs) {
+	void logPairing(int count, MinutiaPair[] pairs) {
+		log("pairing", ".json", streamJson(() -> {
+			Pairing pairing = new Pairing();
+			pairing.root = new RootPair(pairs[0].probe, pairs[0].candidate);
+			pairing.tree = Arrays.stream(pairs).limit(count).skip(1).map(PairingEdge::new).collect(toList());
+			pairing.support = supportingEdges;
+			return pairing;
+		}));
+		supportingEdges.clear();
 	}
-	void logScore(double minutia, double ratio, double supported, double edge, double type, double distance, double angle, double total, double shaped) {
+	@SuppressWarnings("unused") private static class Pairing {
+		RootPair root;
+		List<PairingEdge> tree;
+		List<PairingEdge> support;
+	}
+	@SuppressWarnings("unused") private static class PairingEdge {
+		int probeFrom;
+		int probeTo;
+		int candidateFrom;
+		int candidateTo;
+		PairingEdge(MinutiaPair pair) {
+			probeFrom = pair.probeRef;
+			probeTo = pair.probe;
+			candidateFrom = pair.candidateRef;
+			candidateTo = pair.candidate;
+		}
+	}
+	void logScore(double minutiae, double ratio, double supported, double edge, double type, double distance, double angle, double total, double shaped) {
+		log("scoring", ".json", streamJson(() -> {
+			Score score = new Score();
+			score.matchedMinutiaeScore = minutiae;
+			score.matchedFractionOfAllMinutiaeScore = ratio;
+			score.minutiaeWithSeveralEdgesScore = supported;
+			score.matchedEdgesScore = edge;
+			score.correctMinutiaTypeScore = type;
+			score.accurateEdgeLengthScore = distance;
+			score.accurateMinutiaAngleScore = angle;
+			score.totalScore = total;
+			score.shapedScore = shaped;
+			return score;
+		}));
+	}
+	@SuppressWarnings("unused") private static class Score {
+		double matchedMinutiaeScore;
+		double matchedFractionOfAllMinutiaeScore;
+		double matchedEdgesScore;
+		double minutiaeWithSeveralEdgesScore;
+		double correctMinutiaTypeScore;
+		double accurateEdgeLengthScore;
+		double accurateMinutiaAngleScore;
+		double totalScore;
+		double shapedScore;
 	}
 	void logBestPairing(int nth) {
+		log("best-match", ".json", streamJson(() -> new BestMatch(nth)));
+	}
+	@AllArgsConstructor @SuppressWarnings("unused") private static class BestMatch {
+		int offset;
 	}
 	private void logSkeleton(String name, List<SkeletonMinutia> minutiae) {
 		Supplier<Object> json = () -> {

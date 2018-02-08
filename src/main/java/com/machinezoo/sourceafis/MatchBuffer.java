@@ -49,7 +49,6 @@ class MatchBuffer {
 			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
 				double score = tryRoot(roots[i]);
-				logger.logPairing(i, count, tree);
 				if (score > high) {
 					high = score;
 					best = i;
@@ -127,6 +126,7 @@ class MatchBuffer {
 			collectEdges();
 			skipPaired();
 		} while (!queue.isEmpty());
+		logger.logPairing(count, tree);
 		return computeScore();
 	}
 	private void clearPairing() {
