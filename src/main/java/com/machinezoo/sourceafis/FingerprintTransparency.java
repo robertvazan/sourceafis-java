@@ -371,7 +371,16 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		};
 	}
 	private void logHistogram(String name, Histogram histogram) {
-		log(name, ".dat", streamHistogram(histogram));
+		log(name, ".dat", streamHistogram(histogram), ".json", streamJson(() -> {
+			ArrayDescriptor descriptor = new ArrayDescriptor();
+			descriptor.axes = new String[] { "y", "x", "bin" };
+			descriptor.dimensions = new int[] { histogram.height, histogram.width, histogram.depth };
+			descriptor.scalar = "int";
+			descriptor.bitness = 32;
+			descriptor.endianness = "big";
+			descriptor.format = "signed";
+			return descriptor;
+		}));
 	}
 	private static InputStream streamHistogram(Histogram histogram) {
 		return new LazyByteStream() {
@@ -386,7 +395,16 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		};
 	}
 	private void logPointMap(String name, PointMap map) {
-		log(name, ".dat", streamPointMap(map));
+		log(name, ".dat", streamPointMap(map), ".json", streamJson(() -> {
+			ArrayDescriptor descriptor = new ArrayDescriptor();
+			descriptor.axes = new String[] { "y", "x", "axis" };
+			descriptor.dimensions = new int[] { map.height, map.width, 2 };
+			descriptor.scalar = "double";
+			descriptor.bitness = 64;
+			descriptor.endianness = "big";
+			descriptor.format = "IEEE754";
+			return descriptor;
+		}));
 	}
 	private static InputStream streamPointMap(PointMap map) {
 		return new LazyByteStream() {
@@ -402,7 +420,16 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		};
 	}
 	private void logDoubleMap(String name, DoubleMap map) {
-		log(name, ".dat", streamDoubleMap(map));
+		log(name, ".dat", streamDoubleMap(map), ".json", streamJson(() -> {
+			ArrayDescriptor descriptor = new ArrayDescriptor();
+			descriptor.axes = new String[] { "y", "x" };
+			descriptor.dimensions = new int[] { map.height, map.width };
+			descriptor.scalar = "double";
+			descriptor.bitness = 64;
+			descriptor.endianness = "big";
+			descriptor.format = "IEEE754";
+			return descriptor;
+		}));
 	}
 	private static InputStream streamDoubleMap(DoubleMap map) {
 		return new LazyByteStream() {
@@ -415,7 +442,16 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		};
 	}
 	private void logBooleanMap(String name, BooleanMap map) {
-		log(name, ".dat", streamBooleanMap(map));
+		log(name, ".dat", streamBooleanMap(map), ".json", streamJson(() -> {
+			ArrayDescriptor descriptor = new ArrayDescriptor();
+			descriptor.axes = new String[] { "y", "x" };
+			descriptor.dimensions = new int[] { map.height, map.width };
+			descriptor.scalar = "boolean";
+			descriptor.bitness = 8;
+			descriptor.endianness = "NA";
+			descriptor.format = "false as 0, true as 1";
+			return descriptor;
+		}));
 	}
 	private static InputStream streamBooleanMap(BooleanMap map) {
 		return new LazyByteStream() {
@@ -426,6 +462,14 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				return buffer;
 			}
 		};
+	}
+	@SuppressWarnings("unused") private static class ArrayDescriptor {
+		String[] axes;
+		int[] dimensions;
+		String scalar;
+		int bitness;
+		String endianness;
+		String format;
 	}
 	private abstract static class LazyByteStream extends InputStream {
 		ByteBuffer buffer;
