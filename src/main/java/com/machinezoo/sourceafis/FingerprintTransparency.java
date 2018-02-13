@@ -191,13 +191,13 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("edge-table", ".json", streamJson(() -> table));
 	}
 	void logDeserializedSize(Cell size) {
-		log("deserialized-size", ".json", streamJson(() -> size));
+		log("deserialized-info", ".json", streamJson(() -> size));
 	}
 	void logMinutiaeDeserialized(Minutia[] minutiae) {
 		logMinutiae("minutiae-deserialized", minutiae);
 	}
 	void logIsoDimensions(int width, int height, int cmPixelsX, int cmPixelsY) {
-		log("iso-template", ".json", streamJson(() -> new IsoTemplate(width, height, cmPixelsX, cmPixelsY)));
+		log("iso-info", ".json", streamJson(() -> new IsoTemplate(width, height, cmPixelsX, cmPixelsY)));
 	}
 	@AllArgsConstructor @SuppressWarnings("unused") private static class IsoTemplate {
 		int width;
