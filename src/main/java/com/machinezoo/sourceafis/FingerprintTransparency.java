@@ -246,7 +246,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		int candidate;
 	}
 	void logSupportingEdge(MinutiaPair pair) {
-		supportingEdges.add(new PairingEdge(pair));
+		if (logging())
+			supportingEdges.add(new PairingEdge(pair));
 	}
 	void logPairing(int count, MinutiaPair[] pairs) {
 		log("pairing", ".json", streamJson(() -> {
