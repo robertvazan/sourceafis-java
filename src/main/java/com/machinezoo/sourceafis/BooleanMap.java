@@ -1,6 +1,8 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
+
 class BooleanMap {
 	final int width;
 	final int height;
@@ -50,6 +52,22 @@ class BooleanMap {
 			throw new IllegalArgumentException();
 		for (int i = 0; i < array.length; ++i)
 			array[i] |= other.array[i];
+	}
+	ByteBuffer serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(size().area());
+		for (Cell at : size())
+			buffer.put((byte)(get(at) ? 1 : 0));
+		return buffer;
+	}
+	JsonArrayInfo json() {
+		JsonArrayInfo info = new JsonArrayInfo();
+		info.axes = new String[] { "y", "x" };
+		info.dimensions = new int[] { height, width };
+		info.scalar = "boolean";
+		info.bitness = 8;
+		info.endianness = "NA";
+		info.format = "false as 0, true as 1";
+		return info;
 	}
 	private int offset(int x, int y) {
 		return y * width + x;

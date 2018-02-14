@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
 import java.util.*;
 
 class SkeletonRidge {
@@ -56,5 +57,12 @@ class SkeletonRidge {
 		if (first < 0)
 			first = 0;
 		return Angle.atan(points.get(first), points.get(last));
+	}
+	void write(ByteBuffer buffer) {
+		for (Cell at : points)
+			at.write(buffer);
+	}
+	int serializedSize() {
+		return points.size() * Cell.serializedSize();
 	}
 }

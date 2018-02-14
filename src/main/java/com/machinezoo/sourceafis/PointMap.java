@@ -1,6 +1,8 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
+
 class PointMap {
 	final int width;
 	final int height;
@@ -46,6 +48,25 @@ class PointMap {
 	}
 	void add(Cell at, Point point) {
 		add(at.x, at.y, point);
+	}
+	ByteBuffer serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(16 * size().area());
+		for (Cell at : size()) {
+			Point point = get(at);
+			buffer.putDouble(point.x);
+			buffer.putDouble(point.y);
+		}
+		return buffer;
+	}
+	JsonArrayInfo json() {
+		JsonArrayInfo info = new JsonArrayInfo();
+		info.axes = new String[] { "y", "x", "axis" };
+		info.dimensions = new int[] { height, width, 2 };
+		info.scalar = "double";
+		info.bitness = 64;
+		info.endianness = "big";
+		info.format = "IEEE754";
+		return info;
 	}
 	private int offset(int x, int y) {
 		return y * width + x;

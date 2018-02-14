@@ -1,6 +1,8 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
+
 class Histogram {
 	final int width;
 	final int height;
@@ -47,6 +49,24 @@ class Histogram {
 	}
 	void increment(Cell at, int z) {
 		increment(at.x, at.y, z);
+	}
+	ByteBuffer serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(4 * width * height * depth);
+		for (int y = 0; y < height; ++y)
+			for (int x = 0; x < width; ++x)
+				for (int z = 0; z < depth; ++z)
+					buffer.putInt(get(x, y, z));
+		return buffer;
+	}
+	JsonArrayInfo json() {
+		JsonArrayInfo info = new JsonArrayInfo();
+		info.axes = new String[] { "y", "x", "bin" };
+		info.dimensions = new int[] { height, width, depth };
+		info.scalar = "int";
+		info.bitness = 32;
+		info.endianness = "big";
+		info.format = "signed";
+		return info;
 	}
 	private int offset(int x, int y, int z) {
 		return (y * width + x) * depth + z;

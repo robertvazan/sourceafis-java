@@ -1,6 +1,8 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
+
 class DoubleMap {
 	final int width;
 	final int height;
@@ -39,6 +41,22 @@ class DoubleMap {
 	}
 	void multiply(Cell at, double value) {
 		multiply(at.x, at.y, value);
+	}
+	ByteBuffer serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(8 * size().area());
+		for (Cell at : size())
+			buffer.putDouble(get(at));
+		return buffer;
+	}
+	JsonArrayInfo json() {
+		JsonArrayInfo info = new JsonArrayInfo();
+		info.axes = new String[] { "y", "x" };
+		info.dimensions = new int[] { height, width };
+		info.scalar = "double";
+		info.bitness = 64;
+		info.endianness = "big";
+		info.format = "IEEE754";
+		return info;
 	}
 	private int offset(int x, int y) {
 		return y * width + x;

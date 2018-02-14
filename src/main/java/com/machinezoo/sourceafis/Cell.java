@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
 import java.util.*;
 import lombok.*;
 
@@ -70,6 +71,13 @@ import lombok.*;
 				result[0] = this;
 		}
 		return result;
+	}
+	void write(ByteBuffer buffer) {
+		buffer.putInt(x);
+		buffer.putInt(y);
+	}
+	static int serializedSize() {
+		return 8;
 	}
 	@Override public String toString() {
 		return String.format("[%d,%d]", x, y);
