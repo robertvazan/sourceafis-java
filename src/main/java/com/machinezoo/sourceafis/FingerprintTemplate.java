@@ -102,7 +102,7 @@ public class FingerprintTemplate {
 		logger = FingerprintTransparency.current();
 		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
 		size = data.size;
-		minutiae = data.minutiae;
+		minutiae = JsonMinutia.unmap(data.minutiae);
 		logger.logDeserializedSize(size);
 		logger.logMinutiaeDeserialized(minutiae);
 		buildEdgeTable();
@@ -126,7 +126,7 @@ public class FingerprintTemplate {
 	 * @see #fromJson(String)
 	 */
 	public String toJson() {
-		return new Gson().toJson(new JsonTemplate(size, minutiae));
+		return new Gson().toJson(new JsonTemplate(size, JsonMinutia.map(minutiae)));
 	}
 	/**
 	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.

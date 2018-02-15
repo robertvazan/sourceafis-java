@@ -17,4 +17,7 @@ class JsonMinutia {
 	static List<JsonMinutia> map(Minutia[] minutiae) {
 		return Arrays.stream(minutiae).map(JsonMinutia::new).collect(toList());
 	}
+	static Minutia[] unmap(List<JsonMinutia> minutiae) {
+		return minutiae.stream().map(Minutia::new).toArray(n -> new Minutia[n]);
+	}
 }

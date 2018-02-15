@@ -1,8 +1,9 @@
 package com.machinezoo.sourceafis;
 
+import java.util.*;
 import lombok.*;
 
 @AllArgsConstructor class JsonTemplate {
 	Cell size;
-	Minutia[] minutiae;
+	List<JsonMinutia> minutiae;
 }
