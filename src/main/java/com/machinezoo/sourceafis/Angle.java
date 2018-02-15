@@ -21,6 +21,9 @@ class Angle {
 	static double toOrientation(double angle) {
 		return angle < Math.PI ? 2 * angle : 2 * (angle - Math.PI);
 	}
+	static double fromOrientation(double angle) {
+		return 0.5 * angle;
+	}
 	static double add(double start, double delta) {
 		double angle = start + delta;
 		return angle < PI2 ? angle : angle - PI2;

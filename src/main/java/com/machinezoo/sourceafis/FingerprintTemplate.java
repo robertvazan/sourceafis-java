@@ -557,7 +557,7 @@ public class FingerprintTemplate {
 		for (int orientationIndex = 0; orientationIndex < resolution; ++orientationIndex) {
 			List<Cell> line = new ArrayList<>();
 			line.add(Cell.zero);
-			Point direction = Angle.toVector(Angle.bucketCenter(orientationIndex, 2 * resolution));
+			Point direction = Angle.toVector(Angle.fromOrientation(Angle.bucketCenter(orientationIndex, 2 * resolution)));
 			for (double r = radius; r >= 0.5; r /= step) {
 				Cell sample = direction.multiply(r).round();
 				if (!line.contains(sample)) {
