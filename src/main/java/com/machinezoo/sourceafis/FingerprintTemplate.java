@@ -208,7 +208,7 @@ public class FingerprintTemplate {
 					y = (int)Math.round(y / dpiY * 500);
 				Minutia minutia = new Minutia(
 					new Cell(x, y),
-					angle * Angle.PI2 / 256.0,
+					Angle.complementary(angle * Angle.PI2 / 256.0),
 					type == 2 ? MinutiaType.BIFURCATION : MinutiaType.ENDING);
 				list.add(minutia);
 			}

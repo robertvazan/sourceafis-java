@@ -28,7 +28,7 @@ class EdgeShape {
 		Cell vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
 		int x = vector.x;
-		int y = -vector.y;
+		int y = vector.y;
 		if (y < 0) {
 			x = -x;
 			y = -y;
