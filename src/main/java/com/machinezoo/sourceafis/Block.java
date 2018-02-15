@@ -15,13 +15,13 @@ import lombok.*;
 	int left() {
 		return x;
 	}
-	int bottom() {
+	int top() {
 		return y;
 	}
 	int right() {
 		return x + width;
 	}
-	int top() {
+	int bottom() {
 		return y + height;
 	}
 	int area() {
@@ -40,12 +40,12 @@ import lombok.*;
 		return around(center.x, center.y, radius);
 	}
 	Cell center() {
-		return new Cell((right() + left()) / 2, (bottom() + top()) / 2);
+		return new Cell((right() + left()) / 2, (top() + bottom()) / 2);
 	}
 	Block intersect(Block other) {
 		return between(
-			new Cell(Math.max(left(), other.left()), Math.max(bottom(), other.bottom())),
-			new Cell(Math.min(right(), other.right()), Math.min(top(), other.top())));
+			new Cell(Math.max(left(), other.left()), Math.max(top(), other.top())),
+			new Cell(Math.min(right(), other.right()), Math.min(bottom(), other.bottom())));
 	}
 	Block move(Cell delta) {
 		return new Block(x + delta.x, y + delta.y, width, height);

@@ -4,11 +4,12 @@ package com.machinezoo.sourceafis;
 class Angle {
 	static final double PI2 = 2 * Math.PI;
 	static final double invPI2 = 1.0 / PI2;
+	static final double halfPI = 0.5 * Math.PI;
 	static Point toVector(double angle) {
-		return new Point(Math.cos(angle), Math.sin(angle));
+		return new Point(Math.cos(angle), -Math.sin(angle));
 	}
 	static double atan(Point vector) {
-		double angle = Math.atan2(vector.y, vector.x);
+		double angle = Math.atan2(-vector.y, vector.x);
 		return angle >= 0 ? angle : angle + PI2;
 	}
 	static double atan(Cell vector) {

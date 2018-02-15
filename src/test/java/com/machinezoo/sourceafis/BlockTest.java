@@ -27,10 +27,10 @@ public class BlockTest {
 		assertEquals(6, new Block(2, 3, 4, 5).right());
 	}
 	@Test public void bottom() {
-		assertEquals(3, new Block(2, 3, 4, 5).bottom());
+		assertEquals(3, new Block(2, 3, 4, 5).top());
 	}
 	@Test public void top() {
-		assertEquals(8, new Block(2, 3, 4, 5).top());
+		assertEquals(8, new Block(2, 3, 4, 5).bottom());
 	}
 	@Test public void area() {
 		assertEquals(20, new Block(2, 3, 4, 5).area());

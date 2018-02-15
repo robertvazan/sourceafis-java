@@ -6,7 +6,6 @@ class EdgeShape {
 	private static final int polarCacheRadius = 1 << polarCacheBits;
 	private static final int[] polarDistance = new int[Integers.sq(polarCacheRadius)];
 	private static final double[] polarAngle = new double[Integers.sq(polarCacheRadius)];
-	private static final double HalfPI = 0.5 * Math.PI;
 	final int length;
 	final double referenceAngle;
 	final double neighborAngle;
@@ -15,7 +14,7 @@ class EdgeShape {
 			for (int x = 0; x < polarCacheRadius; ++x) {
 				polarDistance[y * polarCacheRadius + x] = (int)Math.round(Math.sqrt(Integers.sq(x) + Integers.sq(y)));
 				if (y > 0 || x > 0)
-					polarAngle[y * polarCacheRadius + x] = Angle.atan(new Point(x, y));
+					polarAngle[y * polarCacheRadius + x] = Angle.atan(new Point(x, -y));
 				else
 					polarAngle[y * polarCacheRadius + x] = 0;
 			}
@@ -29,7 +28,7 @@ class EdgeShape {
 		Cell vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
 		int x = vector.x;
-		int y = vector.y;
+		int y = -vector.y;
 		if (y < 0) {
 			x = -x;
 			y = -y;
@@ -39,7 +38,7 @@ class EdgeShape {
 			int tmp = -x;
 			x = y;
 			y = tmp;
-			quadrant += HalfPI;
+			quadrant += Angle.halfPI;
 		}
 		int shift = 32 - Integer.numberOfLeadingZeros((x | y) >>> polarCacheBits);
 		int offset = (y >> shift) * polarCacheRadius + (x >> shift);

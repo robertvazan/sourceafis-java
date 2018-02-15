@@ -238,7 +238,7 @@ public class FingerprintTemplate {
 			for (int x = 0; x < width; ++x) {
 				int pixel = pixels[y * width + x];
 				int color = (pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff);
-				map.set(x, height - y - 1, 1 - color * (1.0 / (3.0 * 255.0)));
+				map.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
 			}
 		}
 		logger.logImageDecoded(map);
@@ -281,7 +281,7 @@ public class FingerprintTemplate {
 		Histogram histogram = new Histogram(blocks.blockCount.x, blocks.blockCount.y, Parameters.histogramDepth);
 		for (Cell block : blocks.blockCount) {
 			Block area = blocks.blockAreas.get(block);
-			for (int y = area.bottom(); y < area.top(); ++y)
+			for (int y = area.top(); y < area.bottom(); ++y)
 				for (int x = area.left(); x < area.right(); ++x) {
 					int depth = (int)(image.get(x, y) * histogram.depth);
 					histogram.increment(block, histogram.constrain(depth));
@@ -379,7 +379,7 @@ public class FingerprintTemplate {
 		for (Cell center : rect) {
 			Block neighborhood = Block.around(center, radius).intersect(new Block(size));
 			int ones = 0;
-			for (int ny = neighborhood.bottom(); ny < neighborhood.top(); ++ny)
+			for (int ny = neighborhood.top(); ny < neighborhood.bottom(); ++ny)
 				for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
 					if (input.get(nx, ny))
 						++ones;
@@ -430,16 +430,16 @@ public class FingerprintTemplate {
 		for (Cell block : blocks.blockCount) {
 			if (blockMask.get(block)) {
 				Block area = blocks.blockAreas.get(block);
-				double[] bottomleft = mappings.get(block);
-				double[] bottomright = mappings.get(new Cell(block.x + 1, block.y));
-				double[] topleft = mappings.get(new Cell(block.x, block.y + 1));
-				double[] topright = mappings.get(new Cell(block.x + 1, block.y + 1));
-				for (int y = area.bottom(); y < area.top(); ++y)
+				double[] topleft = mappings.get(block);
+				double[] topright = mappings.get(new Cell(block.x + 1, block.y));
+				double[] bottomleft = mappings.get(new Cell(block.x, block.y + 1));
+				double[] bottomright = mappings.get(new Cell(block.x + 1, block.y + 1));
+				for (int y = area.top(); y < area.bottom(); ++y)
 					for (int x = area.left(); x < area.right(); ++x) {
 						int depth = histogram.constrain((int)(image.get(x, y) * histogram.depth));
 						double rx = (x - area.x + 0.5) / area.width;
 						double ry = (y - area.y + 0.5) / area.height;
-						result.set(x, y, Doubles.interpolate(topleft[depth], topright[depth], bottomleft[depth], bottomright[depth], rx, ry));
+						result.set(x, y, Doubles.interpolate(bottomleft[depth], bottomright[depth], topleft[depth], topright[depth], rx, ry));
 					}
 			}
 		}
@@ -482,7 +482,7 @@ public class FingerprintTemplate {
 				Range validXRange = new Range(
 					blocks.blockAreas.get(maskRange.start, blockY).left(),
 					blocks.blockAreas.get(maskRange.end - 1, blockY).right());
-				for (int y = blocks.blockAreas.get(0, blockY).bottom(); y < blocks.blockAreas.get(0, blockY).top(); ++y) {
+				for (int y = blocks.blockAreas.get(0, blockY).top(); y < blocks.blockAreas.get(0, blockY).bottom(); ++y) {
 					for (ConsideredOrientation neighbor : neighbors[y % neighbors.length]) {
 						int radius = Math.max(Math.abs(neighbor.offset.x), Math.abs(neighbor.offset.y));
 						if (y - radius >= 0 && y + radius < input.height) {
@@ -522,7 +522,7 @@ public class FingerprintTemplate {
 		for (Cell block : blocks.blockCount) {
 			if (mask.get(block)) {
 				Block area = blocks.blockAreas.get(block);
-				for (int y = area.bottom(); y < area.top(); ++y)
+				for (int y = area.top(); y < area.bottom(); ++y)
 					for (int x = area.left(); x < area.right(); ++x)
 						sums.add(block, orientation.get(x, y));
 			}
@@ -536,7 +536,7 @@ public class FingerprintTemplate {
 		for (Cell block : size)
 			if (mask.get(block)) {
 				Block neighbors = Block.around(block, Parameters.orientationSmoothingRadius).intersect(new Block(size));
-				for (int ny = neighbors.bottom(); ny < neighbors.top(); ++ny)
+				for (int ny = neighbors.top(); ny < neighbors.bottom(); ++ny)
 					for (int nx = neighbors.left(); nx < neighbors.right(); ++nx)
 						if (mask.get(nx, ny))
 							smoothed.add(block, orientation.get(nx, ny));
@@ -578,12 +578,12 @@ public class FingerprintTemplate {
 					Block target = blocks.blockAreas.get(block);
 					Block source = target.move(linePoint).intersect(new Block(blocks.pixelCount));
 					target = source.move(linePoint.negate());
-					for (int y = target.bottom(); y < target.top(); ++y)
+					for (int y = target.top(); y < target.bottom(); ++y)
 						for (int x = target.left(); x < target.right(); ++x)
 							output.add(x, y, input.get(x + linePoint.x, y + linePoint.y));
 				}
 				Block blockArea = blocks.blockAreas.get(block);
-				for (int y = blockArea.bottom(); y < blockArea.top(); ++y)
+				for (int y = blockArea.top(); y < blockArea.bottom(); ++y)
 					for (int x = blockArea.left(); x < blockArea.right(); ++x)
 						output.multiply(x, y, 1.0 / line.length);
 			}
@@ -596,7 +596,7 @@ public class FingerprintTemplate {
 		for (Cell block : blocks.blockCount)
 			if (mask.get(block)) {
 				Block rect = blocks.blockAreas.get(block);
-				for (int y = rect.bottom(); y < rect.top(); ++y)
+				for (int y = rect.top(); y < rect.bottom(); ++y)
 					for (int x = rect.left(); x < rect.right(); ++x)
 						if (input.get(x, y) - baseline.get(x, y) > 0)
 							binarized.set(x, y, true);
