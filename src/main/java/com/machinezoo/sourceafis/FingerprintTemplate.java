@@ -128,10 +128,6 @@ public class FingerprintTemplate {
 	public String toJson() {
 		return new Gson().toJson(new JsonTemplate(size, minutiae));
 	}
-	@AllArgsConstructor private static class JsonTemplate {
-		Cell size;
-		Minutia[] minutiae;
-	}
 	/**
 	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.
 	 * This method can import biometric data from ISO 19794-2 templates,
