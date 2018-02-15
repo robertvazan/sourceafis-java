@@ -32,7 +32,7 @@ public class FingerprintTemplate {
 	private FingerprintTransparency logger;
 	Cell size;
 	Minutia[] minutiae = new Minutia[0];
-	NeighborEdge[][] edgeTable;
+	NeighborEdge[][] edges;
 	/**
 	 * Create fingerprint template from raw fingerprint image.
 	 * Image must contain black fingerprint on white background with the specified DPI (dots per inch).
@@ -727,10 +727,10 @@ public class FingerprintTemplate {
 		logger.logMinutiaeShuffled(minutiae);
 	}
 	private void buildEdgeTable() {
-		edgeTable = new NeighborEdge[minutiae.length][];
-		List<NeighborEdge> edges = new ArrayList<>();
+		edges = new NeighborEdge[minutiae.length][];
+		List<NeighborEdge> star = new ArrayList<>();
 		int[] allSqDistances = new int[minutiae.length];
-		for (int reference = 0; reference < edgeTable.length; ++reference) {
+		for (int reference = 0; reference < edges.length; ++reference) {
 			Cell referencePosition = minutiae[reference].position;
 			int sqMaxDistance = Integers.sq(Parameters.edgeTableRange);
 			if (minutiae.length - 1 > Parameters.edgeTableNeighbors) {
@@ -741,14 +741,14 @@ public class FingerprintTemplate {
 			}
 			for (int neighbor = 0; neighbor < minutiae.length; ++neighbor) {
 				if (neighbor != reference && referencePosition.minus(minutiae[neighbor].position).lengthSq() <= sqMaxDistance)
-					edges.add(new NeighborEdge(minutiae, reference, neighbor));
+					star.add(new NeighborEdge(minutiae, reference, neighbor));
 			}
-			edges.sort(Comparator.<NeighborEdge>comparingInt(e -> e.length).thenComparingInt(e -> e.neighbor));
-			while (edges.size() > Parameters.edgeTableNeighbors)
-				edges.remove(edges.size() - 1);
-			edgeTable[reference] = edges.toArray(new NeighborEdge[edges.size()]);
-			edges.clear();
+			star.sort(Comparator.<NeighborEdge>comparingInt(e -> e.length).thenComparingInt(e -> e.neighbor));
+			while (star.size() > Parameters.edgeTableNeighbors)
+				star.remove(star.size() - 1);
+			edges[reference] = star.toArray(new NeighborEdge[star.size()]);
+			star.clear();
 		}
-		logger.logEdgeTable(edgeTable);
+		logger.logEdgeTable(edges);
 	}
 }

@@ -10,6 +10,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private static final ThreadLocal<FingerprintTransparency> current = new ThreadLocal<>();
 	private FingerprintTransparency outer;
 	private boolean closed;
+	private Cell size;
+	private Cell size2;
 	private List<JsonEdge> supportingEdges = new ArrayList<>();
 	static final FingerprintTransparency none = new FingerprintTransparency() {
 		@Override protected void log(String name, Map<String, InputStream> data) {
@@ -43,6 +45,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logDoubleMap("image-scaled", image);
 	}
 	void logBlockMap(BlockMap blocks) {
+		size = blocks.pixelCount;
 		log("block-map", ".json", LazyByteStream.json(() -> new JsonBlockMap(blocks)));
 	}
 	void logBlockHistogram(Histogram histogram) {
@@ -139,19 +142,27 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("edge-table", ".json", LazyByteStream.json(() -> table));
 	}
 	void logDeserializedSize(Cell size) {
+		this.size = size;
 		log("deserialized-info", ".json", LazyByteStream.json(() -> new JsonDeserializedInfo(size.x, size.y)));
 	}
 	void logMinutiaeDeserialized(Minutia[] minutiae) {
 		logMinutiae("minutiae-deserialized", minutiae);
 	}
 	void logIsoDimensions(int width, int height, int cmPixelsX, int cmPixelsY) {
+		size = new Cell(width, height);
 		log("iso-info", ".json", LazyByteStream.json(() -> new JsonIsoInfo(width, height, cmPixelsX, cmPixelsY)));
 	}
 	void logMinutiaeIso(Minutia[] minutiae) {
 		logMinutiae("minutiae-iso", minutiae);
 	}
+	void logProbeSize(FingerprintTemplate template) {
+		size = template.size;
+	}
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		log("edge-hash", ".dat", IndexedEdge.stream(edgeHash));
+	}
+	void logCandidateSize(FingerprintTemplate template) {
+		size2 = template.size;
 	}
 	void logRoots(int count, MinutiaPair[] roots) {
 		log("root-pairs", ".json", LazyByteStream.json(() -> JsonPair.roots(count, roots)));

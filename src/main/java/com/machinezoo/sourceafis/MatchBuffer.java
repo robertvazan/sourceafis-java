@@ -7,11 +7,9 @@ import gnu.trove.map.hash.*;
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
 	private FingerprintTransparency logger = FingerprintTransparency.none;
-	private Minutia[] probeMinutiae;
-	private NeighborEdge[][] probeEdges;
+	private FingerprintTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
-	private Minutia[] candidateMinutiae;
-	private NeighborEdge[][] candidateEdges;
+	private FingerprintTemplate candidate;
 	private MinutiaPair[] pool = new MinutiaPair[1];
 	private int pooled;
 	private PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
@@ -23,26 +21,26 @@ class MatchBuffer {
 	static MatchBuffer current() {
 		return local.get();
 	}
-	void selectProbe(Minutia[] minutiae, NeighborEdge[][] edges) {
-		probeMinutiae = minutiae;
-		probeEdges = edges;
-		if (tree == null || minutiae.length > tree.length) {
-			tree = new MinutiaPair[minutiae.length];
-			byProbe = new MinutiaPair[minutiae.length];
+	void selectProbe(FingerprintTemplate template) {
+		probe = template;
+		if (tree == null || probe.minutiae.length > tree.length) {
+			tree = new MinutiaPair[probe.minutiae.length];
+			byProbe = new MinutiaPair[probe.minutiae.length];
 		}
 	}
 	void selectMatcher(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		this.edgeHash = edgeHash;
 	}
-	void selectCandidate(Minutia[] minutiae, NeighborEdge[][] edges) {
-		candidateMinutiae = minutiae;
-		candidateEdges = edges;
-		if (byCandidate == null || byCandidate.length < minutiae.length)
-			byCandidate = new MinutiaPair[minutiae.length];
+	void selectCandidate(FingerprintTemplate template) {
+		candidate = template;
+		if (byCandidate == null || byCandidate.length < candidate.minutiae.length)
+			byCandidate = new MinutiaPair[candidate.minutiae.length];
 	}
 	double match() {
 		try {
 			logger = FingerprintTransparency.current();
+			logger.logProbeSize(probe);
+			logger.logCandidateSize(candidate);
 			int totalRoots = enumerateRoots();
 			logger.logRoots(totalRoots, roots);
 			double high = 0;
@@ -70,11 +68,11 @@ class MatchBuffer {
 		int totalLookups = 0;
 		int totalRoots = 0;
 		for (boolean shortEdges : new boolean[] { false, true }) {
-			for (int period = 1; period < candidateMinutiae.length; ++period) {
+			for (int period = 1; period < candidate.minutiae.length; ++period) {
 				for (int phase = 0; phase <= period; ++phase) {
-					for (int candidateReference = phase; candidateReference < candidateMinutiae.length; candidateReference += period + 1) {
-						int candidateNeighbor = (candidateReference + period) % candidateMinutiae.length;
-						EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[candidateReference], candidateMinutiae[candidateNeighbor]);
+					for (int candidateReference = phase; candidateReference < candidate.minutiae.length; candidateReference += period + 1) {
+						int candidateNeighbor = (candidateReference + period) % candidate.minutiae.length;
+						EdgeShape candidateEdge = new EdgeShape(candidate.minutiae[candidateReference], candidate.minutiae[candidateNeighbor]);
 						if ((candidateEdge.length >= Parameters.minRootEdgeLength) ^ shortEdges) {
 							List<IndexedEdge> matches = edgeHash.get(hashShape(candidateEdge));
 							if (matches != null) {
@@ -140,8 +138,8 @@ class MatchBuffer {
 	}
 	private void collectEdges() {
 		MinutiaPair reference = tree[count - 1];
-		NeighborEdge[] probeNeighbors = probeEdges[reference.probe];
-		NeighborEdge[] candidateNeigbors = candidateEdges[reference.candidate];
+		NeighborEdge[] probeNeighbors = probe.edges[reference.probe];
+		NeighborEdge[] candidateNeigbors = candidate.edges[reference.candidate];
 		for (MinutiaPair pair : matchPairs(probeNeighbors, candidateNeigbors)) {
 			pair.probeRef = reference.probe;
 			pair.candidateRef = reference.candidate;
@@ -205,7 +203,7 @@ class MatchBuffer {
 	}
 	private double computeScore() {
 		double minutiaScore = Parameters.pairCountScore * count;
-		double ratioScore = Parameters.pairFractionScore * (count / (double)probeMinutiae.length + count / (double)candidateMinutiae.length) / 2;
+		double ratioScore = Parameters.pairFractionScore * (count / (double)probe.minutiae.length + count / (double)candidate.minutiae.length) / 2;
 		double supportedScore = 0;
 		double edgeScore = 0;
 		double typeScore = 0;
@@ -214,7 +212,7 @@ class MatchBuffer {
 			if (pair.supportingEdges >= Parameters.minSupportingEdges)
 				supportedScore += Parameters.supportedCountScore;
 			edgeScore += Parameters.edgeCountScore * (pair.supportingEdges + 1);
-			if (probeMinutiae[pair.probe].type == candidateMinutiae[pair.candidate].type)
+			if (probe.minutiae[pair.probe].type == candidate.minutiae[pair.candidate].type)
 				typeScore += Parameters.correctTypeScore;
 		}
 		int innerDistanceRadius = (int)Math.round(Parameters.distanceErrorFlatness * Parameters.maxDistanceError);
@@ -223,8 +221,8 @@ class MatchBuffer {
 		int angleErrorSum = 0;
 		for (int i = 1; i < count; ++i) {
 			MinutiaPair pair = tree[i];
-			EdgeShape probeEdge = new EdgeShape(probeMinutiae[pair.probeRef], probeMinutiae[pair.probe]);
-			EdgeShape candidateEdge = new EdgeShape(candidateMinutiae[pair.candidateRef], candidateMinutiae[pair.candidate]);
+			EdgeShape probeEdge = new EdgeShape(probe.minutiae[pair.probeRef], probe.minutiae[pair.probe]);
+			EdgeShape candidateEdge = new EdgeShape(candidate.minutiae[pair.candidateRef], candidate.minutiae[pair.candidate]);
 			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
