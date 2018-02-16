@@ -51,6 +51,7 @@ public class FingerprintTemplate {
 		DoubleMap raw = readImage(image);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
+		logger.logImageScaled(raw);
 		size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 		logger.logBlockMap(blocks);
@@ -273,7 +274,6 @@ public class FingerprintTemplate {
 				output.set(x, y, sum * (scaleX * scaleY));
 			}
 		}
-		logger.logImageScaled(output);
 		return output;
 	}
 	private Histogram histogram(BlockMap blocks, DoubleMap image) {
