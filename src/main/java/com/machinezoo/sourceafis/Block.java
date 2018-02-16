@@ -2,13 +2,18 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import lombok.*;
 
-@EqualsAndHashCode @AllArgsConstructor class Block implements Iterable<Cell> {
+class Block implements Iterable<Cell> {
 	final int x;
 	final int y;
 	final int width;
 	final int height;
+	Block(int x, int y, int width, int height) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+	}
 	Block(Cell size) {
 		this(0, 0, size.x, size.y);
 	}
@@ -49,6 +54,15 @@ import lombok.*;
 	}
 	Block move(Cell delta) {
 		return new Block(x + delta.x, y + delta.y, width, height);
+	}
+	private List<Object> fields() {
+		return Arrays.asList(x, y, width, height);
+	}
+	@Override public boolean equals(Object obj) {
+		return obj instanceof Block && fields().equals(((Block)obj).fields());
+	}
+	@Override public int hashCode() {
+		return Objects.hash(x, y, width, height);
 	}
 	@Override public String toString() {
 		return String.format("[%d,%d] @ [%d,%d]", width, height, x, y);

@@ -1,10 +1,11 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-import lombok.*;
-
-@RequiredArgsConstructor class BlockGrid {
+class BlockGrid {
 	final CellGrid corners;
+	BlockGrid(CellGrid corners) {
+		this.corners = corners;
+	}
 	Block get(int x, int y) {
 		return Block.between(corners.get(x, y), corners.get(x + 1, y + 1));
 	}

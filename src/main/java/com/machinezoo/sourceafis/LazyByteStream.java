@@ -5,11 +5,13 @@ import java.nio.*;
 import java.nio.charset.*;
 import java.util.function.*;
 import com.google.gson.*;
-import lombok.*;
 
-@RequiredArgsConstructor class LazyByteStream extends InputStream {
+class LazyByteStream extends InputStream {
 	private final Supplier<ByteBuffer> producer;
 	private ByteBuffer buffer;
+	LazyByteStream(Supplier<ByteBuffer> producer) {
+		this.producer = producer;
+	}
 	static LazyByteStream json(Supplier<Object> source) {
 		return new LazyByteStream(() -> ByteBuffer.wrap(new Gson().toJson(source.get()).getBytes(StandardCharsets.UTF_8)));
 	}

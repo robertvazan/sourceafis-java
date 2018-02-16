@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.*;
 import javax.imageio.*;
 import com.google.gson.*;
-import lombok.*;
+import com.machinezoo.noexception.*;
 
 /**
  * Biometric description of a fingerprint suitable for efficient matching.
@@ -102,7 +102,7 @@ public class FingerprintTemplate {
 		logger = FingerprintTransparency.current();
 		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
 		size = data.size;
-		minutiae = JsonMinutia.unmap(data.minutiae);
+		minutiae = data.minutiae();
 		logger.logDeserializedSize(size);
 		logger.logMinutiaeDeserialized(minutiae);
 		buildEdgeTable();
@@ -126,7 +126,7 @@ public class FingerprintTemplate {
 	 * @see #fromJson(String)
 	 */
 	public String toJson() {
-		return new Gson().toJson(new JsonTemplate(size, JsonMinutia.map(minutiae)));
+		return new Gson().toJson(new JsonTemplate(size, minutiae));
 	}
 	/**
 	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.
@@ -225,8 +225,8 @@ public class FingerprintTemplate {
 		buildEdgeTable();
 		logger = FingerprintTransparency.none;
 	}
-	@SneakyThrows DoubleMap readImage(byte[] serialized) {
-		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
+	DoubleMap readImage(byte[] serialized) {
+		BufferedImage buffered = Exceptions.sneak().get(() -> ImageIO.read(new ByteArrayInputStream(serialized)));
 		if (buffered == null)
 			throw new IllegalArgumentException("Unsupported image format");
 		int width = buffered.getWidth();

@@ -3,9 +3,8 @@ package com.machinezoo.sourceafis;
 
 import java.nio.*;
 import java.util.*;
-import lombok.*;
 
-@EqualsAndHashCode @AllArgsConstructor class Cell implements Iterable<Cell> {
+class Cell implements Iterable<Cell> {
 	static final Cell zero = new Cell(0, 0);
 	static final Cell[] edgeNeighbors = new Cell[] {
 		new Cell(0, -1),
@@ -25,6 +24,10 @@ import lombok.*;
 	};
 	final int x;
 	final int y;
+	Cell(int x, int y) {
+		this.x = x;
+		this.y = y;
+	}
 	int area() {
 		return x * y;
 	}
@@ -78,6 +81,15 @@ import lombok.*;
 	}
 	static int serializedSize() {
 		return 8;
+	}
+	private List<Object> fields() {
+		return Arrays.asList(x, y);
+	}
+	@Override public boolean equals(Object obj) {
+		return obj instanceof Cell && fields().equals(((Cell)obj).fields());
+	}
+	@Override public int hashCode() {
+		return Objects.hash(x, y);
 	}
 	@Override public String toString() {
 		return String.format("[%d,%d]", x, y);

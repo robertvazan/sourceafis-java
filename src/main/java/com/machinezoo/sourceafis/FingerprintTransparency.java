@@ -197,7 +197,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log(name, ".json", LazyByteStream.json(() -> new JsonSkeleton(minutiae)), ".dat", new LazyByteStream(() -> SkeletonMinutia.serialize(minutiae)));
 	}
 	private void logMinutiae(String name, Minutia[] minutiae) {
-		log(name, ".json", LazyByteStream.json(() -> JsonMinutia.map(minutiae)));
+		log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(size, minutiae)));
 	}
 	private void logHistogram(String name, Histogram histogram) {
 		log(name, ".dat", new LazyByteStream(histogram::serialize), ".json", LazyByteStream.json(histogram::json));

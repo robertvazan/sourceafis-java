@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 import org.apache.commons.io.*;
 import org.junit.*;
-import lombok.*;
+import com.machinezoo.noexception.*;
 
 public class FingerprintTemplateTest {
 	private static FingerprintTemplate t = FingerprintTemplate.fromJson("{\"size\":{\"x\":0,\"y\":0},\"minutiae\":[]}");
@@ -70,9 +70,11 @@ public class FingerprintTemplateTest {
 		assertEquals(0.5 * Math.PI, b.direction, 0.0000001);
 		assertEquals(MinutiaType.ENDING, b.type);
 	}
-	@SneakyThrows private static byte[] load(String name) {
-		try (InputStream input = FingerprintTemplateTest.class.getResourceAsStream("/com/machinezoo/sourceafis/" + name)) {
-			return IOUtils.toByteArray(input);
-		}
+	private static byte[] load(String name) {
+		return Exceptions.sneak().get(() -> {
+			try (InputStream input = FingerprintTemplateTest.class.getResourceAsStream("/com/machinezoo/sourceafis/" + name)) {
+				return IOUtils.toByteArray(input);
+			}
+		});
 	}
 }

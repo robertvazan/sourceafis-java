@@ -1,7 +1,8 @@
 package com.machinezoo.sourceafis;
 
-import lombok.*;
-
-@AllArgsConstructor class JsonBestMatch {
+class JsonBestMatch {
 	int offset;
+	JsonBestMatch(int offset) {
+		this.offset = offset;
+	}
 }
