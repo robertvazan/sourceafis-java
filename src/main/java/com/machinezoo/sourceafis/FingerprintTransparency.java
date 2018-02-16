@@ -142,7 +142,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logMinutiae("minutiae-deserialized", template);
 	}
 	void logIsoDimensions(int width, int height, int cmPixelsX, int cmPixelsY) {
-		log("iso-info", ".json", LazyByteStream.json(() -> new JsonIsoInfo(width, height, cmPixelsX, cmPixelsY)));
+		if (logging())
+			log("iso-info", ".json", LazyByteStream.json(() -> new JsonIsoInfo(width, height, cmPixelsX, cmPixelsY)));
 	}
 	void logMinutiaeIso(FingerprintTemplate template) {
 		logMinutiae("minutiae-iso", template);
@@ -151,39 +152,46 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("edge-hash", ".dat", IndexedEdge.stream(edgeHash));
 	}
 	void logRoots(int count, MinutiaPair[] roots) {
-		log("root-pairs", ".json", LazyByteStream.json(() -> JsonPair.roots(count, roots)));
+		if (logging())
+			log("root-pairs", ".json", LazyByteStream.json(() -> JsonPair.roots(count, roots)));
 	}
 	void logSupportingEdge(MinutiaPair pair) {
 		if (logging())
 			supportingEdges.add(new JsonEdge(pair));
 	}
 	void logPairing(int count, MinutiaPair[] pairs) {
-		log("pairing", ".json", LazyByteStream.json(() -> new JsonPairing(count, pairs, supportingEdges)));
-		supportingEdges.clear();
+		if (logging()) {
+			log("pairing", ".json", LazyByteStream.json(() -> new JsonPairing(count, pairs, supportingEdges)));
+			supportingEdges.clear();
+		}
 	}
 	void logScore(double minutiae, double ratio, double supported, double edge, double type, double distance, double angle, double total, double shaped) {
-		log("scoring", ".json", LazyByteStream.json(() -> {
-			JsonScore score = new JsonScore();
-			score.matchedMinutiaeScore = minutiae;
-			score.matchedFractionOfAllMinutiaeScore = ratio;
-			score.minutiaeWithSeveralEdgesScore = supported;
-			score.matchedEdgesScore = edge;
-			score.correctMinutiaTypeScore = type;
-			score.accurateEdgeLengthScore = distance;
-			score.accurateMinutiaAngleScore = angle;
-			score.totalScore = total;
-			score.shapedScore = shaped;
-			return score;
-		}));
+		if (logging()) {
+			log("scoring", ".json", LazyByteStream.json(() -> {
+				JsonScore score = new JsonScore();
+				score.matchedMinutiaeScore = minutiae;
+				score.matchedFractionOfAllMinutiaeScore = ratio;
+				score.minutiaeWithSeveralEdgesScore = supported;
+				score.matchedEdgesScore = edge;
+				score.correctMinutiaTypeScore = type;
+				score.accurateEdgeLengthScore = distance;
+				score.accurateMinutiaAngleScore = angle;
+				score.totalScore = total;
+				score.shapedScore = shaped;
+				return score;
+			}));
+		}
 	}
 	void logBestPairing(int nth) {
-		log("best-match", ".json", LazyByteStream.json(() -> new JsonBestMatch(nth)));
+		if (logging())
+			log("best-match", ".json", LazyByteStream.json(() -> new JsonBestMatch(nth)));
 	}
 	private void logSkeleton(String name, Skeleton skeleton) {
 		log(skeleton.type.prefix + name, ".json", LazyByteStream.json(() -> new JsonSkeleton(skeleton)), ".dat", new LazyByteStream(skeleton::serialize));
 	}
 	private void logMinutiae(String name, FingerprintTemplate template) {
-		log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(template.size, template.minutiae)));
+		if (logging())
+			log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
 	private void logHistogram(String name, Histogram histogram) {
 		log(name, ".dat", new LazyByteStream(histogram::serialize), ".json", LazyByteStream.json(histogram::json));
