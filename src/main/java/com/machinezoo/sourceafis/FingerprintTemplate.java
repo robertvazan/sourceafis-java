@@ -173,13 +173,19 @@ public class FingerprintTemplate {
 			// image size
 			int width = in.readUnsignedShort();
 			int height = in.readUnsignedShort();
-			size = new Cell(width, height);
 			// pixels per cm X and Y, assuming 500dpi
 			int xPixelsPerCM = in.readShort();
 			int yPixelsPerCM = in.readShort();
 			logger.logIsoDimensions(width, height, xPixelsPerCM, yPixelsPerCM);
 			double dpiX = xPixelsPerCM * 2.55;
 			double dpiY = yPixelsPerCM * 2.55;
+			boolean rescaleX = Math.abs(dpiX - 500) > Parameters.dpiTolerance;
+			boolean rescaleY = Math.abs(dpiY - 500) > Parameters.dpiTolerance;
+			if (rescaleX)
+				width = (int)Math.round(width / dpiX * 500);
+			if (rescaleY)
+				height = (int)Math.round(height / dpiY * 500);
+			size = new Cell(width, height);
 			// 1B number of fingerprints in the template (assuming 1)
 			// 1B junk
 			// 1B finger position
@@ -202,9 +208,9 @@ public class FingerprintTemplate {
 				int type = (packedX >> 14) & 0x3;
 				int x = packedX & 0x3fff;
 				int y = packedY & 0x3fff;
-				if (Math.abs(dpiX - 500) > Parameters.dpiTolerance)
+				if (rescaleX)
 					x = (int)Math.round(x / dpiX * 500);
-				if (Math.abs(dpiY - 500) > Parameters.dpiTolerance)
+				if (rescaleY)
 					y = (int)Math.round(y / dpiY * 500);
 				Minutia minutia = new Minutia(
 					new Cell(x, y),
