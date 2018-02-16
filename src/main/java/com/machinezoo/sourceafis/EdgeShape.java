@@ -14,7 +14,7 @@ class EdgeShape {
 			for (int x = 0; x < polarCacheRadius; ++x) {
 				polarDistance[y * polarCacheRadius + x] = (int)Math.round(Math.sqrt(Integers.sq(x) + Integers.sq(y)));
 				if (y > 0 || x > 0)
-					polarAngle[y * polarCacheRadius + x] = Angle.atan(new Point(x, -y));
+					polarAngle[y * polarCacheRadius + x] = Angle.atan(new Point(x, y));
 				else
 					polarAngle[y * polarCacheRadius + x] = 0;
 			}
