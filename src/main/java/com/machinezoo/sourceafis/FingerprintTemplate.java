@@ -725,10 +725,13 @@ public class FingerprintTemplate {
 		logger.logMinutiaeClipped(this);
 	}
 	private void shuffleMinutiae() {
-		int seed = 0;
-		for (Minutia minutia : minutiae)
-			seed += minutia.direction + minutia.position.x + minutia.position.y + minutia.type.ordinal();
-		Collections.shuffle(Arrays.asList(minutiae), new Random(seed));
+		int prime = 1610612741;
+		Arrays.sort(minutiae, Comparator
+			.comparing((Minutia m) -> ((m.position.x * prime) + m.position.y) * prime)
+			.thenComparing(m -> m.position.x)
+			.thenComparing(m -> m.position.y)
+			.thenComparing(m -> m.direction)
+			.thenComparing(m -> m.type));
 		logger.logMinutiaeShuffled(this);
 	}
 	private void buildEdgeTable() {
