@@ -65,7 +65,6 @@ class BooleanMap {
 		info.dimensions = new int[] { height, width };
 		info.scalar = "boolean";
 		info.bitness = 8;
-		info.endianness = "NA";
 		info.format = "false as 0, true as 1";
 		return info;
 	}

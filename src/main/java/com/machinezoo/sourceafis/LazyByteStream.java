@@ -14,7 +14,7 @@ class LazyByteStream extends InputStream {
 		this.producer = producer;
 	}
 	static LazyByteStream json(Supplier<Object> source) {
-		return new LazyByteStream(() -> ByteBuffer.wrap(new Gson().toJson(source.get()).getBytes(StandardCharsets.UTF_8)));
+		return new LazyByteStream(() -> ByteBuffer.wrap(new GsonBuilder().setPrettyPrinting().create().toJson(source.get()).getBytes(StandardCharsets.UTF_8)));
 	}
 	@Override public int read() throws IOException {
 		if (buffer == null)
