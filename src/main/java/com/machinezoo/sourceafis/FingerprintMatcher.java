@@ -32,7 +32,6 @@ public class FingerprintMatcher {
 	public FingerprintMatcher(FingerprintTemplate probe) {
 		logger = FingerprintTransparency.current();
 		this.template = probe;
-		logger.logProbeSize(probe);
 		buildEdgeHash();
 		logger = FingerprintTransparency.none;
 	}

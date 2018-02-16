@@ -75,7 +75,7 @@ public class FingerprintTemplate {
 		Skeleton valleys = new Skeleton(inverted, SkeletonType.VALLEYS, logger);
 		collectMinutiae(ridges, MinutiaType.ENDING);
 		collectMinutiae(valleys, MinutiaType.BIFURCATION);
-		logger.logMinutiaeSkeleton(minutiae);
+		logger.logMinutiaeSkeleton(this);
 		maskMinutiae(innerMask);
 		removeMinutiaClouds();
 		limitTemplateSize();
@@ -101,10 +101,9 @@ public class FingerprintTemplate {
 	private FingerprintTemplate(String json) {
 		logger = FingerprintTransparency.current();
 		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
-		size = data.size;
+		size = data.size();
 		minutiae = data.minutiae();
-		logger.logDeserializedSize(size);
-		logger.logMinutiaeDeserialized(minutiae);
+		logger.logMinutiaeDeserialized(this);
 		buildEdgeTable();
 		logger = FingerprintTransparency.none;
 	}
@@ -217,7 +216,7 @@ public class FingerprintTemplate {
 			// variable-length extra data section
 			in.skipBytes(extra);
 			minutiae = list.stream().toArray(Minutia[]::new);
-			logger.logMinutiaeIso(minutiae);
+			logger.logMinutiaeIso(this);
 		} catch (IOException e) {
 			throw new IllegalArgumentException("Invalid ISO 19794-2 template", e);
 		}
@@ -690,7 +689,7 @@ public class FingerprintTemplate {
 				return mask.get(minutia.position.plus(arrow), false);
 			})
 			.toArray(Minutia[]::new);
-		logger.logMinutiaeInner(minutiae);
+		logger.logMinutiaeInner(this);
 	}
 	private void removeMinutiaClouds() {
 		int radiusSq = Integers.sq(Parameters.minutiaCloudRadius);
@@ -702,7 +701,7 @@ public class FingerprintTemplate {
 		minutiae = Arrays.stream(minutiae)
 			.filter(minutia -> !removed.contains(minutia))
 			.toArray(Minutia[]::new);
-		logger.logMinutiaeRemovedClouds(minutiae);
+		logger.logMinutiaeRemovedClouds(this);
 	}
 	private void limitTemplateSize() {
 		if (minutiae.length > Parameters.maxMinutiae) {
@@ -717,14 +716,14 @@ public class FingerprintTemplate {
 				.limit(Parameters.maxMinutiae)
 				.toArray(Minutia[]::new);
 		}
-		logger.logMinutiaeClipped(minutiae);
+		logger.logMinutiaeClipped(this);
 	}
 	private void shuffleMinutiae() {
 		int seed = 0;
 		for (Minutia minutia : minutiae)
 			seed += minutia.direction + minutia.position.x + minutia.position.y + minutia.type.ordinal();
 		Collections.shuffle(Arrays.asList(minutiae), new Random(seed));
-		logger.logMinutiaeShuffled(minutiae);
+		logger.logMinutiaeShuffled(this);
 	}
 	private void buildEdgeTable() {
 		edges = new NeighborEdge[minutiae.length][];

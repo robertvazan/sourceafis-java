@@ -10,8 +10,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private static final ThreadLocal<FingerprintTransparency> current = new ThreadLocal<>();
 	private FingerprintTransparency outer;
 	private boolean closed;
-	private Cell size;
-	private Cell size2;
 	private List<JsonEdge> supportingEdges = new ArrayList<>();
 	static final FingerprintTransparency none = new FingerprintTransparency() {
 		@Override protected void log(String name, Map<String, InputStream> data) {
@@ -45,7 +43,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logDoubleMap("image-scaled", image);
 	}
 	void logBlockMap(BlockMap blocks) {
-		size = blocks.pixelCount;
 		log("block-map", ".json", LazyByteStream.json(() -> new JsonBlockMap(blocks)));
 	}
 	void logBlockHistogram(Histogram histogram) {
@@ -123,46 +120,35 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logRemovedFragments(SkeletonType type, List<SkeletonMinutia> minutiae) {
 		logSkeleton(type.prefix + "removed-fragments", minutiae);
 	}
-	void logMinutiaeSkeleton(Minutia[] minutiae) {
-		logMinutiae("minutiae-skeleton", minutiae);
+	void logMinutiaeSkeleton(FingerprintTemplate template) {
+		logMinutiae("minutiae-skeleton", template);
 	}
-	void logMinutiaeInner(Minutia[] minutiae) {
-		logMinutiae("minutiae-inner", minutiae);
+	void logMinutiaeInner(FingerprintTemplate template) {
+		logMinutiae("minutiae-inner", template);
 	}
-	void logMinutiaeRemovedClouds(Minutia[] minutiae) {
-		logMinutiae("minutiae-removed-clouds", minutiae);
+	void logMinutiaeRemovedClouds(FingerprintTemplate template) {
+		logMinutiae("minutiae-removed-clouds", template);
 	}
-	void logMinutiaeClipped(Minutia[] minutiae) {
-		logMinutiae("minutiae-clipped", minutiae);
+	void logMinutiaeClipped(FingerprintTemplate template) {
+		logMinutiae("minutiae-clipped", template);
 	}
-	void logMinutiaeShuffled(Minutia[] minutiae) {
-		logMinutiae("minutiae-shuffled", minutiae);
+	void logMinutiaeShuffled(FingerprintTemplate template) {
+		logMinutiae("minutiae-shuffled", template);
 	}
 	void logEdgeTable(NeighborEdge[][] table) {
 		log("edge-table", ".json", LazyByteStream.json(() -> table));
 	}
-	void logDeserializedSize(Cell size) {
-		this.size = size;
-		log("deserialized-info", ".json", LazyByteStream.json(() -> new JsonDeserializedInfo(size.x, size.y)));
-	}
-	void logMinutiaeDeserialized(Minutia[] minutiae) {
-		logMinutiae("minutiae-deserialized", minutiae);
+	void logMinutiaeDeserialized(FingerprintTemplate template) {
+		logMinutiae("minutiae-deserialized", template);
 	}
 	void logIsoDimensions(int width, int height, int cmPixelsX, int cmPixelsY) {
-		size = new Cell(width, height);
 		log("iso-info", ".json", LazyByteStream.json(() -> new JsonIsoInfo(width, height, cmPixelsX, cmPixelsY)));
 	}
-	void logMinutiaeIso(Minutia[] minutiae) {
-		logMinutiae("minutiae-iso", minutiae);
-	}
-	void logProbeSize(FingerprintTemplate template) {
-		size = template.size;
+	void logMinutiaeIso(FingerprintTemplate template) {
+		logMinutiae("minutiae-iso", template);
 	}
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		log("edge-hash", ".dat", IndexedEdge.stream(edgeHash));
-	}
-	void logCandidateSize(FingerprintTemplate template) {
-		size2 = template.size;
 	}
 	void logRoots(int count, MinutiaPair[] roots) {
 		log("root-pairs", ".json", LazyByteStream.json(() -> JsonPair.roots(count, roots)));
@@ -196,8 +182,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private void logSkeleton(String name, List<SkeletonMinutia> minutiae) {
 		log(name, ".json", LazyByteStream.json(() -> new JsonSkeleton(minutiae)), ".dat", new LazyByteStream(() -> SkeletonMinutia.serialize(minutiae)));
 	}
-	private void logMinutiae(String name, Minutia[] minutiae) {
-		log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(size, minutiae)));
+	private void logMinutiae(String name, FingerprintTemplate template) {
+		log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
 	private void logHistogram(String name, Histogram histogram) {
 		log(name, ".dat", new LazyByteStream(histogram::serialize), ".json", LazyByteStream.json(histogram::json));

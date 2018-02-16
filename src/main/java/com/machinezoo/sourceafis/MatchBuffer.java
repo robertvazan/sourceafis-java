@@ -39,8 +39,6 @@ class MatchBuffer {
 	double match() {
 		try {
 			logger = FingerprintTransparency.current();
-			logger.logProbeSize(probe);
-			logger.logCandidateSize(candidate);
 			int totalRoots = enumerateRoots();
 			logger.logRoots(totalRoots, roots);
 			double high = 0;
