@@ -102,23 +102,23 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logThinned(SkeletonType type, BooleanMap image) {
 		logBooleanMap(type.prefix + "thinned", image);
 	}
-	void logTraced(SkeletonType type, List<SkeletonMinutia> minutiae) {
-		logSkeleton(type.prefix + "traced", minutiae);
+	void logTraced(Skeleton skeleton) {
+		logSkeleton("traced", skeleton);
 	}
-	void logRemovedDots(SkeletonType type, List<SkeletonMinutia> minutiae) {
-		logSkeleton(type.prefix + "removed-dots", minutiae);
+	void logRemovedDots(Skeleton skeleton) {
+		logSkeleton("removed-dots", skeleton);
 	}
-	void logRemovedPores(SkeletonType type, List<SkeletonMinutia> minutiae) {
-		logSkeleton(type.prefix + "removed-pores", minutiae);
+	void logRemovedPores(Skeleton skeleton) {
+		logSkeleton("removed-pores", skeleton);
 	}
-	void logRemovedGaps(SkeletonType type, List<SkeletonMinutia> minutiae) {
-		logSkeleton(type.prefix + "removed-gaps", minutiae);
+	void logRemovedGaps(Skeleton skeleton) {
+		logSkeleton("removed-gaps", skeleton);
 	}
-	void logRemovedTails(SkeletonType type, List<SkeletonMinutia> minutiae) {
-		logSkeleton(type.prefix + "removed-tails", minutiae);
+	void logRemovedTails(Skeleton skeleton) {
+		logSkeleton("removed-tails", skeleton);
 	}
-	void logRemovedFragments(SkeletonType type, List<SkeletonMinutia> minutiae) {
-		logSkeleton(type.prefix + "removed-fragments", minutiae);
+	void logRemovedFragments(Skeleton skeleton) {
+		logSkeleton("removed-fragments", skeleton);
 	}
 	void logMinutiaeSkeleton(FingerprintTemplate template) {
 		logMinutiae("minutiae-skeleton", template);
@@ -179,8 +179,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logBestPairing(int nth) {
 		log("best-match", ".json", LazyByteStream.json(() -> new JsonBestMatch(nth)));
 	}
-	private void logSkeleton(String name, List<SkeletonMinutia> minutiae) {
-		log(name, ".json", LazyByteStream.json(() -> new JsonSkeleton(minutiae)), ".dat", new LazyByteStream(() -> SkeletonMinutia.serialize(minutiae)));
+	private void logSkeleton(String name, Skeleton skeleton) {
+		log(skeleton.type.prefix + name, ".json", LazyByteStream.json(() -> new JsonSkeleton(skeleton)), ".dat", new LazyByteStream(skeleton::serialize));
 	}
 	private void logMinutiae(String name, FingerprintTemplate template) {
 		log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(template.size, template.minutiae)));

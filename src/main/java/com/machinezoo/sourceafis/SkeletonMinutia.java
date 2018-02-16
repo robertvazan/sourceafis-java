@@ -31,12 +31,6 @@ class SkeletonMinutia {
 	int serializedSize() {
 		return ridges.stream().filter(r -> r.points instanceof CircularList).mapToInt(r -> r.serializedSize()).sum();
 	}
-	static ByteBuffer serialize(List<SkeletonMinutia> minutiae) {
-		ByteBuffer buffer = ByteBuffer.allocate(minutiae.stream().mapToInt(m -> m.serializedSize()).sum());
-		for (SkeletonMinutia minutia : minutiae)
-			minutia.write(buffer);
-		return buffer;
-	}
 	@Override public String toString() {
 		return String.format("%s*%d", position.toString(), ridges.size());
 	}

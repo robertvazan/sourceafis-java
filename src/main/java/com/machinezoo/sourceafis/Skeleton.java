@@ -1,12 +1,13 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.nio.*;
 import java.util.*;
 
 class Skeleton {
 	private final FingerprintTransparency logger;
-	private final SkeletonType type;
-	private final Cell size;
+	final SkeletonType type;
+	final Cell size;
 	final List<SkeletonMinutia> minutiae = new ArrayList<>();
 	Skeleton(BooleanMap binary, SkeletonType type, FingerprintTransparency logger) {
 		this.type = type;
@@ -19,7 +20,7 @@ class Skeleton {
 		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
 		traceRidges(thinned, minutiaMap);
 		fixLinkingGaps();
-		logger.logTraced(type, minutiae);
+		logger.logTraced(this);
 		filter();
 	}
 	private enum NeighborhoodType {
@@ -200,7 +201,7 @@ class Skeleton {
 	}
 	private void filter() {
 		removeDots();
-		logger.logRemovedDots(type, minutiae);
+		logger.logRemovedDots(this);
 		removePores();
 		removeGaps();
 		removeTails();
@@ -238,7 +239,7 @@ class Skeleton {
 			}
 		}
 		removeKnots();
-		logger.logRemovedPores(type, minutiae);
+		logger.logRemovedPores(this);
 	}
 	private static class Gap implements Comparable<Gap> {
 		int distance;
@@ -271,7 +272,7 @@ class Skeleton {
 			}
 		}
 		removeKnots();
-		logger.logRemovedGaps(type, minutiae);
+		logger.logRemovedGaps(this);
 	}
 	private boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
 		int distanceSq = end1.position.minus(end2.position).lengthSq();
@@ -318,7 +319,7 @@ class Skeleton {
 		}
 		removeDots();
 		removeKnots();
-		logger.logRemovedTails(type, minutiae);
+		logger.logRemovedTails(this);
 	}
 	private void removeFragments() {
 		for (SkeletonMinutia minutia : minutiae)
@@ -328,7 +329,7 @@ class Skeleton {
 					ridge.detach();
 			}
 		removeDots();
-		logger.logRemovedFragments(type, minutiae);
+		logger.logRemovedFragments(this);
 	}
 	private void removeKnots() {
 		for (SkeletonMinutia minutia : minutiae) {
@@ -367,5 +368,11 @@ class Skeleton {
 						shadow.set(point, true);
 		}
 		return shadow;
+	}
+	ByteBuffer serialize() {
+		ByteBuffer buffer = ByteBuffer.allocate(minutiae.stream().mapToInt(m -> m.serializedSize()).sum());
+		for (SkeletonMinutia minutia : minutiae)
+			minutia.write(buffer);
+		return buffer;
 	}
 }
