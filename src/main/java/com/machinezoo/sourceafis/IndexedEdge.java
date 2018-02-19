@@ -24,9 +24,6 @@ class IndexedEdge extends EdgeShape {
 			stream.writeDouble(neighborAngle);
 		});
 	}
-	static LazyByteChannel stream(TIntObjectHashMap<List<IndexedEdge>> hash) {
-		return new LazyByteChannel(() -> serialize(hash));
-	}
 	static ByteBuffer serialize(TIntObjectHashMap<List<IndexedEdge>> hash) {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		DataOutputStream formatter = new DataOutputStream(buffer);
