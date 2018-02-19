@@ -17,8 +17,10 @@ class LazyByteStream extends InputStream {
 		return new LazyByteStream(() -> ByteBuffer.wrap(new GsonBuilder().setPrettyPrinting().create().toJson(source.get()).getBytes(StandardCharsets.UTF_8)));
 	}
 	@Override public int read() throws IOException {
-		if (buffer == null)
+		if (buffer == null) {
 			buffer = producer.get();
+			buffer.rewind();
+		}
 		if (!buffer.hasRemaining())
 			return -1;
 		return buffer.get();
