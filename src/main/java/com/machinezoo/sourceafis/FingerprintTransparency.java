@@ -1,7 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-import java.io.*;
+import java.nio.channels.*;
 import java.util.*;
 import java.util.zip.*;
 import gnu.trove.map.hash.*;
@@ -12,10 +12,10 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private boolean closed;
 	private List<JsonEdge> supportingEdges = new ArrayList<>();
 	static final FingerprintTransparency none = new FingerprintTransparency() {
-		@Override protected void log(String name, Map<String, InputStream> data) {
+		@Override protected void log(String name, Map<String, ReadableByteChannel> data) {
 		}
 	};
-	protected abstract void log(String name, Map<String, InputStream> data);
+	protected abstract void log(String name, Map<String, ReadableByteChannel> data);
 	protected FingerprintTransparency() {
 		outer = current.get();
 		current.set(this);
@@ -43,7 +43,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logDoubleMap("image-scaled", image);
 	}
 	void logBlockMap(BlockMap blocks) {
-		log("block-map", ".json", LazyByteStream.json(() -> new JsonBlockMap(blocks)));
+		log("block-map", ".json", LazyByteChannel.json(() -> new JsonBlockMap(blocks)));
 	}
 	void logBlockHistogram(Histogram histogram) {
 		logHistogram("histogram", histogram);
@@ -136,14 +136,14 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logMinutiae("minutiae-shuffled", template);
 	}
 	void logEdgeTable(NeighborEdge[][] table) {
-		log("edge-table", ".json", LazyByteStream.json(() -> table));
+		log("edge-table", ".json", LazyByteChannel.json(() -> table));
 	}
 	void logMinutiaeDeserialized(FingerprintTemplate template) {
 		logMinutiae("minutiae-deserialized", template);
 	}
 	void logIsoDimensions(int width, int height, int cmPixelsX, int cmPixelsY) {
 		if (logging())
-			log("iso-info", ".json", LazyByteStream.json(() -> new JsonIsoInfo(width, height, cmPixelsX, cmPixelsY)));
+			log("iso-info", ".json", LazyByteChannel.json(() -> new JsonIsoInfo(width, height, cmPixelsX, cmPixelsY)));
 	}
 	void logMinutiaeIso(FingerprintTemplate template) {
 		logMinutiae("minutiae-iso", template);
@@ -153,7 +153,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	void logRoots(int count, MinutiaPair[] roots) {
 		if (logging())
-			log("root-pairs", ".json", LazyByteStream.json(() -> JsonPair.roots(count, roots)));
+			log("root-pairs", ".json", LazyByteChannel.json(() -> JsonPair.roots(count, roots)));
 	}
 	void logSupportingEdge(MinutiaPair pair) {
 		if (logging())
@@ -161,13 +161,13 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	void logPairing(int count, MinutiaPair[] pairs) {
 		if (logging()) {
-			log("pairing", ".json", LazyByteStream.json(() -> new JsonPairing(count, pairs, supportingEdges)));
+			log("pairing", ".json", LazyByteChannel.json(() -> new JsonPairing(count, pairs, supportingEdges)));
 			supportingEdges.clear();
 		}
 	}
 	void logScore(double minutiae, double ratio, double supported, double edge, double type, double distance, double angle, double total, double shaped) {
 		if (logging()) {
-			log("scoring", ".json", LazyByteStream.json(() -> {
+			log("scoring", ".json", LazyByteChannel.json(() -> {
 				JsonScore score = new JsonScore();
 				score.matchedMinutiaeScore = minutiae;
 				score.matchedFractionOfAllMinutiaeScore = ratio;
@@ -184,36 +184,36 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	void logBestPairing(int nth) {
 		if (logging())
-			log("best-match", ".json", LazyByteStream.json(() -> new JsonBestMatch(nth)));
+			log("best-match", ".json", LazyByteChannel.json(() -> new JsonBestMatch(nth)));
 	}
 	private void logSkeleton(String name, Skeleton skeleton) {
-		log(skeleton.type.prefix + name, ".json", LazyByteStream.json(() -> new JsonSkeleton(skeleton)), ".dat", new LazyByteStream(skeleton::serialize));
+		log(skeleton.type.prefix + name, ".json", LazyByteChannel.json(() -> new JsonSkeleton(skeleton)), ".dat", new LazyByteChannel(skeleton::serialize));
 	}
 	private void logMinutiae(String name, FingerprintTemplate template) {
 		if (logging())
-			log(name, ".json", LazyByteStream.json(() -> new JsonTemplate(template.size, template.minutiae)));
+			log(name, ".json", LazyByteChannel.json(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
 	private void logHistogram(String name, Histogram histogram) {
-		log(name, ".dat", new LazyByteStream(histogram::serialize), ".json", LazyByteStream.json(histogram::json));
+		log(name, ".dat", new LazyByteChannel(histogram::serialize), ".json", LazyByteChannel.json(histogram::json));
 	}
 	private void logPointMap(String name, PointMap map) {
-		log(name, ".dat", new LazyByteStream(map::serialize), ".json", LazyByteStream.json(map::json));
+		log(name, ".dat", new LazyByteChannel(map::serialize), ".json", LazyByteChannel.json(map::json));
 	}
 	private void logDoubleMap(String name, DoubleMap map) {
-		log(name, ".dat", new LazyByteStream(map::serialize), ".json", LazyByteStream.json(map::json));
+		log(name, ".dat", new LazyByteChannel(map::serialize), ".json", LazyByteChannel.json(map::json));
 	}
 	private void logBooleanMap(String name, BooleanMap map) {
-		log(name, ".dat", new LazyByteStream(map::serialize), ".json", LazyByteStream.json(map::json));
+		log(name, ".dat", new LazyByteChannel(map::serialize), ".json", LazyByteChannel.json(map::json));
 	}
-	private void log(String name, String suffix, InputStream stream) {
-		Map<String, InputStream> map = new HashMap<>();
-		map.put(suffix, stream);
+	private void log(String name, String suffix, ReadableByteChannel channel) {
+		Map<String, ReadableByteChannel> map = new HashMap<>();
+		map.put(suffix, channel);
 		log(name, map);
 	}
-	private void log(String name, String suffix1, InputStream stream1, String suffix2, InputStream stream2) {
-		Map<String, InputStream> map = new HashMap<>();
-		map.put(suffix1, stream1);
-		map.put(suffix2, stream2);
+	private void log(String name, String suffix1, ReadableByteChannel channel1, String suffix2, ReadableByteChannel channel2) {
+		Map<String, ReadableByteChannel> map = new HashMap<>();
+		map.put(suffix1, channel1);
+		map.put(suffix2, channel2);
 		log(name, map);
 	}
 }

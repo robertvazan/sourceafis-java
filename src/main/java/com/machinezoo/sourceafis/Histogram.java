@@ -56,6 +56,7 @@ class Histogram {
 			for (int x = 0; x < width; ++x)
 				for (int z = 0; z < depth; ++z)
 					buffer.putInt(get(x, y, z));
+		buffer.flip();
 		return buffer;
 	}
 	JsonArrayInfo json() {

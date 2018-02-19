@@ -46,6 +46,7 @@ class DoubleMap {
 		ByteBuffer buffer = ByteBuffer.allocate(8 * size().area());
 		for (Cell at : size())
 			buffer.putDouble(get(at));
+		buffer.flip();
 		return buffer;
 	}
 	JsonArrayInfo json() {

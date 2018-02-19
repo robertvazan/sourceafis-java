@@ -56,6 +56,7 @@ class PointMap {
 			buffer.putDouble(point.x);
 			buffer.putDouble(point.y);
 		}
+		buffer.flip();
 		return buffer;
 	}
 	JsonArrayInfo json() {

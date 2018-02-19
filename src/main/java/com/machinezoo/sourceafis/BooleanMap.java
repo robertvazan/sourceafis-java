@@ -57,6 +57,7 @@ class BooleanMap {
 		ByteBuffer buffer = ByteBuffer.allocate(size().area());
 		for (Cell at : size())
 			buffer.put((byte)(get(at) ? 1 : 0));
+		buffer.flip();
 		return buffer;
 	}
 	JsonArrayInfo json() {
