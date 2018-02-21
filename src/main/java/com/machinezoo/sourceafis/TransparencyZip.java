@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import static java.util.stream.Collectors.*;
 import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
@@ -16,10 +17,19 @@ class TransparencyZip extends FingerprintTransparency {
 		zip = new ZipOutputStream(stream);
 	}
 	@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
-		++offset;
 		Exceptions.sneak().run(() -> {
-			for (String suffix : data.keySet()) {
-				zip.putNextEntry(new ZipEntry(String.format("%02d", offset) + "-" + name + suffix));
+			List<String> suffixes = data.keySet().stream()
+				.sorted(Comparator.comparing(ext -> {
+					if (ext.equals(".json"))
+						return 1;
+					if (ext.equals(".dat"))
+						return 2;
+					return 3;
+				}))
+				.collect(toList());
+			for (String suffix : suffixes) {
+				++offset;
+				zip.putNextEntry(new ZipEntry(String.format("%03d", offset) + "-" + name + suffix));
 				ByteBuffer buffer = data.get(suffix).get();
 				WritableByteChannel output = Channels.newChannel(zip);
 				while (buffer.hasRemaining())
