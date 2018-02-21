@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.io.*;
 import java.nio.*;
 import java.nio.channels.*;
 import java.util.*;
@@ -11,8 +12,8 @@ import com.machinezoo.noexception.*;
 class TransparencyZip extends FingerprintTransparency {
 	private final ZipOutputStream zip;
 	private int offset;
-	TransparencyZip(ZipOutputStream zip) {
-		this.zip = zip;
+	TransparencyZip(OutputStream stream) {
+		zip = new ZipOutputStream(stream);
 	}
 	@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
 		++offset;

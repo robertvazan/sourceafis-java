@@ -1,11 +1,11 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.io.*;
 import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
-import java.util.zip.*;
 import com.google.gson.*;
 import gnu.trove.map.hash.*;
 
@@ -33,8 +33,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	static FingerprintTransparency current() {
 		return Optional.ofNullable(current.get()).orElse(none);
 	}
-	public static FingerprintTransparency zip(ZipOutputStream zip) {
-		return new TransparencyZip(zip);
+	public static FingerprintTransparency zip(OutputStream stream) {
+		return new TransparencyZip(stream);
 	}
 	boolean logging() {
 		return this != none;
