@@ -51,7 +51,7 @@ public class FingerprintTemplate {
 		DoubleMap raw = readImage(image);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
-		logger.logImageScaled(raw);
+		logger.logScaledImage(raw);
 		size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 		logger.logBlockMap(blocks);
@@ -76,7 +76,7 @@ public class FingerprintTemplate {
 		Skeleton valleys = new Skeleton(inverted, SkeletonType.VALLEYS, logger);
 		collectMinutiae(ridges, MinutiaType.ENDING);
 		collectMinutiae(valleys, MinutiaType.BIFURCATION);
-		logger.logMinutiaeSkeleton(this);
+		logger.logSkeletonMinutiae(this);
 		maskMinutiae(innerMask);
 		removeMinutiaClouds();
 		limitTemplateSize();
@@ -104,7 +104,7 @@ public class FingerprintTemplate {
 		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
 		size = data.size();
 		minutiae = data.minutiae();
-		logger.logMinutiaeDeserialized(this);
+		logger.logDeserializedMinutiae(this);
 		buildEdgeTable();
 		logger = FingerprintTransparency.none;
 	}
@@ -176,7 +176,7 @@ public class FingerprintTemplate {
 			// pixels per cm X and Y, assuming 500dpi
 			int xPixelsPerCM = in.readShort();
 			int yPixelsPerCM = in.readShort();
-			logger.logIsoDimensions(width, height, xPixelsPerCM, yPixelsPerCM);
+			logger.logIsoMetadata(width, height, xPixelsPerCM, yPixelsPerCM);
 			double dpiX = xPixelsPerCM * 2.55;
 			double dpiY = yPixelsPerCM * 2.55;
 			boolean rescaleX = Math.abs(dpiX - 500) > Parameters.dpiTolerance;
@@ -223,7 +223,7 @@ public class FingerprintTemplate {
 			// variable-length extra data section
 			in.skipBytes(extra);
 			minutiae = list.stream().toArray(Minutia[]::new);
-			logger.logMinutiaeIso(this);
+			logger.logIsoMinutiae(this);
 		} catch (IOException e) {
 			throw new IllegalArgumentException("Invalid ISO 19794-2 template", e);
 		}
@@ -247,7 +247,7 @@ public class FingerprintTemplate {
 				map.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
 			}
 		}
-		logger.logImageDecoded(map);
+		logger.logDecodedImage(map);
 		return map;
 	}
 	private DoubleMap scaleImage(DoubleMap input, double dpi) {
@@ -292,7 +292,7 @@ public class FingerprintTemplate {
 					histogram.increment(block, histogram.constrain(depth));
 				}
 		}
-		logger.logBlockHistogram(histogram);
+		logger.logHistogram(histogram);
 		return histogram;
 	}
 	private Histogram smoothHistogram(BlockMap blocks, Histogram input) {
@@ -314,14 +314,14 @@ public class FingerprintTemplate {
 		DoubleMap contrast = clipContrast(blocks, histogram);
 		BooleanMap mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
-		logger.logContrastCombined(mask);
+		logger.logCombinedMask(mask);
 		mask.merge(vote(mask, Parameters.contrastVoteRadius, Parameters.contrastVoteMajority, Parameters.contrastVoteBorderDistance));
 		mask.merge(filterBlockErrors(mask));
 		mask.invert();
 		mask.merge(filterBlockErrors(mask));
 		mask.merge(filterBlockErrors(mask));
 		mask.merge(vote(mask, Parameters.maskVoteRadius, Parameters.maskVoteMajority, Parameters.maskVoteBorderDistance));
-		logger.logContrastFiltered(mask);
+		logger.logFilteredMask(mask);
 		return mask;
 	}
 	private DoubleMap clipContrast(BlockMap blocks, Histogram histogram) {
@@ -349,7 +349,7 @@ public class FingerprintTemplate {
 			}
 			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.depth - 1)));
 		}
-		logger.logContrastClipped(result);
+		logger.logClippedContrast(result);
 		return result;
 	}
 	private BooleanMap filterAbsoluteContrast(DoubleMap contrast) {
@@ -357,7 +357,7 @@ public class FingerprintTemplate {
 		for (Cell block : contrast.size())
 			if (contrast.get(block) < Parameters.minAbsoluteContrast)
 				result.set(block, true);
-		logger.logContrastAbsolute(result);
+		logger.logAbsoluteContrastMask(result);
 		return result;
 	}
 	private BooleanMap filterRelativeContrast(DoubleMap contrast, BlockMap blocks) {
@@ -374,7 +374,7 @@ public class FingerprintTemplate {
 		for (Cell block : blocks.blockCount)
 			if (contrast.get(block) < limit)
 				result.set(block, true);
-		logger.logContrastRelative(result);
+		logger.logRelativeContrastMask(result);
 		return result;
 	}
 	private BooleanMap vote(BooleanMap input, int radius, double majority, int borderDistance) {
@@ -448,7 +448,7 @@ public class FingerprintTemplate {
 					}
 			}
 		}
-		logger.logEqualized(result);
+		logger.logEqualizedImage(result);
 		return result;
 	}
 	private DoubleMap orientationMap(DoubleMap image, BooleanMap mask, BlockMap blocks) {
@@ -505,7 +505,7 @@ public class FingerprintTemplate {
 				}
 			}
 		}
-		logger.logOrientationPixelwise(orientation);
+		logger.logPixelwiseOrientation(orientation);
 		return orientation;
 	}
 	private static Range maskRange(BooleanMap mask, int y) {
@@ -532,7 +532,7 @@ public class FingerprintTemplate {
 						sums.add(block, orientation.get(x, y));
 			}
 		}
-		logger.logOrientationBlocks(orientation);
+		logger.logBlockOrientation(orientation);
 		return sums;
 	}
 	private PointMap smoothOrientation(PointMap orientation, BooleanMap mask) {
@@ -546,7 +546,7 @@ public class FingerprintTemplate {
 						if (mask.get(nx, ny))
 							smoothed.add(block, orientation.get(nx, ny));
 			}
-		logger.logOrientationSmoothed(smoothed);
+		logger.logSmoothedOrientation(smoothed);
 		return smoothed;
 	}
 	private static DoubleMap orientationAngles(PointMap vectors, BooleanMap mask) {
@@ -606,7 +606,7 @@ public class FingerprintTemplate {
 						if (input.get(x, y) - baseline.get(x, y) > 0)
 							binarized.set(x, y, true);
 			}
-		logger.logBinarized(binarized);
+		logger.logBinarizedImage(binarized);
 		return binarized;
 	}
 	private void cleanupBinarized(BooleanMap binary) {
@@ -619,7 +619,7 @@ public class FingerprintTemplate {
 			for (int x = 0; x < size.x; ++x)
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
 		removeCrosses(binary);
-		logger.logBinarizedFiltered(binary);
+		logger.logFilteredBinarydImage(binary);
 	}
 	private static void removeCrosses(BooleanMap input) {
 		Cell size = input.size();
@@ -695,7 +695,7 @@ public class FingerprintTemplate {
 				return mask.get(minutia.position.plus(arrow), false);
 			})
 			.toArray(Minutia[]::new);
-		logger.logMinutiaeInner(this);
+		logger.logInnerMinutiae(this);
 	}
 	private void removeMinutiaClouds() {
 		int radiusSq = Integers.sq(Parameters.minutiaCloudRadius);
@@ -707,7 +707,7 @@ public class FingerprintTemplate {
 		minutiae = Arrays.stream(minutiae)
 			.filter(minutia -> !removed.contains(minutia))
 			.toArray(Minutia[]::new);
-		logger.logMinutiaeRemovedClouds(this);
+		logger.logRemovedMinutiaClouds(this);
 	}
 	private void limitTemplateSize() {
 		if (minutiae.length > Parameters.maxMinutiae) {
@@ -722,7 +722,7 @@ public class FingerprintTemplate {
 				.limit(Parameters.maxMinutiae)
 				.toArray(Minutia[]::new);
 		}
-		logger.logMinutiaeClipped(this);
+		logger.logTopMinutiae(this);
 	}
 	private void shuffleMinutiae() {
 		int prime = 1610612741;
@@ -732,7 +732,7 @@ public class FingerprintTemplate {
 			.thenComparing(m -> m.position.y)
 			.thenComparing(m -> m.direction)
 			.thenComparing(m -> m.type));
-		logger.logMinutiaeShuffled(this);
+		logger.logShuffledMinutiae(this);
 	}
 	private void buildEdgeTable() {
 		edges = new NeighborEdge[minutiae.length][];

@@ -40,7 +40,7 @@ class MatchBuffer {
 		try {
 			logger = FingerprintTransparency.current();
 			int totalRoots = enumerateRoots();
-			logger.logRoots(totalRoots, roots);
+			logger.logRootPairs(totalRoots, roots);
 			double high = 0;
 			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
@@ -51,7 +51,7 @@ class MatchBuffer {
 				}
 				clearPairing();
 			}
-			logger.logBestPairing(best);
+			logger.logBestMatch(best);
 			return high;
 		} catch (Throwable e) {
 			local.remove();

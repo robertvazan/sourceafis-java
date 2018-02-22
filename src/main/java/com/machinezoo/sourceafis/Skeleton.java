@@ -12,7 +12,7 @@ class Skeleton {
 	Skeleton(BooleanMap binary, SkeletonType type, FingerprintTransparency logger) {
 		this.type = type;
 		this.logger = logger;
-		logger.logSkeletonBinarized(type, binary);
+		logger.logBinarizedSkeleton(type, binary);
 		size = binary.size();
 		BooleanMap thinned = thin(binary);
 		List<Cell> minutiaPoints = findMinutiae(thinned);
@@ -20,7 +20,7 @@ class Skeleton {
 		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
 		traceRidges(thinned, minutiaMap);
 		fixLinkingGaps();
-		logger.logTraced(this);
+		logger.logTracedSkeleton(this);
 		filter();
 	}
 	private enum NeighborhoodType {
@@ -60,7 +60,7 @@ class Skeleton {
 									thinned.set(x, y, true);
 							}
 		}
-		logger.logThinned(type, thinned);
+		logger.logThinnedSkeleton(type, thinned);
 		return thinned;
 	}
 	private static NeighborhoodType[] neighborhoodTypes() {
