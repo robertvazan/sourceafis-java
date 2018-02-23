@@ -532,7 +532,7 @@ public class FingerprintTemplate {
 						sums.add(block, orientation.get(x, y));
 			}
 		}
-		logger.logBlockOrientation(orientation);
+		logger.logBlockOrientation(sums);
 		return sums;
 	}
 	private PointMap smoothOrientation(PointMap orientation, BooleanMap mask) {
