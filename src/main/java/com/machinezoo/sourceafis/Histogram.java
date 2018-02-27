@@ -14,6 +14,9 @@ class Histogram {
 		this.depth = depth;
 		array = new int[width * height * depth];
 	}
+	Histogram(Cell size, int depth) {
+		this(size.x, size.y, depth);
+	}
 	int constrain(int z) {
 		return Math.max(0, Math.min(depth - 1, z));
 	}

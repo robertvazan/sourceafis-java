@@ -283,9 +283,9 @@ public class FingerprintTemplate {
 		return output;
 	}
 	private Histogram histogram(BlockMap blocks, DoubleMap image) {
-		Histogram histogram = new Histogram(blocks.blockCount.x, blocks.blockCount.y, Parameters.histogramDepth);
-		for (Cell block : blocks.blockCount) {
-			Block area = blocks.blockAreas.get(block);
+		Histogram histogram = new Histogram(blocks.primary.blocks, Parameters.histogramDepth);
+		for (Cell block : blocks.primary.blocks) {
+			Block area = blocks.primary.block(block);
 			for (int y = area.top(); y < area.bottom(); ++y)
 				for (int x = area.left(); x < area.right(); ++x) {
 					int depth = (int)(image.get(x, y) * histogram.depth);
@@ -297,11 +297,11 @@ public class FingerprintTemplate {
 	}
 	private Histogram smoothHistogram(BlockMap blocks, Histogram input) {
 		Cell[] blocksAround = new Cell[] { new Cell(0, 0), new Cell(-1, 0), new Cell(0, -1), new Cell(-1, -1) };
-		Histogram output = new Histogram(blocks.cornerCount.x, blocks.cornerCount.y, input.depth);
-		for (Cell corner : blocks.cornerCount) {
+		Histogram output = new Histogram(blocks.secondary.blocks, input.depth);
+		for (Cell corner : blocks.secondary.blocks) {
 			for (Cell relative : blocksAround) {
 				Cell block = corner.plus(relative);
-				if (blocks.blockCount.contains(block)) {
+				if (blocks.primary.blocks.contains(block)) {
 					for (int i = 0; i < input.depth; ++i)
 						output.add(corner, i, input.get(block, i));
 				}
@@ -325,8 +325,8 @@ public class FingerprintTemplate {
 		return mask;
 	}
 	private DoubleMap clipContrast(BlockMap blocks, Histogram histogram) {
-		DoubleMap result = new DoubleMap(blocks.blockCount);
-		for (Cell block : blocks.blockCount) {
+		DoubleMap result = new DoubleMap(blocks.primary.blocks);
+		for (Cell block : blocks.primary.blocks) {
 			int volume = histogram.sum(block);
 			int clipLimit = (int)Math.round(volume * Parameters.clippedContrast);
 			int accumulator = 0;
@@ -365,13 +365,13 @@ public class FingerprintTemplate {
 		for (Cell block : contrast.size())
 			sortedContrast.add(contrast.get(block));
 		sortedContrast.sort(Comparator.<Double>naturalOrder().reversed());
-		int pixelsPerBlock = blocks.pixelCount.area() / blocks.blockCount.area();
+		int pixelsPerBlock = blocks.pixels.area() / blocks.primary.blocks.area();
 		int sampleCount = Math.min(sortedContrast.size(), Parameters.relativeContrastSample / pixelsPerBlock);
 		int consideredBlocks = Math.max((int)Math.round(sampleCount * Parameters.relativeContrastPercentile), 1);
 		double averageContrast = sortedContrast.stream().mapToDouble(n -> n).limit(consideredBlocks).average().getAsDouble();
 		double limit = averageContrast * Parameters.minRelativeContrast;
-		BooleanMap result = new BooleanMap(blocks.blockCount);
-		for (Cell block : blocks.blockCount)
+		BooleanMap result = new BooleanMap(blocks.primary.blocks);
+		for (Cell block : blocks.primary.blocks)
 			if (contrast.get(block) < limit)
 				result.set(block, true);
 		logger.logRelativeContrastMask(result);
@@ -412,7 +412,7 @@ public class FingerprintTemplate {
 			dequantized[i] = i / (double)(histogram.depth - 1);
 		}
 		Map<Cell, double[]> mappings = new HashMap<>();
-		for (Cell corner : blocks.cornerCount) {
+		for (Cell corner : blocks.secondary.blocks) {
 			double[] mapping = new double[histogram.depth];
 			mappings.put(corner, mapping);
 			if (blockMask.get(corner, false) || blockMask.get(corner.x - 1, corner.y, false)
@@ -431,10 +431,10 @@ public class FingerprintTemplate {
 				}
 			}
 		}
-		DoubleMap result = new DoubleMap(blocks.pixelCount);
-		for (Cell block : blocks.blockCount) {
+		DoubleMap result = new DoubleMap(blocks.pixels);
+		for (Cell block : blocks.primary.blocks) {
 			if (blockMask.get(block)) {
-				Block area = blocks.blockAreas.get(block);
+				Block area = blocks.primary.block(block);
 				double[] topleft = mappings.get(block);
 				double[] topright = mappings.get(new Cell(block.x + 1, block.y));
 				double[] bottomleft = mappings.get(new Cell(block.x, block.y + 1));
@@ -481,13 +481,13 @@ public class FingerprintTemplate {
 	private PointMap pixelwiseOrientation(DoubleMap input, BooleanMap mask, BlockMap blocks) {
 		ConsideredOrientation[][] neighbors = planOrientations();
 		PointMap orientation = new PointMap(input.size());
-		for (int blockY = 0; blockY < blocks.blockCount.y; ++blockY) {
+		for (int blockY = 0; blockY < blocks.primary.blocks.y; ++blockY) {
 			Range maskRange = maskRange(mask, blockY);
 			if (maskRange.length() > 0) {
 				Range validXRange = new Range(
-					blocks.blockAreas.get(maskRange.start, blockY).left(),
-					blocks.blockAreas.get(maskRange.end - 1, blockY).right());
-				for (int y = blocks.blockAreas.get(0, blockY).top(); y < blocks.blockAreas.get(0, blockY).bottom(); ++y) {
+					blocks.primary.block(maskRange.start, blockY).left(),
+					blocks.primary.block(maskRange.end - 1, blockY).right());
+				for (int y = blocks.primary.block(0, blockY).top(); y < blocks.primary.block(0, blockY).bottom(); ++y) {
 					for (ConsideredOrientation neighbor : neighbors[y % neighbors.length]) {
 						int radius = Math.max(Math.abs(neighbor.offset.x), Math.abs(neighbor.offset.y));
 						if (y - radius >= 0 && y + radius < input.height) {
@@ -523,10 +523,10 @@ public class FingerprintTemplate {
 			return Range.zero;
 	}
 	private PointMap blockOrientations(PointMap orientation, BlockMap blocks, BooleanMap mask) {
-		PointMap sums = new PointMap(blocks.blockCount);
-		for (Cell block : blocks.blockCount) {
+		PointMap sums = new PointMap(blocks.primary.blocks);
+		for (Cell block : blocks.primary.blocks) {
 			if (mask.get(block)) {
-				Block area = blocks.blockAreas.get(block);
+				Block area = blocks.primary.block(block);
 				for (int y = area.top(); y < area.bottom(); ++y)
 					for (int x = area.left(); x < area.right(); ++x)
 						sums.add(block, orientation.get(x, y));
@@ -576,18 +576,18 @@ public class FingerprintTemplate {
 	}
 	private static DoubleMap smoothRidges(DoubleMap input, DoubleMap orientation, BooleanMap mask, BlockMap blocks, double angle, Cell[][] lines) {
 		DoubleMap output = new DoubleMap(input.size());
-		for (Cell block : blocks.blockCount) {
+		for (Cell block : blocks.primary.blocks) {
 			if (mask.get(block)) {
 				Cell[] line = lines[Angle.quantize(Angle.add(orientation.get(block), angle), lines.length)];
 				for (Cell linePoint : line) {
-					Block target = blocks.blockAreas.get(block);
-					Block source = target.move(linePoint).intersect(new Block(blocks.pixelCount));
+					Block target = blocks.primary.block(block);
+					Block source = target.move(linePoint).intersect(new Block(blocks.pixels));
 					target = source.move(linePoint.negate());
 					for (int y = target.top(); y < target.bottom(); ++y)
 						for (int x = target.left(); x < target.right(); ++x)
 							output.add(x, y, input.get(x + linePoint.x, y + linePoint.y));
 				}
-				Block blockArea = blocks.blockAreas.get(block);
+				Block blockArea = blocks.primary.block(block);
 				for (int y = blockArea.top(); y < blockArea.bottom(); ++y)
 					for (int x = blockArea.left(); x < blockArea.right(); ++x)
 						output.multiply(x, y, 1.0 / line.length);
@@ -598,9 +598,9 @@ public class FingerprintTemplate {
 	private BooleanMap binarize(DoubleMap input, DoubleMap baseline, BooleanMap mask, BlockMap blocks) {
 		Cell size = input.size();
 		BooleanMap binarized = new BooleanMap(size);
-		for (Cell block : blocks.blockCount)
+		for (Cell block : blocks.primary.blocks)
 			if (mask.get(block)) {
-				Block rect = blocks.blockAreas.get(block);
+				Block rect = blocks.primary.block(block);
 				for (int y = rect.top(); y < rect.bottom(); ++y)
 					for (int x = rect.left(); x < rect.right(); ++x)
 						if (input.get(x, y) - baseline.get(x, y) > 0)
@@ -639,10 +639,10 @@ public class FingerprintTemplate {
 		}
 	}
 	private static BooleanMap fillBlocks(BooleanMap mask, BlockMap blocks) {
-		BooleanMap pixelized = new BooleanMap(blocks.pixelCount);
-		for (Cell block : blocks.blockCount)
+		BooleanMap pixelized = new BooleanMap(blocks.pixels);
+		for (Cell block : blocks.primary.blocks)
 			if (mask.get(block))
-				for (Cell pixel : blocks.blockAreas.get(block))
+				for (Cell pixel : blocks.primary.block(block))
 					pixelized.set(pixel, true);
 		return pixelized;
 	}

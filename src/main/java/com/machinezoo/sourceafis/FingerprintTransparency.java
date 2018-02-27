@@ -46,7 +46,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logDoubleMap("scaled-image", image);
 	}
 	void logBlockMap(BlockMap blocks) {
-		log("block-map", ".json", json(() -> new JsonBlockMap(blocks)));
+		log("block-map", ".json", json(() -> blocks));
 	}
 	void logHistogram(Histogram histogram) {
 		logHistogram("histogram", histogram);
