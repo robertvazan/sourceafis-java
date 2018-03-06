@@ -11,25 +11,25 @@ public class FingerprintTemplateTest {
 	private static TemplateBuilder io = new TemplateBuilder();
 	private static FingerprintTemplate t = new FingerprintTemplate();
 	public static FingerprintTemplate probe() {
-		return new FingerprintTemplate(load("probe.png"), 500);
+		return new FingerprintTemplate().create(load("probe.png"), 500);
 	}
 	public static FingerprintTemplate matching() {
-		return new FingerprintTemplate(load("matching.png"), 500);
+		return new FingerprintTemplate().create(load("matching.png"), 500);
 	}
 	public static FingerprintTemplate nonmatching() {
-		return new FingerprintTemplate(load("nonmatching.png"), 500);
+		return new FingerprintTemplate().create(load("nonmatching.png"), 500);
 	}
 	public static FingerprintTemplate probeIso() {
-		return FingerprintTemplate.convert(load("iso-probe.dat"));
+		return new FingerprintTemplate().convert(load("iso-probe.dat"));
 	}
 	public static FingerprintTemplate matchingIso() {
-		return FingerprintTemplate.convert(load("iso-matching.dat"));
+		return new FingerprintTemplate().convert(load("iso-matching.dat"));
 	}
 	public static FingerprintTemplate nonmatchingIso() {
-		return FingerprintTemplate.convert(load("iso-nonmatching.dat"));
+		return new FingerprintTemplate().convert(load("iso-nonmatching.dat"));
 	}
 	@Test public void constructor() {
-		new FingerprintTemplate(load("probe.png"), 500);
+		new FingerprintTemplate().create(load("probe.png"), 500);
 	}
 	@Test public void readImage_png() {
 		readImage_validate(io.readImage(load("probe.png")));
@@ -64,7 +64,7 @@ public class FingerprintTemplateTest {
 			new Minutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
 		};
 		t.immutable = new ImmutableTemplate(tb);
-		t = FingerprintTemplate.fromJson(t.toJson());
+		t = new FingerprintTemplate().deserialize(t.serialize());
 		assertEquals(2, t.immutable.minutiae.length);
 		Minutia a = t.immutable.minutiae[0];
 		Minutia b = t.immutable.minutiae[1];

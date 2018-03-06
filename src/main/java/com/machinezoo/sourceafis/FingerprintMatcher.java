@@ -9,7 +9,8 @@ import gnu.trove.map.hash.*;
  * {@code FingerprintMatcher} maintains data structures that improve matching speed at the cost of some RAM.
  * It can efficiently match one probe fingerprint to many candidate fingerprints.
  * <p>
- * Probe fingerprint template is passed to {@link #FingerprintMatcher(FingerprintTemplate)}.
+ * After instantiating an empty matcher with {@link #FingerprintMatcher()},
+ * application should pass probe fingerprint template to {@link #index(FingerprintTemplate)}.
  * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)}.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
@@ -19,28 +20,31 @@ public class FingerprintMatcher {
 	private FingerprintTransparency transparency;
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.empty;
 	/**
-	 * Create an empty fingerprint matcher.
+	 * Instantiate an empty fingerprint matcher.
 	 * Empty matcher does not match any {@link FingerprintTemplate} passed to {@link #match(FingerprintTemplate)}.
 	 * In order for the matcher to be useful, it must be first initialized
-	 * by passing {@link FingerprintTemplate} to the initializing method.
+	 * by passing {@link FingerprintTemplate} to {@link #index(FingerprintTemplate)}.
 	 */
 	public FingerprintMatcher() {
 	}
 	/**
 	 * Create {@code FingerprintMatcher} from probe fingerprint template.
-	 * Constructed {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
+	 * This method is usually called only once for every {@code FingerprintMatcher}.
+	 * {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
 	 * It should be reused for multiple {@link #match(FingerprintTemplate)} calls in 1:N matching.
 	 * 
 	 * @param probe
 	 *            fingerprint template to be matched to candidate fingerprints
+	 * @return {@code this} (fluent method)
 	 * 
 	 * @see #match(FingerprintTemplate)
 	 */
-	public FingerprintMatcher(FingerprintTemplate probe) {
+	public FingerprintMatcher index(FingerprintTemplate probe) {
 		transparency = FingerprintTransparency.current();
 		ImmutableTemplate template = probe.immutable;
 		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
 		transparency = FingerprintTransparency.none;
+		return this;
 	}
 	private TIntObjectHashMap<List<IndexedEdge>> buildEdgeHash(ImmutableTemplate template) {
 		TIntObjectHashMap<List<IndexedEdge>> map = new TIntObjectHashMap<>();
@@ -77,7 +81,7 @@ public class FingerprintMatcher {
 	}
 	/**
 	 * Match candidate fingerprint template to this probe fingerprint and calculate similarity score.
-	 * Candidate fingerprint is matched to probe fingerprint previously passed to {@link #FingerprintMatcher(FingerprintTemplate)}.
+	 * Candidate fingerprint is matched to probe fingerprint previously passed to {@link #index(FingerprintTemplate)}.
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
 	 * Application should compare the score to a threshold with expression {@code (score >= threshold)} to arrive at boolean match/non-match decision.
@@ -91,7 +95,7 @@ public class FingerprintMatcher {
 	 * This method is thread-safe. Multiple threads can match candidates against single {@code FingerprintMatcher}.
 	 * 
 	 * @param candidate
-	 *            fingerprint template to be matched with probe fingerprint represented by this {@code FingerprintMatcher}
+	 *            fingerprint template to be matched with probe fingerprint indexed by this {@code FingerprintMatcher}
 	 * @return similarity score between probe and candidate fingerprints
 	 */
 	public double match(FingerprintTemplate candidate) {
