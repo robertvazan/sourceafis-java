@@ -7,6 +7,7 @@ import org.junit.*;
 import com.machinezoo.noexception.*;
 
 public class FingerprintTemplateTest {
+	private static TemplateBuilder io = new TemplateBuilder();
 	private static FingerprintTemplate t = FingerprintTemplate.fromJson("{\"size\":{\"x\":0,\"y\":0},\"minutiae\":[]}");
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate(load("probe.png"), 500);
@@ -30,18 +31,18 @@ public class FingerprintTemplateTest {
 		new FingerprintTemplate(load("probe.png"), 500);
 	}
 	@Test public void readImage_png() {
-		readImage_validate(t.readImage(load("probe.png")));
+		readImage_validate(io.readImage(load("probe.png")));
 	}
 	@Test public void readImage_jpeg() {
-		readImage_validate(t.readImage(load("probe.jpeg")));
+		readImage_validate(io.readImage(load("probe.jpeg")));
 	}
 	@Test public void readImage_bmp() {
-		readImage_validate(t.readImage(load("probe.bmp")));
+		readImage_validate(io.readImage(load("probe.bmp")));
 	}
 	private void readImage_validate(DoubleMap map) {
 		assertEquals(388, map.width);
 		assertEquals(374, map.height);
-		DoubleMap reference = t.readImage(load("probe.png"));
+		DoubleMap reference = io.readImage(load("probe.png"));
 		double delta = 0, max = -1, min = 1;
 		for (int x = 0; x < map.width; ++x) {
 			for (int y = 0; y < map.height; ++y) {

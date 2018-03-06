@@ -123,32 +123,32 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logRemovedFragments(Skeleton skeleton) {
 		logSkeleton("removed-fragments", skeleton);
 	}
-	void logSkeletonMinutiae(FingerprintTemplate template) {
+	void logSkeletonMinutiae(TemplateBuilder template) {
 		logMinutiae("skeleton-minutiae", template);
 	}
-	void logInnerMinutiae(FingerprintTemplate template) {
+	void logInnerMinutiae(TemplateBuilder template) {
 		logMinutiae("inner-minutiae", template);
 	}
-	void logRemovedMinutiaClouds(FingerprintTemplate template) {
+	void logRemovedMinutiaClouds(TemplateBuilder template) {
 		logMinutiae("removed-minutia-clouds", template);
 	}
-	void logTopMinutiae(FingerprintTemplate template) {
+	void logTopMinutiae(TemplateBuilder template) {
 		logMinutiae("top-minutiae", template);
 	}
-	void logShuffledMinutiae(FingerprintTemplate template) {
+	void logShuffledMinutiae(TemplateBuilder template) {
 		logMinutiae("shuffled-minutiae", template);
 	}
 	void logEdgeTable(NeighborEdge[][] table) {
 		log("edge-table", ".json", json(() -> table));
 	}
-	void logDeserializedMinutiae(FingerprintTemplate template) {
+	void logDeserializedMinutiae(TemplateBuilder template) {
 		logMinutiae("deserialized-minutiae", template);
 	}
 	void logIsoMetadata(int width, int height, int cmPixelsX, int cmPixelsY) {
 		if (logging())
 			log("iso-metadata", ".json", json(() -> new JsonIsoMetadata(width, height, cmPixelsX, cmPixelsY)));
 	}
-	void logIsoMinutiae(FingerprintTemplate template) {
+	void logIsoMinutiae(TemplateBuilder template) {
 		logMinutiae("iso-minutiae", template);
 	}
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
@@ -192,7 +192,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private void logSkeleton(String name, Skeleton skeleton) {
 		log(skeleton.type.prefix + name, ".json", json(() -> new JsonSkeleton(skeleton)), ".dat", skeleton::serialize);
 	}
-	private void logMinutiae(String name, FingerprintTemplate template) {
+	private void logMinutiae(String name, TemplateBuilder template) {
 		if (logging())
 			log(name, ".json", json(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
