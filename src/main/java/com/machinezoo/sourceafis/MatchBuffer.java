@@ -7,9 +7,9 @@ import gnu.trove.map.hash.*;
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
 	private FingerprintTransparency transparency = FingerprintTransparency.none;
-	private FingerprintTemplate probe;
+	private ImmutableTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
-	private FingerprintTemplate candidate;
+	private ImmutableTemplate candidate;
 	private MinutiaPair[] pool = new MinutiaPair[1];
 	private int pooled;
 	private PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
@@ -21,17 +21,15 @@ class MatchBuffer {
 	static MatchBuffer current() {
 		return local.get();
 	}
-	void selectProbe(FingerprintTemplate template) {
-		probe = template;
+	void selectMatcher(ImmutableMatcher matcher) {
+		probe = matcher.template;
 		if (tree == null || probe.minutiae.length > tree.length) {
 			tree = new MinutiaPair[probe.minutiae.length];
 			byProbe = new MinutiaPair[probe.minutiae.length];
 		}
+		edgeHash = matcher.edgeHash;
 	}
-	void selectMatcher(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
-		this.edgeHash = edgeHash;
-	}
-	void selectCandidate(FingerprintTemplate template) {
+	void selectCandidate(ImmutableTemplate template) {
 		candidate = template;
 		if (byCandidate == null || byCandidate.length < candidate.minutiae.length)
 			byCandidate = new MinutiaPair[candidate.minutiae.length];

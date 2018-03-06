@@ -17,8 +17,7 @@ import gnu.trove.map.hash.*;
  */
 public class FingerprintMatcher {
 	private FingerprintTransparency transparency;
-	private final FingerprintTemplate template;
-	private TIntObjectHashMap<List<IndexedEdge>> edgeHash = new TIntObjectHashMap<>();
+	private volatile ImmutableMatcher immutable;
 	/**
 	 * Create {@code FingerprintMatcher} from probe fingerprint template.
 	 * Constructed {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
@@ -31,23 +30,25 @@ public class FingerprintMatcher {
 	 */
 	public FingerprintMatcher(FingerprintTemplate probe) {
 		transparency = FingerprintTransparency.current();
-		this.template = probe;
-		buildEdgeHash();
+		ImmutableTemplate template = probe.immutable;
+		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
 		transparency = FingerprintTransparency.none;
 	}
-	private void buildEdgeHash() {
+	private TIntObjectHashMap<List<IndexedEdge>> buildEdgeHash(ImmutableTemplate template) {
+		TIntObjectHashMap<List<IndexedEdge>> map = new TIntObjectHashMap<>();
 		for (int reference = 0; reference < template.minutiae.length; ++reference)
 			for (int neighbor = 0; neighbor < template.minutiae.length; ++neighbor)
 				if (reference != neighbor) {
 					IndexedEdge edge = new IndexedEdge(template.minutiae, reference, neighbor);
 					for (int hash : shapeCoverage(edge)) {
-						List<IndexedEdge> list = edgeHash.get(hash);
+						List<IndexedEdge> list = map.get(hash);
 						if (list == null)
-							edgeHash.put(hash, list = new ArrayList<>());
+							map.put(hash, list = new ArrayList<>());
 						list.add(edge);
 					}
 				}
-		transparency.logEdgeHash(edgeHash);
+		transparency.logEdgeHash(map);
+		return map;
 	}
 	private List<Integer> shapeCoverage(EdgeShape edge) {
 		int minLengthBin = (edge.length - Parameters.maxDistanceError) / Parameters.maxDistanceError;
@@ -87,9 +88,8 @@ public class FingerprintMatcher {
 	 */
 	public double match(FingerprintTemplate candidate) {
 		MatchBuffer buffer = MatchBuffer.current();
-		buffer.selectProbe(template);
-		buffer.selectMatcher(edgeHash);
-		buffer.selectCandidate(candidate);
+		buffer.selectMatcher(immutable);
+		buffer.selectCandidate(candidate.immutable);
 		return buffer.match();
 	}
 }

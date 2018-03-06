@@ -23,9 +23,7 @@ import com.google.gson.*;
  * @see FingerprintMatcher
  */
 public class FingerprintTemplate {
-	Cell size;
-	Minutia[] minutiae = new Minutia[0];
-	NeighborEdge[][] edges;
+	volatile ImmutableTemplate immutable;
 	/**
 	 * Create fingerprint template from raw fingerprint image.
 	 * Image must contain black fingerprint on white background with the specified DPI (dots per inch).
@@ -43,9 +41,7 @@ public class FingerprintTemplate {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.extract(image, dpi);
-		size = builder.size;
-		minutiae = builder.minutiae;
-		edges = builder.edges;
+		immutable = new ImmutableTemplate(builder); 
 	}
 	/**
 	 * Deserialize fingerprint template from JSON string.
@@ -66,9 +62,7 @@ public class FingerprintTemplate {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.deserialize(json);
-		size = builder.size;
-		minutiae = builder.minutiae;
-		edges = builder.edges;
+		immutable = new ImmutableTemplate(builder); 
 	}
 	/**
 	 * Serialize fingerprint template to JSON string.
@@ -88,7 +82,8 @@ public class FingerprintTemplate {
 	 * @see #fromJson(String)
 	 */
 	public String toJson() {
-		return new Gson().toJson(new JsonTemplate(size, minutiae));
+		ImmutableTemplate current = immutable;
+		return new Gson().toJson(new JsonTemplate(current.size, current.minutiae));
 	}
 	/**
 	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.
@@ -123,8 +118,6 @@ public class FingerprintTemplate {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.convert(iso);
-		size = builder.size;
-		minutiae = builder.minutiae;
-		edges = builder.edges;
+		immutable = new ImmutableTemplate(builder); 
 	}
 }
