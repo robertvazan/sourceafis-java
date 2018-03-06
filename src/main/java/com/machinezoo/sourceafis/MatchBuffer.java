@@ -6,7 +6,7 @@ import gnu.trove.map.hash.*;
 
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
-	private FingerprintTransparency logger = FingerprintTransparency.none;
+	private FingerprintTransparency transparency = FingerprintTransparency.none;
 	private FingerprintTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
 	private FingerprintTemplate candidate;
@@ -38,9 +38,9 @@ class MatchBuffer {
 	}
 	double match() {
 		try {
-			logger = FingerprintTransparency.current();
+			transparency = FingerprintTransparency.current();
 			int totalRoots = enumerateRoots();
-			logger.logRootPairs(totalRoots, roots);
+			transparency.logRootPairs(totalRoots, roots);
 			double high = 0;
 			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
@@ -51,13 +51,13 @@ class MatchBuffer {
 				}
 				clearPairing();
 			}
-			logger.logBestMatch(best);
+			transparency.logBestMatch(best);
 			return high;
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
 		} finally {
-			logger = FingerprintTransparency.none;
+			transparency = FingerprintTransparency.none;
 		}
 	}
 	private int enumerateRoots() {
@@ -122,7 +122,7 @@ class MatchBuffer {
 			collectEdges();
 			skipPaired();
 		} while (!queue.isEmpty());
-		logger.logPairing(count, tree);
+		transparency.logPairing(count, tree);
 		return computeScore();
 	}
 	private void clearPairing() {
@@ -197,7 +197,7 @@ class MatchBuffer {
 	private void addSupportingEdge(MinutiaPair pair) {
 		++byProbe[pair.probe].supportingEdges;
 		++byProbe[pair.probeRef].supportingEdges;
-		logger.logSupportingEdge(pair);
+		transparency.logSupportingEdge(pair);
 	}
 	private double computeScore() {
 		double minutiaScore = Parameters.pairCountScore * count;
@@ -235,7 +235,7 @@ class MatchBuffer {
 		}
 		double total = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
 		double shaped = shape(total);
-		logger.logScore(minutiaScore, ratioScore, supportedScore, edgeScore, typeScore, distanceScore, angleScore, total, shaped);
+		transparency.logScore(minutiaScore, ratioScore, supportedScore, edgeScore, typeScore, distanceScore, angleScore, total, shaped);
 		return shaped;
 	}
 	private static double shape(double raw) {

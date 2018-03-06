@@ -16,7 +16,7 @@ import gnu.trove.map.hash.*;
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
-	private FingerprintTransparency logger;
+	private FingerprintTransparency transparency;
 	private final FingerprintTemplate template;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash = new TIntObjectHashMap<>();
 	/**
@@ -30,10 +30,10 @@ public class FingerprintMatcher {
 	 * @see #match(FingerprintTemplate)
 	 */
 	public FingerprintMatcher(FingerprintTemplate probe) {
-		logger = FingerprintTransparency.current();
+		transparency = FingerprintTransparency.current();
 		this.template = probe;
 		buildEdgeHash();
-		logger = FingerprintTransparency.none;
+		transparency = FingerprintTransparency.none;
 	}
 	private void buildEdgeHash() {
 		for (int reference = 0; reference < template.minutiae.length; ++reference)
@@ -47,7 +47,7 @@ public class FingerprintMatcher {
 						list.add(edge);
 					}
 				}
-		logger.logEdgeHash(edgeHash);
+		transparency.logEdgeHash(edgeHash);
 	}
 	private List<Integer> shapeCoverage(EdgeShape edge) {
 		int minLengthBin = (edge.length - Parameters.maxDistanceError) / Parameters.maxDistanceError;
