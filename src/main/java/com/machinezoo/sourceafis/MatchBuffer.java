@@ -6,7 +6,7 @@ import gnu.trove.map.hash.*;
 
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
-	private FingerprintTransparency transparency = FingerprintTransparency.none;
+	FingerprintTransparency transparency = FingerprintTransparency.none;
 	private ImmutableTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
 	private ImmutableTemplate candidate;
@@ -36,7 +36,6 @@ class MatchBuffer {
 	}
 	double match() {
 		try {
-			transparency = FingerprintTransparency.current();
 			int totalRoots = enumerateRoots();
 			transparency.logRootPairs(totalRoots, roots);
 			double high = 0;
@@ -54,8 +53,6 @@ class MatchBuffer {
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
-		} finally {
-			transparency = FingerprintTransparency.none;
 		}
 	}
 	private int enumerateRoots() {

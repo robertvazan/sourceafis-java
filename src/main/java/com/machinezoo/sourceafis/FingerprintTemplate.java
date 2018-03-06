@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.util.*;
 import javax.imageio.*;
 import com.google.gson.*;
 
@@ -29,6 +30,7 @@ import com.google.gson.*;
  */
 public class FingerprintTemplate {
 	private double dpi = 500;
+	private FingerprintTransparency transparency = FingerprintTransparency.none;
 	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
 	/**
 	 * Instantiate an empty fingerprint template.
@@ -38,6 +40,20 @@ public class FingerprintTemplate {
 	 * Only one initializing method is usually called for every {@code FingerprintTemplate}.
 	 */
 	public FingerprintTemplate() {
+	}
+	/**
+	 * Set algorithm transparency logger.
+	 * Transparency logger can be set before calling {@link #create(byte[])},
+	 * {@link #deserialize(String)}, or {@link #convert(byte[])}
+	 * to log intermediate data structures constructed during template initialization.
+	 * 
+	 * @param transparency
+	 *            new algorithm transparency logger or {@code null} to disable logging
+	 * @return {@code this} (fluent method)
+	 */
+	public FingerprintTemplate transparency(FingerprintTransparency transparency) {
+		this.transparency = Optional.ofNullable(transparency).orElse(FingerprintTransparency.none);
+		return this;
 	}
 	/**
 	 * Set DPI (dots per inch) of the fingerprint image.
@@ -68,7 +84,7 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate create(byte[] image) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.transparency = FingerprintTransparency.current();
+		builder.transparency = transparency;
 		builder.extract(image, dpi);
 		immutable = new ImmutableTemplate(builder);
 		return this;
@@ -88,7 +104,7 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate deserialize(String json) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.transparency = FingerprintTransparency.current();
+		builder.transparency = transparency;
 		builder.deserialize(json);
 		immutable = new ImmutableTemplate(builder);
 		return this;
@@ -143,7 +159,7 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate convert(byte[] iso) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.transparency = FingerprintTransparency.current();
+		builder.transparency = transparency;
 		builder.convert(iso);
 		immutable = new ImmutableTemplate(builder);
 		return this;

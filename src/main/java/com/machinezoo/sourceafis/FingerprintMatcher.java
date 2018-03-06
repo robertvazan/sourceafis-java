@@ -17,7 +17,7 @@ import gnu.trove.map.hash.*;
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
-	private FingerprintTransparency transparency;
+	private FingerprintTransparency transparency = FingerprintTransparency.none;
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.empty;
 	/**
 	 * Instantiate an empty fingerprint matcher.
@@ -26,6 +26,19 @@ public class FingerprintMatcher {
 	 * by passing {@link FingerprintTemplate} to {@link #index(FingerprintTemplate)}.
 	 */
 	public FingerprintMatcher() {
+	}
+	/**
+	 * Set algorithm transparency logger.
+	 * If this is set before call to {@link #index(FingerprintTemplate)}, search data structures will be logged.
+	 * If this is set before call to {@link #match(FingerprintTemplate)}, matching process will be logged.
+	 * 
+	 * @param transparency
+	 *            new algorithm transparency logger or {@code null} to disable logging
+	 * @return {@code this} (fluent method)
+	 */
+	public FingerprintMatcher transparency(FingerprintTransparency transparency) {
+		this.transparency = Optional.ofNullable(transparency).orElse(FingerprintTransparency.none);
+		return this;
 	}
 	/**
 	 * Create {@code FingerprintMatcher} from probe fingerprint template.
@@ -40,10 +53,8 @@ public class FingerprintMatcher {
 	 * @see #match(FingerprintTemplate)
 	 */
 	public FingerprintMatcher index(FingerprintTemplate probe) {
-		transparency = FingerprintTransparency.current();
 		ImmutableTemplate template = probe.immutable;
 		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
-		transparency = FingerprintTransparency.none;
 		return this;
 	}
 	private TIntObjectHashMap<List<IndexedEdge>> buildEdgeHash(ImmutableTemplate template) {
@@ -100,8 +111,13 @@ public class FingerprintMatcher {
 	 */
 	public double match(FingerprintTemplate candidate) {
 		MatchBuffer buffer = MatchBuffer.current();
-		buffer.selectMatcher(immutable);
-		buffer.selectCandidate(candidate.immutable);
-		return buffer.match();
+		try {
+			buffer.transparency = transparency;
+			buffer.selectMatcher(immutable);
+			buffer.selectCandidate(candidate.immutable);
+			return buffer.match();
+		} finally {
+			buffer.transparency = FingerprintTransparency.none;
+		}
 	}
 }

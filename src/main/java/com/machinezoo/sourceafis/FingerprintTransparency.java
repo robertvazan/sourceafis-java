@@ -10,9 +10,6 @@ import com.google.gson.*;
 import gnu.trove.map.hash.*;
 
 public abstract class FingerprintTransparency implements AutoCloseable {
-	private static final ThreadLocal<FingerprintTransparency> current = new ThreadLocal<>();
-	private FingerprintTransparency outer;
-	private boolean closed;
 	private List<JsonEdge> supportingEdges = new ArrayList<>();
 	static final FingerprintTransparency none = new FingerprintTransparency() {
 		@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
@@ -20,18 +17,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	};
 	protected abstract void log(String name, Map<String, Supplier<ByteBuffer>> data);
 	protected FingerprintTransparency() {
-		outer = current.get();
-		current.set(this);
 	}
 	@Override public void close() {
-		if (!closed) {
-			closed = true;
-			current.set(outer);
-			outer = null;
-		}
-	}
-	static FingerprintTransparency current() {
-		return Optional.ofNullable(current.get()).orElse(none);
 	}
 	public static FingerprintTransparency zip(OutputStream stream) {
 		return new TransparencyZip(stream);

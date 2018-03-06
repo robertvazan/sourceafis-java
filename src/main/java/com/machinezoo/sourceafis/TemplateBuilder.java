@@ -16,7 +16,6 @@ class TemplateBuilder {
 	Minutia[] minutiae;
 	NeighborEdge[][] edges;
 	void extract(byte[] image, double dpi) {
-		transparency = FingerprintTransparency.current();
 		DoubleMap raw = readImage(image);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
