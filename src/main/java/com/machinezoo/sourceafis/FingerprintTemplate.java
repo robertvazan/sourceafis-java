@@ -10,8 +10,8 @@ import com.google.gson.*;
  * Original image is not preserved in the fingerprint template and there is no way to reconstruct the original fingerprint from its template.
  * <p>
  * In order to create fingerprint template, first instantiate it with {@link #FingerprintTemplate()}
- * and then initialized it by calling {@link #create(byte[], double)}, {@link #deserialize(String)}, or {@link #convert(byte[])}.
- * Most commonly used method {@link #create(byte[], double)} creates fingerprint template from fingerprint image.
+ * and then initialized it by calling {@link #create(byte[])}, {@link #deserialize(String)}, or {@link #convert(byte[])}.
+ * Most commonly used method {@link #create(byte[])} creates fingerprint template from fingerprint image.
  * <p>
  * Since image processing is expensive, applications should cache serialized templates.
  * Serialization is performed by {@link #serialize()} and deserialization by {@link #deserialize(String)}.
@@ -28,32 +28,45 @@ import com.google.gson.*;
  * @see FingerprintMatcher
  */
 public class FingerprintTemplate {
+	private double dpi = 500;
 	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
 	/**
 	 * Instantiate an empty fingerprint template.
 	 * Empty template represents fingerprint with no features that does not match any other fingerprint.
 	 * In order for the template to be useful, it must be first initialized by calling
-	 * {@link #create(byte[], double)}, {@link #deserialize(String)}, or {@link #convert(byte[])}.
+	 * {@link #create(byte[])}, {@link #deserialize(String)}, or {@link #convert(byte[])}.
 	 * Only one initializing method is usually called for every {@code FingerprintTemplate}.
 	 */
 	public FingerprintTemplate() {
 	}
 	/**
+	 * Set DPI (dots per inch) of the fingerprint image.
+	 * This is the DPI of the image later passed to {@link #create(byte[])}.
+	 * Check your fingerprint reader specification for correct DPI value. Default DPI is 500.
+	 * 
+	 * @param dpi
+	 *            DPI of the fingerprint image, usually around 500
+	 * @return {@code this} (fluent method)
+	 * 
+	 * @see #create(byte[])
+	 */
+	public FingerprintTemplate dpi(double dpi) {
+		this.dpi = dpi;
+		return this;
+	}
+	/**
 	 * Create fingerprint template from fingerprint image.
 	 * This method initializes the {@code FingerprintTemplate} and makes it ready for use.
-	 * Image must contain black fingerprint on white background with the specified DPI (dots per inch).
-	 * Check your fingerprint reader specification for correct DPI value.
+	 * Image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
 	 * All image formats supported by Java's {@link ImageIO} are accepted, for example JPEG, PNG, or BMP,
 	 * 
 	 * @param image
 	 *            fingerprint image in {@link ImageIO}-supported format
-	 * @param dpi
-	 *            DPI of the image, usually around 500
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see #FingerprintTemplate(byte[])
+	 * @see #dpi(double)
 	 */
-	public FingerprintTemplate create(byte[] image, double dpi) {
+	public FingerprintTemplate create(byte[] image) {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.extract(image, dpi);
@@ -124,7 +137,7 @@ public class FingerprintTemplate {
 	 *            ISO 19794-2 template to import
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see #create(byte[], double)
+	 * @see #create(byte[])
 	 * @see #deserialize(String)
 	 * @see #serialize()
 	 */

@@ -11,13 +11,13 @@ public class FingerprintTemplateTest {
 	private static TemplateBuilder io = new TemplateBuilder();
 	private static FingerprintTemplate t = new FingerprintTemplate();
 	public static FingerprintTemplate probe() {
-		return new FingerprintTemplate().create(load("probe.png"), 500);
+		return new FingerprintTemplate().create(load("probe.png"));
 	}
 	public static FingerprintTemplate matching() {
-		return new FingerprintTemplate().create(load("matching.png"), 500);
+		return new FingerprintTemplate().create(load("matching.png"));
 	}
 	public static FingerprintTemplate nonmatching() {
-		return new FingerprintTemplate().create(load("nonmatching.png"), 500);
+		return new FingerprintTemplate().create(load("nonmatching.png"));
 	}
 	public static FingerprintTemplate probeIso() {
 		return new FingerprintTemplate().convert(load("iso-probe.dat"));
@@ -29,7 +29,7 @@ public class FingerprintTemplateTest {
 		return new FingerprintTemplate().convert(load("iso-nonmatching.dat"));
 	}
 	@Test public void constructor() {
-		new FingerprintTemplate().create(load("probe.png"), 500);
+		new FingerprintTemplate().create(load("probe.png"));
 	}
 	@Test public void readImage_png() {
 		readImage_validate(io.readImage(load("probe.png")));
