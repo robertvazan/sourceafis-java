@@ -9,7 +9,7 @@ import com.machinezoo.noexception.*;
 
 public class FingerprintTemplateTest {
 	private static TemplateBuilder io = new TemplateBuilder();
-	private static FingerprintTemplate t = FingerprintTemplate.fromJson("{\"size\":{\"x\":0,\"y\":0},\"minutiae\":[]}");
+	private static FingerprintTemplate t = new FingerprintTemplate();
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate(load("probe.png"), 500);
 	}

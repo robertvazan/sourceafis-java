@@ -23,7 +23,14 @@ import com.google.gson.*;
  * @see FingerprintMatcher
  */
 public class FingerprintTemplate {
-	volatile ImmutableTemplate immutable;
+	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
+	/**
+	 * Create an empty fingerprint template.
+	 * Empty template represents fingerprint with no features that does not match any other fingerprint.
+	 * In order for the template to be useful, it must be first initialized by calling one of the initializing methods.
+	 */
+	public FingerprintTemplate() {
+	}
 	/**
 	 * Create fingerprint template from raw fingerprint image.
 	 * Image must contain black fingerprint on white background with the specified DPI (dots per inch).
@@ -41,7 +48,7 @@ public class FingerprintTemplate {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.extract(image, dpi);
-		immutable = new ImmutableTemplate(builder); 
+		immutable = new ImmutableTemplate(builder);
 	}
 	/**
 	 * Deserialize fingerprint template from JSON string.
@@ -62,7 +69,7 @@ public class FingerprintTemplate {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.deserialize(json);
-		immutable = new ImmutableTemplate(builder); 
+		immutable = new ImmutableTemplate(builder);
 	}
 	/**
 	 * Serialize fingerprint template to JSON string.
@@ -118,6 +125,6 @@ public class FingerprintTemplate {
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.transparency = FingerprintTransparency.current();
 		builder.convert(iso);
-		immutable = new ImmutableTemplate(builder); 
+		immutable = new ImmutableTemplate(builder);
 	}
 }

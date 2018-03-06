@@ -17,7 +17,15 @@ import gnu.trove.map.hash.*;
  */
 public class FingerprintMatcher {
 	private FingerprintTransparency transparency;
-	private volatile ImmutableMatcher immutable;
+	private volatile ImmutableMatcher immutable = ImmutableMatcher.empty;
+	/**
+	 * Create an empty fingerprint matcher.
+	 * Empty matcher does not match any {@link FingerprintTemplate} passed to {@link #match(FingerprintTemplate)}.
+	 * In order for the matcher to be useful, it must be first initialized
+	 * by passing {@link FingerprintTemplate} to the initializing method.
+	 */
+	public FingerprintMatcher() {
+	}
 	/**
 	 * Create {@code FingerprintMatcher} from probe fingerprint template.
 	 * Constructed {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
