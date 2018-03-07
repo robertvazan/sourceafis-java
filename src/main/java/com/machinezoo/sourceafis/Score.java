@@ -1,29 +1,41 @@
 package com.machinezoo.sourceafis;
 
 class Score {
+	int matchedMinutiae;
 	double matchedMinutiaeScore;
+	double matchedFractionOfProbeMinutiae;
+	double matchedFractionOfCandidateMinutiae;
 	double matchedFractionOfAllMinutiaeScore;
+	int matchedEdges;
 	double matchedEdgesScore;
+	int minutiaeWithSeveralEdges;
 	double minutiaeWithSeveralEdgesScore;
+	int correctMinutiaTypeCount;
 	double correctMinutiaTypeScore;
 	double accurateEdgeLengthScore;
 	double accurateMinutiaAngleScore;
 	double totalScore;
 	double shapedScore;
 	void compute(MatchBuffer match) {
-		matchedMinutiaeScore = Parameters.pairCountScore * match.count;
-		matchedFractionOfAllMinutiaeScore = Parameters.pairFractionScore * (match.count / (double)match.probe.minutiae.length + match.count / (double)match.candidate.minutiae.length) / 2;
-		minutiaeWithSeveralEdgesScore = 0;
-		matchedEdgesScore = 0;
-		correctMinutiaTypeScore = 0;
+		matchedMinutiae = match.count;
+		matchedMinutiaeScore = Parameters.pairCountScore * matchedMinutiae;
+		matchedFractionOfProbeMinutiae = match.count / (double)match.probe.minutiae.length;
+		matchedFractionOfCandidateMinutiae = match.count / (double)match.candidate.minutiae.length;
+		matchedFractionOfAllMinutiaeScore = Parameters.pairFractionScore * (matchedFractionOfProbeMinutiae + matchedFractionOfCandidateMinutiae) / 2;
+		matchedEdges = match.count;
+		minutiaeWithSeveralEdges = 0;
+		correctMinutiaTypeCount = 0;
 		for (int i = 0; i < match.count; ++i) {
 			MinutiaPair pair = match.tree[i];
+			matchedEdges += pair.supportingEdges;
 			if (pair.supportingEdges >= Parameters.minSupportingEdges)
-				minutiaeWithSeveralEdgesScore += Parameters.supportedCountScore;
-			matchedEdgesScore += Parameters.edgeCountScore * (pair.supportingEdges + 1);
+				++minutiaeWithSeveralEdges;
 			if (match.probe.minutiae[pair.probe].type == match.candidate.minutiae[pair.candidate].type)
-				correctMinutiaTypeScore += Parameters.correctTypeScore;
+				++correctMinutiaTypeCount;
 		}
+		matchedEdgesScore = Parameters.edgeCountScore * matchedEdges;
+		minutiaeWithSeveralEdgesScore = Parameters.supportedCountScore * minutiaeWithSeveralEdges;
+		correctMinutiaTypeScore = Parameters.correctTypeScore * correctMinutiaTypeCount;
 		int innerDistanceRadius = (int)Math.round(Parameters.distanceErrorFlatness * Parameters.maxDistanceError);
 		int innerAngleRadius = (int)Math.round(Parameters.angleErrorFlatness * Parameters.maxAngleError);
 		int distanceErrorSum = 0;
