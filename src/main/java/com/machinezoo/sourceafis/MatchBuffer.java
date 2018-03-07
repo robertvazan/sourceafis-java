@@ -7,17 +7,18 @@ import gnu.trove.map.hash.*;
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
 	FingerprintTransparency transparency = FingerprintTransparency.none;
-	private ImmutableTemplate probe;
+	ImmutableTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
-	private ImmutableTemplate candidate;
+	ImmutableTemplate candidate;
 	private MinutiaPair[] pool = new MinutiaPair[1];
 	private int pooled;
 	private PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
-	private int count;
-	private MinutiaPair[] tree;
+	int count;
+	MinutiaPair[] tree;
 	private MinutiaPair[] byProbe;
 	private MinutiaPair[] byCandidate;
 	private MinutiaPair[] roots;
+	private Score score = new Score();
 	static MatchBuffer current() {
 		return local.get();
 	}
@@ -41,9 +42,9 @@ class MatchBuffer {
 			double high = 0;
 			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
-				double score = tryRoot(roots[i]);
-				if (score > high) {
-					high = score;
+				double partial = tryRoot(roots[i]);
+				if (partial > high) {
+					high = partial;
 					best = i;
 				}
 				clearPairing();
@@ -118,7 +119,9 @@ class MatchBuffer {
 			skipPaired();
 		} while (!queue.isEmpty());
 		transparency.logPairing(count, tree);
-		return computeScore();
+		score.compute(this);
+		transparency.logScore(score);
+		return score.shapedScore;
 	}
 	private void clearPairing() {
 		for (int i = 0; i < count; ++i) {
@@ -193,65 +196,6 @@ class MatchBuffer {
 		++byProbe[pair.probe].supportingEdges;
 		++byProbe[pair.probeRef].supportingEdges;
 		transparency.logSupportingEdge(pair);
-	}
-	private double computeScore() {
-		double minutiaScore = Parameters.pairCountScore * count;
-		double ratioScore = Parameters.pairFractionScore * (count / (double)probe.minutiae.length + count / (double)candidate.minutiae.length) / 2;
-		double supportedScore = 0;
-		double edgeScore = 0;
-		double typeScore = 0;
-		for (int i = 0; i < count; ++i) {
-			MinutiaPair pair = tree[i];
-			if (pair.supportingEdges >= Parameters.minSupportingEdges)
-				supportedScore += Parameters.supportedCountScore;
-			edgeScore += Parameters.edgeCountScore * (pair.supportingEdges + 1);
-			if (probe.minutiae[pair.probe].type == candidate.minutiae[pair.candidate].type)
-				typeScore += Parameters.correctTypeScore;
-		}
-		int innerDistanceRadius = (int)Math.round(Parameters.distanceErrorFlatness * Parameters.maxDistanceError);
-		int innerAngleRadius = (int)Math.round(Parameters.angleErrorFlatness * Parameters.maxAngleError);
-		int distanceErrorSum = 0;
-		int angleErrorSum = 0;
-		for (int i = 1; i < count; ++i) {
-			MinutiaPair pair = tree[i];
-			EdgeShape probeEdge = new EdgeShape(probe.minutiae[pair.probeRef], probe.minutiae[pair.probe]);
-			EdgeShape candidateEdge = new EdgeShape(candidate.minutiae[pair.candidateRef], candidate.minutiae[pair.candidate]);
-			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
-			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
-			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
-		}
-		double distanceScore = 0;
-		double angleScore = 0;
-		if (count >= 2) {
-			double pairedDistanceError = Parameters.maxDistanceError * (count - 1);
-			distanceScore = Parameters.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
-			double pairedAngleError = Parameters.maxAngleError * (count - 1) * 2;
-			angleScore = Parameters.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
-		}
-		double total = minutiaScore + ratioScore + supportedScore + edgeScore + typeScore + distanceScore + angleScore;
-		double shaped = shape(total);
-		transparency.logScore(minutiaScore, ratioScore, supportedScore, edgeScore, typeScore, distanceScore, angleScore, total, shaped);
-		return shaped;
-	}
-	private static double shape(double raw) {
-		if (raw < Parameters.thresholdMaxFMR)
-			return 0;
-		if (raw < Parameters.thresholdFMR2)
-			return interpolate(raw, Parameters.thresholdMaxFMR, Parameters.thresholdFMR2, 0, 3);
-		if (raw < Parameters.thresholdFMR10)
-			return interpolate(raw, Parameters.thresholdFMR2, Parameters.thresholdFMR10, 3, 7);
-		if (raw < Parameters.thresholdFMR100)
-			return interpolate(raw, Parameters.thresholdFMR10, Parameters.thresholdFMR100, 10, 10);
-		if (raw < Parameters.thresholdFMR1000)
-			return interpolate(raw, Parameters.thresholdFMR100, Parameters.thresholdFMR1000, 20, 10);
-		if (raw < Parameters.thresholdFMR10_000)
-			return interpolate(raw, Parameters.thresholdFMR1000, Parameters.thresholdFMR10_000, 30, 10);
-		if (raw < Parameters.thresholdFMR100_000)
-			return interpolate(raw, Parameters.thresholdFMR10_000, Parameters.thresholdFMR100_000, 40, 10);
-		return (raw - Parameters.thresholdFMR100_000) / (Parameters.thresholdFMR100_000 - Parameters.thresholdFMR100) * 30 + 50;
-	}
-	private static double interpolate(double raw, double min, double max, double start, double length) {
-		return (raw - min) / (max - min) * length + start;
 	}
 	private MinutiaPair allocate() {
 		if (pooled > 0) {

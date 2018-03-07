@@ -222,22 +222,9 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			supportingEdges.clear();
 		}
 	}
-	void logScore(double minutiae, double ratio, double supported, double edge, double type, double distance, double angle, double total, double shaped) {
-		if (logging()) {
-			log("score", ".json", json(() -> {
-				JsonScore score = new JsonScore();
-				score.matchedMinutiaeScore = minutiae;
-				score.matchedFractionOfAllMinutiaeScore = ratio;
-				score.minutiaeWithSeveralEdgesScore = supported;
-				score.matchedEdgesScore = edge;
-				score.correctMinutiaTypeScore = type;
-				score.accurateEdgeLengthScore = distance;
-				score.accurateMinutiaAngleScore = angle;
-				score.totalScore = total;
-				score.shapedScore = shaped;
-				return score;
-			}));
-		}
+	void logScore(Score score) {
+		if (logging())
+			log("score", ".json", json(() -> score));
 	}
 	void logBestMatch(int nth) {
 		if (logging())
