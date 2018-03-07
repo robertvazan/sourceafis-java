@@ -9,8 +9,8 @@ import gnu.trove.map.hash.*;
  * {@code FingerprintMatcher} maintains data structures that improve matching speed at the cost of some RAM.
  * It can efficiently match one probe fingerprint to many candidate fingerprints.
  * <p>
- * After instantiating an empty matcher with {@link #FingerprintMatcher()},
- * application should pass probe fingerprint template to {@link #index(FingerprintTemplate)}.
+ * New matcher is created by passing probe fingerprint template to {@link #index(FingerprintTemplate)}
+ * on an empty fingerprint matcher instantiated  with {@link #FingerprintMatcher()} constructor.
  * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)}.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
@@ -22,18 +22,20 @@ public class FingerprintMatcher {
 	/**
 	 * Instantiate an empty fingerprint matcher.
 	 * Empty matcher does not match any {@link FingerprintTemplate} passed to {@link #match(FingerprintTemplate)}.
-	 * In order for the matcher to be useful, it must be first initialized
-	 * by passing {@link FingerprintTemplate} to {@link #index(FingerprintTemplate)}.
+	 * You can call {@link #index(FingerprintTemplate)} to index probe fingerprint
+	 * and {@link #match(FingerprintTemplate)} to match it to some candidate fingerprint.
+	 * 
+	 * @see #index(FingerprintTemplate)
 	 */
 	public FingerprintMatcher() {
 	}
 	/**
-	 * Set algorithm transparency logger.
-	 * If this is set before call to {@link #index(FingerprintTemplate)}, search data structures will be logged.
-	 * If this is set before call to {@link #match(FingerprintTemplate)}, matching process will be logged.
+	 * Enable algorithm transparency.
+	 * Subsequent operations on this matcher will report intermediate data structures created by the algorithm
+	 * to the provided {@link FingerprintTransparency} instance.
 	 * 
 	 * @param transparency
-	 *            new algorithm transparency logger or {@code null} to disable logging
+	 *            target {@link FingerprintTransparency} or {@code null} to disable algorithm transparency
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see FingerprintTransparency
@@ -43,13 +45,14 @@ public class FingerprintMatcher {
 		return this;
 	}
 	/**
-	 * Create {@code FingerprintMatcher} from probe fingerprint template.
-	 * This method is usually called only once for every {@code FingerprintMatcher}.
-	 * {@code FingerprintMatcher} is heavy in terms of RAM footprint and CPU consumed to create it.
-	 * It should be reused for multiple {@link #match(FingerprintTemplate)} calls in 1:N matching.
+	 * Build search data structures over probe fingerprint template.
+	 * Once this method is called, it is possible to call {@link #match(FingerprintTemplate)} to compare fingerprints.
+	 * <p>
+	 * This method is heavy in terms of RAM footprint and CPU usage.
+	 * Initialized {@code FingerprintMatcher} should be reused for multiple {@link #match(FingerprintTemplate)} calls in 1:N matching.
 	 * 
 	 * @param probe
-	 *            fingerprint template to be matched to candidate fingerprints
+	 *            probe fingerprint template to be matched to candidate fingerprints
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see #match(FingerprintTemplate)
@@ -93,8 +96,8 @@ public class FingerprintMatcher {
 		return coverage;
 	}
 	/**
-	 * Match candidate fingerprint template to this probe fingerprint and calculate similarity score.
-	 * Candidate fingerprint is matched to probe fingerprint previously passed to {@link #index(FingerprintTemplate)}.
+	 * Match candidate fingerprint to probe fingerprint and calculate similarity score.
+	 * Candidate fingerprint in {@code candidate} parameter is matched to probe fingerprint previously passed to {@link #index(FingerprintTemplate)}.
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
 	 * Application should compare the score to a threshold with expression {@code (score >= threshold)} to arrive at boolean match/non-match decision.
@@ -110,6 +113,8 @@ public class FingerprintMatcher {
 	 * @param candidate
 	 *            fingerprint template to be matched with probe fingerprint indexed by this {@code FingerprintMatcher}
 	 * @return similarity score between probe and candidate fingerprints
+	 * 
+	 * @see #index(FingerprintTemplate)
 	 */
 	public double match(FingerprintTemplate candidate) {
 		MatchBuffer buffer = MatchBuffer.current();

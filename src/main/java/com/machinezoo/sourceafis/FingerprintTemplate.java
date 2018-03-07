@@ -7,15 +7,17 @@ import com.google.gson.*;
 
 /**
  * Biometric description of a fingerprint suitable for efficient matching.
- * Fingerprint template holds high-level fingerprint features, specifically ridge endings and bifurcations (minutiae).
+ * Fingerprint template holds high-level fingerprint features, specifically ridge endings and bifurcations (together called minutiae).
  * Original image is not preserved in the fingerprint template and there is no way to reconstruct the original fingerprint from its template.
  * <p>
- * In order to create fingerprint template, first instantiate it with {@link #FingerprintTemplate()}
- * and then initialized it by calling {@link #create(byte[])}, {@link #deserialize(String)}, or {@link #convert(byte[])}.
- * Most commonly used method {@link #create(byte[])} creates fingerprint template from fingerprint image.
+ * Fingerprint image can be converted to template by calling {@link #create(byte[])} method
+ * on an empty fingerprint template instantiated with {@link #FingerprintTemplate()} constructor.
+ * Image DPI may be specified first by calling {@link #dpi(double)}.
  * <p>
  * Since image processing is expensive, applications should cache serialized templates.
- * Serialization is performed by {@link #serialize()} and deserialization by {@link #deserialize(String)}.
+ * Serialization into JSON format is performed by {@link #serialize()} method.
+ * JSON template can be deserialized by calling {@link #deserialize(String)}.
+ * on an empty fingerprint template instantiated with {@link #FingerprintTemplate()} constructor.
  * <p>
  * Matching is performed by constructing {@link FingerprintMatcher},
  * passing probe fingerprint to its {@link FingerprintMatcher#index(FingerprintTemplate)} method,
@@ -34,21 +36,20 @@ public class FingerprintTemplate {
 	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
 	/**
 	 * Instantiate an empty fingerprint template.
-	 * Empty template represents fingerprint with no features that does not match any other fingerprint.
-	 * In order for the template to be useful, it must be first initialized by calling
-	 * {@link #create(byte[])}, {@link #deserialize(String)}, or {@link #convert(byte[])}.
-	 * Only one initializing method is usually called for every {@code FingerprintTemplate}.
+	 * Empty template represents fingerprint with no features that does not match any other fingerprint (not even itself).
+	 * You can then call one of the methods
+	 * {@link #create(byte[])}, {@link #deserialize(String)}, or {@link #convert(byte[])}
+	 * to actually fill the template with useful biometric data.
 	 */
 	public FingerprintTemplate() {
 	}
 	/**
-	 * Set algorithm transparency logger.
-	 * Transparency logger can be set before calling {@link #create(byte[])},
-	 * {@link #deserialize(String)}, or {@link #convert(byte[])}
-	 * to log intermediate data structures constructed during template initialization.
+	 * Enable algorithm transparency.
+	 * Subsequent operations on this template will report intermediate data structures created by the algorithm
+	 * to the provided {@link FingerprintTransparency} instance.
 	 * 
 	 * @param transparency
-	 *            new algorithm transparency logger or {@code null} to disable logging
+	 *            target {@link FingerprintTransparency} or {@code null} to disable algorithm transparency
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see FingerprintTransparency
@@ -74,9 +75,10 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Create fingerprint template from fingerprint image.
-	 * This method initializes the {@code FingerprintTemplate} and makes it ready for use.
 	 * Image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
 	 * All image formats supported by Java's {@link ImageIO} are accepted, for example JPEG, PNG, or BMP,
+	 * <p>
+	 * This method replaces any previously added biometric data in this template.
 	 * 
 	 * @param image
 	 *            fingerprint image in {@link ImageIO}-supported format
@@ -93,10 +95,12 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Deserialize fingerprint template from JSON string.
-	 * This method initializes the {@code FingerprintTemplate} and makes it ready for use.
-	 * It reads JSON string produced by {@link #serialize()} to reconstruct exact copy of the original fingerprint template.
+	 * This method reads JSON string produced by {@link #serialize()} to reconstruct an exact copy of the original fingerprint template.
+	 * <p>
 	 * Templates produced by previous versions of SourceAFIS may fail to deserialize correctly.
 	 * Applications should re-extract all templates from original raw images when upgrading SourceAFIS.
+	 * <p>
+	 * This method replaces any previously added biometric data in this template.
 	 * 
 	 * @param json
 	 *            serialized fingerprint template in JSON format produced by {@link #serialize()}
@@ -113,7 +117,7 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Serialize fingerprint template to JSON string.
-	 * Serialized template can be stored in database or sent over network.
+	 * Serialized template can be stored in a database or sent over network.
 	 * It can be deserialized by calling {@link #deserialize(String)}.
 	 * Persisting templates alongside fingerprint images allows applications to start faster,
 	 * because template deserialization is more than 100x faster than re-extraction from fingerprint image.
@@ -134,9 +138,10 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Import ISO 19794-2 fingerprint template from another fingerprint recognition system.
-	 * This method initializes the {@code FingerprintTemplate} and makes it ready for use.
-	 * It can import biometric data from ISO 19794-2 templates,
+	 * This method can import biometric data from ISO 19794-2 templates,
 	 * which carry fingerprint features (endings and bifurcations) without the original image.
+	 * <p>
+	 * This method replaces any previously added biometric data in this template.
 	 * <p>
 	 * This method is written for ISO 19794-2:2005, but it should be able to handle ISO 19794-2:2011 templates.
 	 * If you believe you have a conforming template, but this method doesn't accept it, mail the template in for analysis.
