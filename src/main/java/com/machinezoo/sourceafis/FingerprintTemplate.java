@@ -50,6 +50,8 @@ public class FingerprintTemplate {
 	 * @param transparency
 	 *            new algorithm transparency logger or {@code null} to disable logging
 	 * @return {@code this} (fluent method)
+	 * 
+	 * @see FingerprintTransparency
 	 */
 	public FingerprintTemplate transparency(FingerprintTransparency transparency) {
 		this.transparency = Optional.ofNullable(transparency).orElse(FingerprintTransparency.none);

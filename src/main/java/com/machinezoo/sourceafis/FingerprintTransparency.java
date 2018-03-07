@@ -9,17 +9,85 @@ import java.util.function.*;
 import com.google.gson.*;
 import gnu.trove.map.hash.*;
 
+/**
+ * Algorithm transparency logger for capturing data structures from the algorithm.
+ * If an implementation of this abstract class is passed to {@link FingerprintTemplate#transparency(FingerprintTransparency)}
+ * or {@link FingerprintMatcher#transparency(FingerprintTransparency)},
+ * method {@link #log(String, Map)} in the derived class will be called from various parts of the algorithm
+ * with interesting data in method's parameters.
+ * Convenience method {@link #zip(OutputStream)} will write all data to a ZIP file.
+ * <p>
+ * See <a href="https://sourceafis.machinezoo.com/transparency/">algorithm transparency</a>
+ * on SourceAFIS website for documentation of the many data structures logged by SourceAFIS
+ * as well as a short tutorial on how to use transparency API.
+ * <p>
+ * This class implements {@link AutoCloseable} and it should be used as a resource
+ * in try-with-resources construct if the derived class needs to cleanup system resources.
+ *
+ * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
+ * @see FingerprintTemplate#transparency(FingerprintTransparency)
+ * @see FingerprintMatcher#transparency(FingerprintTransparency)
+ */
 public abstract class FingerprintTransparency implements AutoCloseable {
 	private List<JsonEdge> supportingEdges = new ArrayList<>();
 	static final FingerprintTransparency none = new FingerprintTransparency() {
 		@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
 		}
 	};
-	protected abstract void log(String name, Map<String, Supplier<ByteBuffer>> data);
-	protected FingerprintTransparency() {
-	}
+	/**
+	 * Record transparency data.
+	 * If transparency logging is enabled by passing an instance of {@code FingerprintTransparency}
+	 * to {@link FingerprintTemplate#transparency(FingerprintTransparency)} or {@link FingerprintMatcher#transparency(FingerprintTransparency)},
+	 * this method is called in derived class with transparency data in its parameters.
+	 * <p>
+	 * Parameter {@code keyword} specifies the kind of transparency data being logged,
+	 * usually corresponding to some stage in the algorithm.
+	 * For convenience, several related pieces of data are logged together.
+	 * All pieces are available via map in parameter {@code data},
+	 * keyed by file suffix identifying the kind of data,
+	 * usually {@code .json} or {@code .dat} for JSON and binary data respectively.
+	 * See <a href="https://sourceafis.machinezoo.com/transparency/">algorithm transparency</a>
+	 * on SourceAFIS website for documentation of the structure of the transparency data.
+	 * <p>
+	 * Transparency data is offered indirectly via {@link Supplier}.
+	 * If this {@code Supplier} is not evaluated, the data is never serialized.
+	 * This allows applications to efficiently collect only transparency data that is actually needed.
+	 * 
+	 * @param keyword
+	 *            identifier of the transparency data being logged
+	 * @param data
+	 *            suffixes (like {@code .json} or {@code .dat}) mapped to {@link Supplier} of the actual data
+	 * 
+	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
+	 * @see #zip(OutputStream)
+	 */
+	protected abstract void log(String keyword, Map<String, Supplier<ByteBuffer>> data);
+	/**
+	 * Close the algorithm transparency logger.
+	 * Derived class can override this method to perform cleanup.
+	 * If it does so, users of that class should use it in try-with-resources construct to ensure the cleanup code runs.
+	 * Default implementation in this class is empty.
+	 * {@code FingerprintTransparency} object returned from {@link #zip(OutputStream)} must be closed.
+	 */
 	@Override public void close() {
 	}
+	/**
+	 * Write all transparency data to a ZIP file.
+	 * This is a convenience method to enable easy exploration of the available data.
+	 * Programmatic processing of transparency data should be done by deriving from this class
+	 * and implementing abstract {@link #log(String, Map)} method.
+	 * <p>
+	 * The returned {@code FingerprintTransparency} object should be used
+	 * in try-with-resources construct to ensure that {@link #close()} method is called.
+	 * Failing to close the returned object may result in damaged ZIP file.
+	 * 
+	 * @param stream
+	 *            output stream where ZIP file will be written
+	 * @return algorithm transparency logger that writes data to a ZIP file
+	 * 
+	 * @see #close()
+	 * @see #log(String, Map)
+	 */
 	public static FingerprintTransparency zip(OutputStream stream) {
 		return new TransparencyZip(stream);
 	}

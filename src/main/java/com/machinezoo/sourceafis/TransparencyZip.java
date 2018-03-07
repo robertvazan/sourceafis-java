@@ -16,7 +16,7 @@ class TransparencyZip extends FingerprintTransparency {
 	TransparencyZip(OutputStream stream) {
 		zip = new ZipOutputStream(stream);
 	}
-	@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
+	@Override protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
 		Exceptions.sneak().run(() -> {
 			List<String> suffixes = data.keySet().stream()
 				.sorted(Comparator.comparing(ext -> {
@@ -29,7 +29,7 @@ class TransparencyZip extends FingerprintTransparency {
 				.collect(toList());
 			for (String suffix : suffixes) {
 				++offset;
-				zip.putNextEntry(new ZipEntry(String.format("%03d", offset) + "-" + name + suffix));
+				zip.putNextEntry(new ZipEntry(String.format("%03d", offset) + "-" + keyword + suffix));
 				ByteBuffer buffer = data.get(suffix).get();
 				WritableByteChannel output = Channels.newChannel(zip);
 				while (buffer.hasRemaining())
@@ -39,7 +39,6 @@ class TransparencyZip extends FingerprintTransparency {
 		});
 	}
 	@Override public void close() {
-		super.close();
 		Exceptions.sneak().run(zip::close);
 	}
 }
