@@ -360,16 +360,27 @@ class TemplateBuilder {
 		Cell offset;
 		Point orientation;
 	}
+	private static class OrientationRandom {
+		static final int prime = 1610612741;
+		static final int bits = 30;
+		static final int mask = (1 << bits) - 1;
+		static final double scaling = 1.0 / (1 << bits);
+		long state = prime * prime * prime;
+		double next() {
+			state *= prime;
+			return ((state & mask) + 0.5) * scaling;
+		}
+	}
 	private ConsideredOrientation[][] planOrientations() {
-		Random random = new Random(0);
+		OrientationRandom random = new OrientationRandom();
 		ConsideredOrientation[][] splits = new ConsideredOrientation[Parameters.orientationSplit][];
 		for (int i = 0; i < Parameters.orientationSplit; ++i) {
 			ConsideredOrientation[] orientations = splits[i] = new ConsideredOrientation[Parameters.orientationsChecked];
 			for (int j = 0; j < Parameters.orientationsChecked; ++j) {
 				ConsideredOrientation sample = orientations[j] = new ConsideredOrientation();
 				do {
-					double angle = random.nextDouble() * Math.PI;
-					double distance = Doubles.interpolateExponential(Parameters.minOrientationRadius, Parameters.maxOrientationRadius, random.nextDouble());
+					double angle = random.next() * Math.PI;
+					double distance = Doubles.interpolateExponential(Parameters.minOrientationRadius, Parameters.maxOrientationRadius, random.next());
 					sample.offset = Angle.toVector(angle).multiply(distance).round();
 				} while (sample.offset.equals(Cell.zero) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
 				sample.orientation = Angle.toVector(Angle.add(Angle.toOrientation(Angle.atan(sample.offset.toPoint())), Math.PI));
