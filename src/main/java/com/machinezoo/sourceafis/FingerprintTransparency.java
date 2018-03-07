@@ -23,7 +23,7 @@ import gnu.trove.map.hash.*;
  * for transparency data to be actually collected.
  * <p>
  * This class implements {@link AutoCloseable} and callers must ensure that {@link #close()} is called,
- * perhaps by using try-with-resources construct, unless the particular subclass is known not to need any cleanup.
+ * perhaps by using try-with-resources construct, unless the particular subclass is known to not need any cleanup.
  *
  * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
  * @see FingerprintTemplate#transparency(FingerprintTransparency)
@@ -35,6 +35,13 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
 		}
 	};
+	/**
+	 * Creates an instance of {@code FingerprintTransparency}.
+	 * {@code FingerprintTransparency} is an abstract class.
+	 * This empty constructor is only called by subclasses.
+	 */
+	protected FingerprintTransparency() {
+	}
 	/**
 	 * Record transparency data. This is an abstract method that subclasses must override.
 	 * If algorithm transparency is enabled by passing an instance of {@code FingerprintTransparency}
