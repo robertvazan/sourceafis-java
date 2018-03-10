@@ -6,16 +6,20 @@ It can do 1:1 comparisons as well as efficient 1:N search. This is the Java impl
 ```java
 byte[] probeImage = Files.readAllBytes(Paths.get("probe.jpeg"));
 byte[] candidateImage = Files.readAllBytes(Paths.get("candidate.jpeg"));
-FingerprintTemplate probe = new FingerprintTemplate(probeImage);
-FingerprintTemplate candidate = new FingerprintTemplate(candidateImage);
-FingerprintMatcher matcher = new FingerprintMatcher(probe);
-double score = matcher.match(candidate);
-boolean match = score >= 40;
+FingerprintTemplate probe = new FingerprintTemplate()
+	.dpi(500)
+	.create(probeImage);
+FingerprintTemplate candidate = new FingerprintTemplate()
+	.dpi(500)
+	.create(candidateImage);
+double score = new FingerprintMatcher()
+	.index(probe)
+	.match(candidate);
+boolean matches = score >= 40;
 ```
 
-* [Homepage](https://sourceafis.machinezoo.com/) - Overview, tutorial, contact.
-* [Download](https://sourceafis.machinezoo.com/download) - Maven package, JAR file, sample fingerprints.
-* [Javadoc](https://sourceafis.machinezoo.com/javadoc/com/machinezoo/sourceafis/package-summary.html) - API reference documentation.
-* [Sources](https://bitbucket.org/robertvazan/sourceafis-java/src) - Primary repository, preferred for pull requests.
-* [License](https://www.apache.org/licenses/LICENSE-2.0) - Distributed under Apache License 2.0.
-
+* [SourceAFIS overview](https://sourceafis.machinezoo.com/)
+* [SourceAFIS for Java (download, tutorial)](https://sourceafis.machinezoo.com/java)
+* [API documentation (javadoc)](https://sourceafis.machinezoo.com/javadoc/com/machinezoo/sourceafis/package-summary.html)
+* [Source code (main repository)](https://bitbucket.org/robertvazan/sourceafis-java/src)
+* [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
