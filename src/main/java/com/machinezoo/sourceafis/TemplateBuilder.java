@@ -332,8 +332,8 @@ class TemplateBuilder {
 		}
 		DoubleMap result = new DoubleMap(blocks.pixels);
 		for (Cell block : blocks.primary.blocks) {
+			Block area = blocks.primary.block(block);
 			if (blockMask.get(block)) {
-				Block area = blocks.primary.block(block);
 				double[] topleft = mappings.get(block);
 				double[] topright = mappings.get(new Cell(block.x + 1, block.y));
 				double[] bottomleft = mappings.get(new Cell(block.x, block.y + 1));
@@ -345,6 +345,10 @@ class TemplateBuilder {
 						double ry = (y - area.y + 0.5) / area.height;
 						result.set(x, y, Doubles.interpolate(bottomleft[depth], bottomright[depth], topleft[depth], topright[depth], rx, ry));
 					}
+			} else {
+				for (int y = area.top(); y < area.bottom(); ++y)
+					for (int x = area.left(); x < area.right(); ++x)
+						result.set(x, y, -1);
 			}
 		}
 		transparency.logEqualizedImage(result);
