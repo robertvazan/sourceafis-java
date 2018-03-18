@@ -107,6 +107,7 @@ public class FingerprintTemplate {
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see #serialize()
+	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 */
 	public FingerprintTemplate deserialize(String json) {
 		TemplateBuilder builder = new TemplateBuilder();
@@ -127,10 +128,13 @@ public class FingerprintTemplate {
 	 * <p>
 	 * Serialization format can change with every SourceAFIS version. There is no backward compatibility of templates.
 	 * Applications should preserve raw fingerprint images, so that templates can be re-extracted after SourceAFIS upgrade.
+	 * Template format for current version of SourceAFIS is
+	 * <a href="https://sourceafis.machinezoo.com/template">documented on SourceAFIS website</a>.
 	 * 
 	 * @return serialized fingerprint template in JSON format
 	 * 
 	 * @see #deserialize(String)
+	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 */
 	public String serialize() {
 		ImmutableTemplate current = immutable;
