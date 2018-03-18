@@ -3,6 +3,7 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 import gnu.trove.map.hash.*;
+import gnu.trove.set.hash.*;
 
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
@@ -18,6 +19,7 @@ class MatchBuffer {
 	private MinutiaPair[] byProbe;
 	private MinutiaPair[] byCandidate;
 	private MinutiaPair[] roots;
+	private final TIntHashSet duplicates = new TIntHashSet();
 	private Score score = new Score();
 	static MatchBuffer current() {
 		return local.get();
@@ -61,6 +63,8 @@ class MatchBuffer {
 			roots = new MinutiaPair[Parameters.maxTriedRoots];
 		int totalLookups = 0;
 		int totalRoots = 0;
+		int triedRoots = 0;
+		duplicates.clear();
 		for (boolean shortEdges : new boolean[] { false, true }) {
 			for (int period = 1; period < candidate.minutiae.length; ++period) {
 				for (int phase = 0; phase <= period; ++phase) {
@@ -72,12 +76,17 @@ class MatchBuffer {
 							if (matches != null) {
 								for (IndexedEdge match : matches) {
 									if (matchingShapes(match, candidateEdge)) {
-										MinutiaPair pair = allocate();
-										pair.probe = match.reference;
-										pair.candidate = candidateReference;
-										roots[totalRoots] = pair;
-										++totalRoots;
-										if (totalRoots >= Parameters.maxTriedRoots)
+										int duplicateKey = (match.reference << 16) | candidateReference;
+										if (!duplicates.contains(duplicateKey)) {
+											duplicates.add(duplicateKey);
+											MinutiaPair pair = allocate();
+											pair.probe = match.reference;
+											pair.candidate = candidateReference;
+											roots[totalRoots] = pair;
+											++totalRoots;
+										}
+										++triedRoots;
+										if (triedRoots >= Parameters.maxTriedRoots)
 											return totalRoots;
 									}
 								}
