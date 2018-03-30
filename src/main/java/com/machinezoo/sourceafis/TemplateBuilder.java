@@ -35,8 +35,8 @@ class TemplateBuilder {
 		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
 		transparency.logOrthogonalSmoothing(orthogonal);
 		BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
-		cleanupBinarized(binary);
 		BooleanMap pixelMask = fillBlocks(mask, blocks);
+		cleanupBinarized(binary, pixelMask);
 		transparency.logPixelMask(pixelMask);
 		BooleanMap inverted = invert(binary, pixelMask);
 		BooleanMap innerMask = innerMask(pixelMask);
@@ -214,12 +214,12 @@ class TemplateBuilder {
 		BooleanMap mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		transparency.logCombinedMask(mask);
-		mask.merge(vote(mask, Parameters.contrastVoteRadius, Parameters.contrastVoteMajority, Parameters.contrastVoteBorderDistance));
+		mask.merge(vote(mask, null, Parameters.contrastVoteRadius, Parameters.contrastVoteMajority, Parameters.contrastVoteBorderDistance));
 		mask.merge(filterBlockErrors(mask));
 		mask.invert();
 		mask.merge(filterBlockErrors(mask));
 		mask.merge(filterBlockErrors(mask));
-		mask.merge(vote(mask, Parameters.maskVoteRadius, Parameters.maskVoteMajority, Parameters.maskVoteBorderDistance));
+		mask.merge(vote(mask, null, Parameters.maskVoteRadius, Parameters.maskVoteMajority, Parameters.maskVoteBorderDistance));
 		transparency.logFilteredMask(mask);
 		return mask;
 	}
@@ -276,25 +276,54 @@ class TemplateBuilder {
 		transparency.logRelativeContrastMask(result);
 		return result;
 	}
-	private BooleanMap vote(BooleanMap input, int radius, double majority, int borderDistance) {
+	private BooleanMap vote(BooleanMap input, BooleanMap mask, int radius, double majority, int borderDistance) {
 		Cell size = input.size();
 		Block rect = new Block(borderDistance, borderDistance, size.x - 2 * borderDistance, size.y - 2 * borderDistance);
+		int[] thresholds = IntStream.range(0, Integers.sq(2 * radius + 1) + 1).map(i -> (int)Math.ceil(majority * i)).toArray();
+		IntMap counts = new IntMap(size);
 		BooleanMap output = new BooleanMap(size);
-		for (Cell center : rect) {
-			Block neighborhood = Block.around(center, radius).intersect(new Block(size));
-			int ones = 0;
-			for (int ny = neighborhood.top(); ny < neighborhood.bottom(); ++ny)
-				for (int nx = neighborhood.left(); nx < neighborhood.right(); ++nx)
-					if (input.get(nx, ny))
-						++ones;
-			double voteWeight = 1.0 / neighborhood.area();
-			if (ones * voteWeight >= majority)
-				output.set(center, true);
+		for (int y = rect.top(); y < rect.bottom(); ++y) {
+			int superTop = y - radius - 1;
+			int superBottom = y + radius;
+			int yMin = Math.max(0, y - radius);
+			int yMax = Math.min(size.y - 1, y + radius);
+			int yRange = yMax - yMin + 1;
+			for (int x = rect.left(); x < rect.right(); ++x)
+				if (mask == null || mask.get(x, y)) {
+					int left = x > 0 ? counts.get(x - 1, y) : 0;
+					int top = y > 0 ? counts.get(x, y - 1) : 0;
+					int diagonal = x > 0 && y > 0 ? counts.get(x - 1, y - 1) : 0;
+					int xMin = Math.max(0, x - radius);
+					int xMax = Math.min(size.x - 1, x + radius);
+					int ones;
+					if (left > 0 && top > 0 && diagonal > 0) {
+						ones = top + left - diagonal - 1;
+						int superLeft = x - radius - 1;
+						int superRight = x + radius;
+						if (superLeft >= 0 && superTop >= 0 && input.get(superLeft, superTop))
+							++ones;
+						if (superLeft >= 0 && superBottom < size.y && input.get(superLeft, superBottom))
+							--ones;
+						if (superRight < size.x && superTop >= 0 && input.get(superRight, superTop))
+							--ones;
+						if (superRight < size.x && superBottom < size.y && input.get(superRight, superBottom))
+							++ones;
+					} else {
+						ones = 0;
+						for (int ny = yMin; ny <= yMax; ++ny)
+							for (int nx = xMin; nx <= xMax; ++nx)
+								if (input.get(nx, ny))
+									++ones;
+					}
+					counts.set(x, y, ones + 1);
+					if (ones >= thresholds[yRange * (xMax - xMin + 1)])
+						output.set(x, y, true);
+				}
 		}
 		return output;
 	}
 	private BooleanMap filterBlockErrors(BooleanMap input) {
-		return vote(input, Parameters.blockErrorsVoteRadius, Parameters.blockErrorsVoteMajority, Parameters.blockErrorsVoteBorderDistance);
+		return vote(input, null, Parameters.blockErrorsVoteRadius, Parameters.blockErrorsVoteMajority, Parameters.blockErrorsVoteBorderDistance);
 	}
 	private DoubleMap equalize(BlockMap blocks, DoubleMap image, Histogram histogram, BooleanMap blockMask) {
 		final double rangeMin = -1;
@@ -523,12 +552,12 @@ class TemplateBuilder {
 		transparency.logBinarizedImage(binarized);
 		return binarized;
 	}
-	private void cleanupBinarized(BooleanMap binary) {
+	private void cleanupBinarized(BooleanMap binary, BooleanMap mask) {
 		Cell size = binary.size();
 		BooleanMap inverted = new BooleanMap(binary);
 		inverted.invert();
-		BooleanMap islands = vote(inverted, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
-		BooleanMap holes = vote(binary, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
+		BooleanMap islands = vote(inverted, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
+		BooleanMap holes = vote(binary, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
 		for (int y = 0; y < size.y; ++y)
 			for (int x = 0; x < size.x; ++x)
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
