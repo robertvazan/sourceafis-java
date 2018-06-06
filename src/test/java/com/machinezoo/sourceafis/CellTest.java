@@ -46,7 +46,7 @@ public class CellTest {
 	@Test public void toPoint() {
 		PointTest.assertPointEquals(new Point(2, 3), new Cell(2, 3).toPoint(), 0.001);
 	}
-	@Test public void equals() {
+	@SuppressWarnings("unlikely-arg-type") @Test public void equals() {
 		assertTrue(new Cell(2, 3).equals(new Cell(2, 3)));
 		assertFalse(new Cell(2, 3).equals(new Cell(0, 3)));
 		assertFalse(new Cell(2, 3).equals(new Cell(2, 0)));

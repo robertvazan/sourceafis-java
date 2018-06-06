@@ -47,7 +47,7 @@ public class CircularListTest {
 		assertTrue(l.containsAll(Arrays.asList(2, 3)));
 		assertFalse(l.containsAll(Arrays.asList(1, 10)));
 	}
-	@Test public void equals() {
+	@SuppressWarnings("unlikely-arg-type") @Test public void equals() {
 		assertTrue(l.equals(Arrays.asList(1, 2, 3, 4, 5)));
 		assertFalse(l.equals(5));
 		assertFalse(l.equals(Arrays.asList(1, 2, 10, 4, 5)));

@@ -51,7 +51,7 @@ public class ReversedListTest {
 		assertTrue(r.containsAll(Arrays.asList(2, 4)));
 		assertFalse(r.containsAll(Arrays.asList(2, 10)));
 	}
-	@Test public void equals() {
+	@SuppressWarnings("unlikely-arg-type") @Test public void equals() {
 		assertTrue(r.equals(Arrays.asList(5, 4, 3, 2, 1)));
 		assertFalse(r.equals(Arrays.asList(1, 2, 3, 4, 5)));
 		assertFalse(r.equals(Arrays.asList(5, 4, 3, 2)));
