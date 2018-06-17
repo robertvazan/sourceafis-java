@@ -12,6 +12,7 @@ class Skeleton {
 	Skeleton(BooleanMap binary, SkeletonType type, FingerprintTransparency logger) {
 		this.type = type;
 		this.logger = logger;
+		// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
 		logger.logBinarizedSkeleton(type, binary);
 		size = binary.size();
 		BooleanMap thinned = thin(binary);
@@ -20,6 +21,7 @@ class Skeleton {
 		Map<Cell, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
 		traceRidges(thinned, minutiaMap);
 		fixLinkingGaps();
+		// https://sourceafis.machinezoo.com/transparency/traced-skeleton
 		logger.logTracedSkeleton(this);
 		filter();
 	}
@@ -60,6 +62,7 @@ class Skeleton {
 									thinned.set(x, y, true);
 							}
 		}
+		// https://sourceafis.machinezoo.com/transparency/thinned-skeleton
 		logger.logThinnedSkeleton(type, thinned);
 		return thinned;
 	}
@@ -201,6 +204,7 @@ class Skeleton {
 	}
 	private void filter() {
 		removeDots();
+		// https://sourceafis.machinezoo.com/transparency/removed-dots
 		logger.logRemovedDots(this);
 		removePores();
 		removeGaps();
@@ -239,6 +243,7 @@ class Skeleton {
 			}
 		}
 		removeKnots();
+		// https://sourceafis.machinezoo.com/transparency/removed-pores
 		logger.logRemovedPores(this);
 	}
 	private static class Gap implements Comparable<Gap> {
@@ -272,6 +277,7 @@ class Skeleton {
 			}
 		}
 		removeKnots();
+		// https://sourceafis.machinezoo.com/transparency/removed-gaps
 		logger.logRemovedGaps(this);
 	}
 	private boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
@@ -319,6 +325,7 @@ class Skeleton {
 		}
 		removeDots();
 		removeKnots();
+		// https://sourceafis.machinezoo.com/transparency/removed-tails
 		logger.logRemovedTails(this);
 	}
 	private void removeFragments() {
@@ -329,6 +336,7 @@ class Skeleton {
 					ridge.detach();
 			}
 		removeDots();
+		// https://sourceafis.machinezoo.com/transparency/removed-fragments
 		logger.logRemovedFragments(this);
 	}
 	private void removeKnots() {

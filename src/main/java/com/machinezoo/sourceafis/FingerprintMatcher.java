@@ -75,6 +75,7 @@ public class FingerprintMatcher {
 						list.add(edge);
 					}
 				}
+		// https://sourceafis.machinezoo.com/transparency/edge-hash
 		transparency.logEdgeHash(map);
 		return map;
 	}

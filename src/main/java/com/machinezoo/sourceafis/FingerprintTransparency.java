@@ -100,139 +100,182 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	boolean logging() {
 		return this != none;
 	}
+	// https://sourceafis.machinezoo.com/transparency/decoded-image
 	void logDecodedImage(DoubleMap image) {
 		logDoubleMap("decoded-image", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/scaled-image
 	void logScaledImage(DoubleMap image) {
 		logDoubleMap("scaled-image", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/block-map
 	void logBlockMap(BlockMap blocks) {
 		log("block-map", ".json", json(() -> blocks));
 	}
+	// https://sourceafis.machinezoo.com/transparency/histogram
 	void logHistogram(Histogram histogram) {
 		logHistogram("histogram", histogram);
 	}
+	// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
 	void logSmoothedHistogram(Histogram histogram) {
 		logHistogram("smoothed-histogram", histogram);
 	}
+	// https://sourceafis.machinezoo.com/transparency/clipped-contrast
 	void logClippedContrast(DoubleMap contrast) {
 		logDoubleMap("clipped-contrast", contrast);
 	}
+	// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
 	void logAbsoluteContrastMask(BooleanMap mask) {
 		logBooleanMap("absolute-contrast-mask", mask);
 	}
+	// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
 	void logRelativeContrastMask(BooleanMap mask) {
 		logBooleanMap("relative-contrast-mask", mask);
 	}
+	// https://sourceafis.machinezoo.com/transparency/combined-mask
 	void logCombinedMask(BooleanMap mask) {
 		logBooleanMap("combined-mask", mask);
 	}
+	// https://sourceafis.machinezoo.com/transparency/filtered-mask
 	void logFilteredMask(BooleanMap mask) {
 		logBooleanMap("filtered-mask", mask);
 	}
+	// https://sourceafis.machinezoo.com/transparency/equalized-image
 	void logEqualizedImage(DoubleMap image) {
 		logDoubleMap("equalized-image", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
 	void logPixelwiseOrientation(PointMap orientations) {
 		logPointMap("pixelwise-orientation", orientations);
 	}
+	// https://sourceafis.machinezoo.com/transparency/block-orientation
 	void logBlockOrientation(PointMap orientations) {
 		logPointMap("block-orientation", orientations);
 	}
+	// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
 	void logSmoothedOrientation(PointMap orientations) {
 		logPointMap("smoothed-orientation", orientations);
 	}
+	// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
 	void logParallelSmoothing(DoubleMap smoothed) {
 		logDoubleMap("parallel-smoothing", smoothed);
 	}
+	// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
 	void logOrthogonalSmoothing(DoubleMap smoothed) {
 		logDoubleMap("orthogonal-smoothing", smoothed);
 	}
+	// https://sourceafis.machinezoo.com/transparency/binarized-image
 	void logBinarizedImage(BooleanMap image) {
 		logBooleanMap("binarized-image", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
 	void logFilteredBinarydImage(BooleanMap image) {
 		logBooleanMap("filtered-binary-image", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/pixel-mask
 	void logPixelMask(BooleanMap image) {
 		logBooleanMap("pixel-mask", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/inner-mask
 	void logInnerMask(BooleanMap image) {
 		logBooleanMap("inner-mask", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
 	void logBinarizedSkeleton(SkeletonType type, BooleanMap image) {
 		logBooleanMap(type.prefix + "binarized-skeleton", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/thinned-skeleton
 	void logThinnedSkeleton(SkeletonType type, BooleanMap image) {
 		logBooleanMap(type.prefix + "thinned-skeleton", image);
 	}
+	// https://sourceafis.machinezoo.com/transparency/traced-skeleton
 	void logTracedSkeleton(Skeleton skeleton) {
 		logSkeleton("traced-skeleton", skeleton);
 	}
+	// https://sourceafis.machinezoo.com/transparency/removed-dots
 	void logRemovedDots(Skeleton skeleton) {
 		logSkeleton("removed-dots", skeleton);
 	}
+	// https://sourceafis.machinezoo.com/transparency/removed-pores
 	void logRemovedPores(Skeleton skeleton) {
 		logSkeleton("removed-pores", skeleton);
 	}
+	// https://sourceafis.machinezoo.com/transparency/removed-gaps
 	void logRemovedGaps(Skeleton skeleton) {
 		logSkeleton("removed-gaps", skeleton);
 	}
+	// https://sourceafis.machinezoo.com/transparency/removed-tails
 	void logRemovedTails(Skeleton skeleton) {
 		logSkeleton("removed-tails", skeleton);
 	}
+	// https://sourceafis.machinezoo.com/transparency/removed-fragments
 	void logRemovedFragments(Skeleton skeleton) {
 		logSkeleton("removed-fragments", skeleton);
 	}
+	// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
 	void logSkeletonMinutiae(TemplateBuilder template) {
 		logMinutiae("skeleton-minutiae", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/inner-minutiae
 	void logInnerMinutiae(TemplateBuilder template) {
 		logMinutiae("inner-minutiae", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
 	void logRemovedMinutiaClouds(TemplateBuilder template) {
 		logMinutiae("removed-minutia-clouds", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/top-minutiae
 	void logTopMinutiae(TemplateBuilder template) {
 		logMinutiae("top-minutiae", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
 	void logShuffledMinutiae(TemplateBuilder template) {
 		logMinutiae("shuffled-minutiae", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/edge-table
 	void logEdgeTable(NeighborEdge[][] table) {
 		log("edge-table", ".json", json(() -> table));
 	}
+	// https://sourceafis.machinezoo.com/transparency/deserialized-minutiae
 	void logDeserializedMinutiae(TemplateBuilder template) {
 		logMinutiae("deserialized-minutiae", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/iso-metadata
 	void logIsoMetadata(int width, int height, int cmPixelsX, int cmPixelsY) {
 		if (logging())
 			log("iso-metadata", ".json", json(() -> new JsonIsoMetadata(width, height, cmPixelsX, cmPixelsY)));
 	}
+	// https://sourceafis.machinezoo.com/transparency/iso-minutiae
 	void logIsoMinutiae(TemplateBuilder template) {
 		logMinutiae("iso-minutiae", template);
 	}
+	// https://sourceafis.machinezoo.com/transparency/edge-hash
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		log("edge-hash", ".dat", () -> IndexedEdge.serialize(edgeHash));
 	}
+	// https://sourceafis.machinezoo.com/transparency/root-pairs
 	void logRootPairs(int count, MinutiaPair[] roots) {
 		if (logging())
 			log("root-pairs", ".json", json(() -> JsonPair.roots(count, roots)));
 	}
+	// Accumulated and then added to https://sourceafis.machinezoo.com/transparency/pairing
 	void logSupportingEdge(MinutiaPair pair) {
 		if (logging())
 			supportingEdges.add(new JsonEdge(pair));
 	}
+	// https://sourceafis.machinezoo.com/transparency/pairing
 	void logPairing(int count, MinutiaPair[] pairs) {
 		if (logging()) {
 			log("pairing", ".json", json(() -> new JsonPairing(count, pairs, supportingEdges)));
 			supportingEdges.clear();
 		}
 	}
+	// https://sourceafis.machinezoo.com/transparency/score
 	void logScore(Score score) {
 		if (logging())
 			log("score", ".json", json(() -> score));
 	}
+	// https://sourceafis.machinezoo.com/transparency/best-match
 	void logBestMatch(int nth) {
 		if (logging())
 			log("best-match", ".json", json(() -> new JsonBestMatch(nth)));

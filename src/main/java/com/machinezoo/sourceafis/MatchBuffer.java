@@ -40,6 +40,7 @@ class MatchBuffer {
 	double match() {
 		try {
 			int totalRoots = enumerateRoots();
+			// https://sourceafis.machinezoo.com/transparency/root-pairs
 			transparency.logRootPairs(totalRoots, roots);
 			double high = 0;
 			int best = -1;
@@ -51,6 +52,7 @@ class MatchBuffer {
 				}
 				clearPairing();
 			}
+			// https://sourceafis.machinezoo.com/transparency/best-match
 			transparency.logBestMatch(best);
 			return high;
 		} catch (Throwable e) {
@@ -127,8 +129,10 @@ class MatchBuffer {
 			collectEdges();
 			skipPaired();
 		} while (!queue.isEmpty());
+		// https://sourceafis.machinezoo.com/transparency/pairing
 		transparency.logPairing(count, tree);
 		score.compute(this);
+		// https://sourceafis.machinezoo.com/transparency/score
 		transparency.logScore(score);
 		return score.shapedScore;
 	}
@@ -204,6 +208,7 @@ class MatchBuffer {
 	private void addSupportingEdge(MinutiaPair pair) {
 		++byProbe[pair.probe].supportingEdges;
 		++byProbe[pair.probeRef].supportingEdges;
+		// https://sourceafis.machinezoo.com/transparency/pairing
 		transparency.logSupportingEdge(pair);
 	}
 	private MinutiaPair allocate() {
