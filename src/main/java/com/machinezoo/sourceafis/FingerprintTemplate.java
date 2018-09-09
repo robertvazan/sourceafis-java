@@ -77,6 +77,7 @@ public class FingerprintTemplate {
 	 * Create fingerprint template from fingerprint image.
 	 * Image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
 	 * All image formats supported by Java's {@link ImageIO} are accepted, for example JPEG, PNG, or BMP,
+	 * If WSQ image is supplied, it will decoded using <a href="https://github.com/kareez/jnbis">jnbis</a> library.
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
 	 * 

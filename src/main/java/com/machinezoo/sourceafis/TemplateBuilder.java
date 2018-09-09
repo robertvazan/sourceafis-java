@@ -7,6 +7,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 import javax.imageio.*;
+import org.jnbis.api.*;
 import com.google.gson.*;
 import com.machinezoo.noexception.*;
 
@@ -140,7 +141,9 @@ class TemplateBuilder {
 		buildEdgeTable();
 	}
 	DoubleMap readImage(byte[] serialized) {
-		BufferedImage buffered = Exceptions.sneak().get(() -> ImageIO.read(new ByteArrayInputStream(serialized)));
+		if (serialized.length >= 2 && serialized[0] == (byte)0xff && serialized[1] == (byte)0xa0)
+			serialized = Jnbis.wsq().decode(serialized).toPng().asByteArray();
+		BufferedImage buffered = Exceptions.sneak().function((byte[] s) -> ImageIO.read(new ByteArrayInputStream(s))).apply(serialized);
 		if (buffered == null)
 			throw new IllegalArgumentException("Unsupported image format");
 		int width = buffered.getWidth();
