@@ -148,8 +148,7 @@ public class FingerprintTemplate {
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
 	 * <p>
-	 * This method is written for ISO 19794-2:2005, but it should be able to handle ISO 19794-2:2011 templates.
-	 * If you believe you have a conforming template, but this method doesn't accept it, mail the template in for analysis.
+	 * This method is written for ISO 19794-2:2005, but it might be able to handle ISO 19794-2:2011 templates as well.
 	 * No other fingerprint template formats are currently supported.
 	 * <p>
 	 * Note that the use of ISO 19794-2 templates is strongly discouraged
