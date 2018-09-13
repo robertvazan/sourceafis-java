@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.stream.*;
 import javax.imageio.*;
 import org.jnbis.api.*;
+import org.jnbis.api.model.*;
 import com.google.gson.*;
 import com.machinezoo.noexception.*;
 
@@ -17,7 +18,9 @@ class TemplateBuilder {
 	Minutia[] minutiae;
 	NeighborEdge[][] edges;
 	void extract(byte[] image, double dpi) {
-		DoubleMap raw = readImage(image);
+		DoubleMap raw = decodeImage(image);
+		// https://sourceafis.machinezoo.com/transparency/decoded-image
+		transparency.logDecodedImage(raw);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
@@ -140,12 +143,19 @@ class TemplateBuilder {
 		shuffleMinutiae();
 		buildEdgeTable();
 	}
-	DoubleMap readImage(byte[] serialized) {
-		if (serialized.length >= 2 && serialized[0] == (byte)0xff && serialized[1] == (byte)0xa0)
-			serialized = Jnbis.wsq().decode(serialized).toPng().asByteArray();
+	DoubleMap decodeImage(byte[] serialized) {
+		DoubleMap imageio = decodeViaImageIO(serialized);
+		if (imageio != null)
+			return imageio;
+		DoubleMap wsq = decodeWsq(serialized);
+		if (wsq != null)
+			return wsq;
+		throw new IllegalArgumentException("Unsupported image format");
+	}
+	private DoubleMap decodeViaImageIO(byte[] serialized) {
 		BufferedImage buffered = Exceptions.sneak().function((byte[] s) -> ImageIO.read(new ByteArrayInputStream(s))).apply(serialized);
 		if (buffered == null)
-			throw new IllegalArgumentException("Unsupported image format");
+			return null;
 		int width = buffered.getWidth();
 		int height = buffered.getHeight();
 		int[] pixels = new int[width * height];
@@ -158,8 +168,21 @@ class TemplateBuilder {
 				map.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
 			}
 		}
-		// https://sourceafis.machinezoo.com/transparency/decoded-image
-		transparency.logDecodedImage(map);
+		return map;
+	}
+	private DoubleMap decodeWsq(byte[] serialized) {
+		if (serialized.length < 2)
+			return null;
+		if (serialized[0] != (byte)0xff || serialized[1] != (byte)0xa0)
+			return null;
+		Bitmap bitmap = Jnbis.wsq().decode(serialized).asBitmap();
+		int width = bitmap.getWidth();
+		int height = bitmap.getHeight();
+		byte[] buffer = bitmap.getPixels();
+		DoubleMap map = new DoubleMap(width, height);
+		for (int y = 0; y < height; ++y)
+			for (int x = 0; x < width; ++x)
+				map.set(x, y, 1 - (buffer[y * width + x] & 0xff) / 255.0);
 		return map;
 	}
 	private DoubleMap scaleImage(DoubleMap input, double dpi) {

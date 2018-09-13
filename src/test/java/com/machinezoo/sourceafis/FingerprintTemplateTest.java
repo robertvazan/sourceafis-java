@@ -31,22 +31,22 @@ public class FingerprintTemplateTest {
 	@Test public void constructor() {
 		new FingerprintTemplate().create(load("probe.png"));
 	}
-	@Test public void readImage_png() {
-		readImage_validate(io.readImage(load("probe.png")));
+	@Test public void decodeImage_png() {
+		decodeImage_validate(io.decodeImage(load("probe.png")));
 	}
-	@Test public void readImage_jpeg() {
-		readImage_validate(io.readImage(load("probe.jpeg")));
+	@Test public void decodeImage_jpeg() {
+		decodeImage_validate(io.decodeImage(load("probe.jpeg")));
 	}
-	@Test public void readImage_bmp() {
-		readImage_validate(io.readImage(load("probe.bmp")));
+	@Test public void decodeImage_bmp() {
+		decodeImage_validate(io.decodeImage(load("probe.bmp")));
 	}
-	@Test public void readImage_wsq() {
-		readImage_validate(io.readImage(load("wsq-original.wsq")), io.readImage(load("wsq-converted.png")));
+	@Test public void decodeImage_wsq() {
+		decodeImage_validate(io.decodeImage(load("wsq-original.wsq")), io.decodeImage(load("wsq-converted.png")));
 	}
-	private void readImage_validate(DoubleMap map) {
-		readImage_validate(map, io.readImage(load("probe.png")));
+	private void decodeImage_validate(DoubleMap map) {
+		decodeImage_validate(map, io.decodeImage(load("probe.png")));
 	}
-	private void readImage_validate(DoubleMap map, DoubleMap reference) {
+	private void decodeImage_validate(DoubleMap map, DoubleMap reference) {
 		assertEquals(reference.width, map.width);
 		assertEquals(reference.height, map.height);
 		double delta = 0, max = -1, min = 1;
