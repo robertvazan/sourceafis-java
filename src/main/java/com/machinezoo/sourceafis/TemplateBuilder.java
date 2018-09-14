@@ -8,11 +8,12 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 import javax.imageio.*;
+import org.apache.sanselan.*;
 import org.jnbis.api.*;
 import org.jnbis.api.model.*;
 import org.slf4j.*;
 import com.google.gson.*;
-import com.machinezoo.noexception.*;
+import com.machinezoo.noexception.throwing.*;
 
 class TemplateBuilder {
 	private static final Logger logger = LoggerFactory.getLogger(TemplateBuilder.class);
@@ -149,6 +150,7 @@ class TemplateBuilder {
 	static DoubleMap decodeImage(byte[] serialized) {
 		Stream<Function<byte[], DoubleMap>> decoders = Stream.of(
 			decodeSafely("ImageIO", TemplateBuilder::decodeViaImageIO),
+			decodeSafely("Sanselan", TemplateBuilder::decodeViaSanselan),
 			decodeSafely("JNBIS/WSQ", TemplateBuilder::decodeWsq));
 		return decoders
 			.map(decoder -> decoder.apply(serialized))
@@ -156,7 +158,7 @@ class TemplateBuilder {
 			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("Unsupported image format"));
 	}
-	private static Function<byte[], DoubleMap> decodeSafely(String name, Function<byte[], DoubleMap> decoder) {
+	private static Function<byte[], DoubleMap> decodeSafely(String name, ThrowingFunction<byte[], DoubleMap> decoder) {
 		return serialized -> {
 			try {
 				return decoder.apply(serialized);
@@ -166,10 +168,22 @@ class TemplateBuilder {
 			}
 		};
 	}
-	private static DoubleMap decodeViaImageIO(byte[] serialized) {
-		BufferedImage buffered = Exceptions.sneak().function((byte[] s) -> ImageIO.read(new ByteArrayInputStream(s))).apply(serialized);
+	private static DoubleMap decodeViaImageIO(byte[] serialized) throws IOException {
+		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
 		if (buffered == null)
 			return null;
+		return decodeBufferedImage(buffered);
+	}
+	private static DoubleMap decodeViaSanselan(byte[] serialized) throws IOException {
+		BufferedImage buffered;
+		try {
+			buffered = Sanselan.getBufferedImage(serialized);
+		} catch (ImageReadException ex) {
+			return null;
+		}
+		return decodeBufferedImage(buffered);
+	}
+	private static DoubleMap decodeBufferedImage(BufferedImage buffered) {
 		int width = buffered.getWidth();
 		int height = buffered.getHeight();
 		int[] pixels = new int[width * height];

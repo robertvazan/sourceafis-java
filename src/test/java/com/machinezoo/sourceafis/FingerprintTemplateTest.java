@@ -39,6 +39,9 @@ public class FingerprintTemplateTest {
 	@Test public void decodeImage_bmp() {
 		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.bmp")));
 	}
+	@Test public void decodeImage_tiff() {
+		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.tiff")));
+	}
 	@Test public void decodeImage_wsq() {
 		decodeImage_validate(TemplateBuilder.decodeImage(load("wsq-original.wsq")), TemplateBuilder.decodeImage(load("wsq-converted.png")));
 	}

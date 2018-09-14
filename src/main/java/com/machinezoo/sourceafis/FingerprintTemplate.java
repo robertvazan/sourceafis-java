@@ -75,9 +75,13 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Create fingerprint template from fingerprint image.
-	 * Image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
-	 * All image formats supported by Java's {@link ImageIO} are accepted, for example JPEG, PNG, or BMP,
-	 * If WSQ image is supplied, it will decoded using <a href="https://github.com/kareez/jnbis">jnbis</a> library.
+	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
+	 * <p>
+	 * The image may be in any format commonly used to store fingerprint images, including PNG, JPEG, BMP, TIFF, or WSQ.
+	 * SourceAFIS will try to decode the image using Java's {@link ImageIO} (PNG, JPEG, BMP),
+	 * <a href="https://commons.apache.org/proper/commons-imaging/">Sanselan</a> library (TIFF),
+	 * and <a href="https://github.com/kareez/jnbis">JNBIS</a> library (WSQ) in this order.
+	 * Note that these libraries might not support all variations of the mentioned formats.
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
 	 * 
