@@ -8,7 +8,6 @@ import org.junit.*;
 import com.machinezoo.noexception.*;
 
 public class FingerprintTemplateTest {
-	private static TemplateBuilder io = new TemplateBuilder();
 	private static FingerprintTemplate t = new FingerprintTemplate();
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate().create(load("probe.png"));
@@ -32,19 +31,19 @@ public class FingerprintTemplateTest {
 		new FingerprintTemplate().create(load("probe.png"));
 	}
 	@Test public void decodeImage_png() {
-		decodeImage_validate(io.decodeImage(load("probe.png")));
+		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.png")));
 	}
 	@Test public void decodeImage_jpeg() {
-		decodeImage_validate(io.decodeImage(load("probe.jpeg")));
+		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.jpeg")));
 	}
 	@Test public void decodeImage_bmp() {
-		decodeImage_validate(io.decodeImage(load("probe.bmp")));
+		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.bmp")));
 	}
 	@Test public void decodeImage_wsq() {
-		decodeImage_validate(io.decodeImage(load("wsq-original.wsq")), io.decodeImage(load("wsq-converted.png")));
+		decodeImage_validate(TemplateBuilder.decodeImage(load("wsq-original.wsq")), TemplateBuilder.decodeImage(load("wsq-converted.png")));
 	}
 	private void decodeImage_validate(DoubleMap map) {
-		decodeImage_validate(map, io.decodeImage(load("probe.png")));
+		decodeImage_validate(map, TemplateBuilder.decodeImage(load("probe.png")));
 	}
 	private void decodeImage_validate(DoubleMap map, DoubleMap reference) {
 		assertEquals(reference.width, map.width);

@@ -5,14 +5,17 @@ import static java.util.stream.Collectors.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 import javax.imageio.*;
 import org.jnbis.api.*;
 import org.jnbis.api.model.*;
+import org.slf4j.*;
 import com.google.gson.*;
 import com.machinezoo.noexception.*;
 
 class TemplateBuilder {
+	private static final Logger logger = LoggerFactory.getLogger(TemplateBuilder.class);
 	FingerprintTransparency transparency = FingerprintTransparency.none;
 	Cell size;
 	Minutia[] minutiae;
@@ -143,16 +146,27 @@ class TemplateBuilder {
 		shuffleMinutiae();
 		buildEdgeTable();
 	}
-	DoubleMap decodeImage(byte[] serialized) {
-		DoubleMap imageio = decodeViaImageIO(serialized);
-		if (imageio != null)
-			return imageio;
-		DoubleMap wsq = decodeWsq(serialized);
-		if (wsq != null)
-			return wsq;
-		throw new IllegalArgumentException("Unsupported image format");
+	static DoubleMap decodeImage(byte[] serialized) {
+		Stream<Function<byte[], DoubleMap>> decoders = Stream.of(
+			decodeSafely("ImageIO", TemplateBuilder::decodeViaImageIO),
+			decodeSafely("JNBIS/WSQ", TemplateBuilder::decodeWsq));
+		return decoders
+			.map(decoder -> decoder.apply(serialized))
+			.filter(Objects::nonNull)
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("Unsupported image format"));
 	}
-	private DoubleMap decodeViaImageIO(byte[] serialized) {
+	private static Function<byte[], DoubleMap> decodeSafely(String name, Function<byte[], DoubleMap> decoder) {
+		return serialized -> {
+			try {
+				return decoder.apply(serialized);
+			} catch (Throwable ex) {
+				logger.warn("Image decoder '" + name + "' failed with an exception", ex);
+				return null;
+			}
+		};
+	}
+	private static DoubleMap decodeViaImageIO(byte[] serialized) {
 		BufferedImage buffered = Exceptions.sneak().function((byte[] s) -> ImageIO.read(new ByteArrayInputStream(s))).apply(serialized);
 		if (buffered == null)
 			return null;
@@ -170,10 +184,8 @@ class TemplateBuilder {
 		}
 		return map;
 	}
-	private DoubleMap decodeWsq(byte[] serialized) {
-		if (serialized.length < 2)
-			return null;
-		if (serialized[0] != (byte)0xff || serialized[1] != (byte)0xa0)
+	private static DoubleMap decodeWsq(byte[] serialized) {
+		if (serialized.length < 2 || serialized[0] != (byte)0xff || serialized[1] != (byte)0xa0)
 			return null;
 		Bitmap bitmap = Jnbis.wsq().decode(serialized).asBitmap();
 		int width = bitmap.getWidth();
