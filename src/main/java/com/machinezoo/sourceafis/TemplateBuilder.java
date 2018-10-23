@@ -211,10 +211,10 @@ class TemplateBuilder {
 				map.set(x, y, 1 - (buffer[y * width + x] & 0xff) / 255.0);
 		return map;
 	}
-	private DoubleMap scaleImage(DoubleMap input, double dpi) {
+	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
 	}
-	private DoubleMap scaleImage(DoubleMap input, int newWidth, int newHeight) {
+	static DoubleMap scaleImage(DoubleMap input, int newWidth, int newHeight) {
 		DoubleMap output = new DoubleMap(newWidth, newHeight);
 		double scaleX = newWidth / (double)input.width;
 		double scaleY = newHeight / (double)input.height;
@@ -224,12 +224,12 @@ class TemplateBuilder {
 			double y1 = y * descaleY;
 			double y2 = y1 + descaleY;
 			int y1i = (int)y1;
-			int y2i = (int)Math.ceil(y2);
+			int y2i = Math.min((int)Math.ceil(y2), input.height);
 			for (int x = 0; x < newWidth; ++x) {
 				double x1 = x * descaleX;
 				double x2 = x1 + descaleX;
 				int x1i = (int)x1;
-				int x2i = (int)Math.ceil(x2);
+				int x2i = Math.min((int)Math.ceil(x2), input.width);
 				double sum = 0;
 				for (int oy = y1i; oy < y2i; ++oy) {
 					double ry = Math.min(oy + 1, y2) - Math.max(oy, y1);
