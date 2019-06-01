@@ -26,6 +26,8 @@ import java.util.*;
  * @see <a href="https://templates.machinezoo.com/standard-fingerprint-templates-bad-idea">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
+	private FingerprintCompatibility() {
+	}
 	/**
 	 * Convert foreign fingerprint template to native SourceAFIS template.
 	 * This is a convenience wrapper around {@link #convertAll(byte[])}
