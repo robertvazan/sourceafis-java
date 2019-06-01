@@ -11,6 +11,13 @@ import java.util.*;
  * Three versions of ANSI 378 can be both imported and exported.
  * Limited support for import of ISO 19794-2 is also provided.
  * <p>
+ * ANSI and ISO template specs prescribe specific ways to calculate minutia position and angle.
+ * They even vary these calculations between versions of the same spec.
+ * SourceAFIS has its own algorithms to determine minutia positions and angles.
+ * Conversion routines currently don't attempt to compensate for this difference.
+ * They just copy minutia positions and angles to the target template without any adjustments.
+ * This may result in some loss of accuracy when matching against templates from other sources.
+ * <p>
  * Note that the use of these so-called "standard" templates for fingerprint exchange is
  * <a href="https://templates.machinezoo.com/standard-fingerprint-templates-bad-idea">strongly discouraged</a>
  * in favor of plain fingerprint images.
