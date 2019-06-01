@@ -73,79 +73,25 @@ class TemplateBuilder {
 		transparency.logDeserializedMinutiae(this);
 		buildEdgeTable();
 	}
-	void convert(byte[] iso) {
-		if (iso.length < 30)
-			throw new IllegalArgumentException("Array too small to be an ISO 19794-2 template");
-		try {
-			DataInput in = new DataInputStream(new ByteArrayInputStream(iso));
-			// 4B magic header "FMR\0"
-			if (in.readByte() != 'F' || in.readByte() != 'M' || in.readByte() != 'R' || in.readByte() != 0)
-				throw new IllegalArgumentException("This is not an ISO 19794-2 template");
-			// 4B version " 20\0"
-			// 4B template length in bytes (should be 28 + 6 * count + 2 + extra-data)
-			// 2B junk
-			in.skipBytes(10);
-			// image size
-			int width = in.readUnsignedShort();
-			int height = in.readUnsignedShort();
-			// pixels per cm X and Y, assuming 500dpi
-			int xPixelsPerCM = in.readShort();
-			int yPixelsPerCM = in.readShort();
-			// https://sourceafis.machinezoo.com/transparency/iso-metadata
-			transparency.logIsoMetadata(width, height, xPixelsPerCM, yPixelsPerCM);
-			double dpiX = xPixelsPerCM * 2.55;
-			double dpiY = yPixelsPerCM * 2.55;
-			boolean rescaleX = Math.abs(dpiX - 500) > Parameters.dpiTolerance;
-			boolean rescaleY = Math.abs(dpiY - 500) > Parameters.dpiTolerance;
-			if (rescaleX)
-				width = (int)Math.round(width / dpiX * 500);
-			if (rescaleY)
-				height = (int)Math.round(height / dpiY * 500);
-			size = new Cell(width, height);
-			// 1B number of fingerprints in the template (assuming 1)
-			// 1B junk
-			// 1B finger position
-			// 1B junk
-			// 1B fingerprint quality
-			in.skipBytes(5);
-			// minutia count
-			int count = in.readUnsignedByte();
-			List<Minutia> list = new ArrayList<>();
-			for (int i = 0; i < count; ++i) {
-				// X position, upper two bits are type
-				int packedX = in.readUnsignedShort();
-				// Y position, upper two bits ignored
-				int packedY = in.readUnsignedShort();
-				// angle, 0..255 equivalent to 0..2pi
-				int angle = in.readUnsignedByte();
-				// 1B minutia quality
-				in.skipBytes(1);
-				// type: 01 ending, 10 bifurcation, 00 other (treated as ending)
-				int type = (packedX >> 14) & 0x3;
-				int x = packedX & 0x3fff;
-				int y = packedY & 0x3fff;
-				if (rescaleX)
-					x = (int)Math.round(x / dpiX * 500);
-				if (rescaleY)
-					y = (int)Math.round(y / dpiY * 500);
-				Minutia minutia = new Minutia(
-					new Cell(x, y),
-					Angle.complementary(angle * Angle.PI2 / 256.0),
-					type == 2 ? MinutiaType.BIFURCATION : MinutiaType.ENDING);
-				list.add(minutia);
-			}
-			// extra data length
-			int extra = in.readUnsignedShort();
-			// variable-length extra data section
-			in.skipBytes(extra);
-			minutiae = list.stream().toArray(Minutia[]::new);
-			// https://sourceafis.machinezoo.com/transparency/iso-minutiae
-			transparency.logIsoMinutiae(this);
-		} catch (IOException e) {
-			throw new IllegalArgumentException("Invalid ISO 19794-2 template", e);
+	void convert(ForeignTemplate template, ForeignFingerprint fingerprint) {
+		int width = normalizeDpi(fingerprint.dimensions.width, fingerprint.dimensions.dpiX);
+		int height = normalizeDpi(fingerprint.dimensions.height, fingerprint.dimensions.dpiY);
+		size = new Cell(width, height);
+		List<Minutia> list = new ArrayList<>();
+		for (ForeignMinutia minutia : fingerprint.minutiae) {
+			int x = normalizeDpi(minutia.x, fingerprint.dimensions.dpiX);
+			int y = normalizeDpi(minutia.y, fingerprint.dimensions.dpiY);
+			list.add(new Minutia(new Cell(x, y), minutia.angle, minutia.type.convert()));
 		}
+		minutiae = list.stream().toArray(Minutia[]::new);
 		shuffleMinutiae();
 		buildEdgeTable();
+	}
+	private static int normalizeDpi(int value, double dpi) {
+		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
+			return (int)Math.round(value / dpi * 500);
+		else
+			return value;
 	}
 	static DoubleMap decodeImage(byte[] serialized) {
 		Stream<Function<byte[], DoubleMap>> decoders = Stream.of(
