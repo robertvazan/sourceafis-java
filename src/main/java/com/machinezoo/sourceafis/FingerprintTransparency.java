@@ -240,15 +240,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logDeserializedMinutiae(TemplateBuilder template) {
 		logMinutiae("deserialized-minutiae", template);
 	}
-	// https://sourceafis.machinezoo.com/transparency/iso-metadata
-	void logIsoMetadata(int width, int height, int cmPixelsX, int cmPixelsY) {
-		if (logging())
-			log("iso-metadata", ".json", json(() -> new JsonIsoMetadata(width, height, cmPixelsX, cmPixelsY)));
-	}
-	// https://sourceafis.machinezoo.com/transparency/iso-minutiae
-	void logIsoMinutiae(TemplateBuilder template) {
-		logMinutiae("iso-minutiae", template);
-	}
 	// https://sourceafis.machinezoo.com/transparency/edge-hash
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		log("edge-hash", ".dat", () -> IndexedEdge.serialize(edgeHash));
