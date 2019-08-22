@@ -695,7 +695,7 @@ class TemplateBuilder {
 	private void shuffleMinutiae() {
 		int prime = 1610612741;
 		Arrays.sort(minutiae, Comparator
-			.comparing((Minutia m) -> ((m.position.x * prime) + m.position.y) * prime)
+			.comparingInt((Minutia m) -> ((m.position.x * prime) + m.position.y) * prime)
 			.thenComparing(m -> m.position.x)
 			.thenComparing(m -> m.position.y)
 			.thenComparing(m -> m.direction)
