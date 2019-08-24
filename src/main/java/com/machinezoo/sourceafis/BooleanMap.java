@@ -12,7 +12,7 @@ class BooleanMap {
 		this.height = height;
 		array = new boolean[width * height];
 	}
-	BooleanMap(Cell size) {
+	BooleanMap(IntPoint size) {
 		this(size.x, size.y);
 	}
 	BooleanMap(BooleanMap other) {
@@ -20,13 +20,13 @@ class BooleanMap {
 		for (int i = 0; i < array.length; ++i)
 			array[i] = other.array[i];
 	}
-	Cell size() {
-		return new Cell(width, height);
+	IntPoint size() {
+		return new IntPoint(width, height);
 	}
 	boolean get(int x, int y) {
 		return array[offset(x, y)];
 	}
-	boolean get(Cell at) {
+	boolean get(IntPoint at) {
 		return get(at.x, at.y);
 	}
 	boolean get(int x, int y, boolean fallback) {
@@ -34,13 +34,13 @@ class BooleanMap {
 			return fallback;
 		return array[offset(x, y)];
 	}
-	boolean get(Cell at, boolean fallback) {
+	boolean get(IntPoint at, boolean fallback) {
 		return get(at.x, at.y, fallback);
 	}
 	void set(int x, int y, boolean value) {
 		array[offset(x, y)] = value;
 	}
-	void set(Cell at, boolean value) {
+	void set(IntPoint at, boolean value) {
 		set(at.x, at.y, value);
 	}
 	void invert() {
@@ -55,7 +55,7 @@ class BooleanMap {
 	}
 	ByteBuffer serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(size().area());
-		for (Cell at : size())
+		for (IntPoint at : size())
 			buffer.put((byte)(get(at) ? 1 : 0));
 		buffer.flip();
 		return buffer;

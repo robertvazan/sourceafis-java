@@ -112,10 +112,10 @@ class MatchBuffer {
 	private boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
 		int lengthDelta = probe.length - candidate.length;
 		if (lengthDelta >= -Parameters.maxDistanceError && lengthDelta <= Parameters.maxDistanceError) {
-			double complementaryAngleError = Angle.complementary(Parameters.maxAngleError);
-			double referenceDelta = Angle.difference(probe.referenceAngle, candidate.referenceAngle);
+			double complementaryAngleError = DoubleAngle.complementary(Parameters.maxAngleError);
+			double referenceDelta = DoubleAngle.difference(probe.referenceAngle, candidate.referenceAngle);
 			if (referenceDelta <= Parameters.maxAngleError || referenceDelta >= complementaryAngleError) {
-				double neighborDelta = Angle.difference(probe.neighborAngle, candidate.neighborAngle);
+				double neighborDelta = DoubleAngle.difference(probe.neighborAngle, candidate.neighborAngle);
 				if (neighborDelta <= Parameters.maxAngleError || neighborDelta >= complementaryAngleError)
 					return true;
 			}
@@ -162,7 +162,7 @@ class MatchBuffer {
 		}
 	}
 	private List<MinutiaPair> matchPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
-		double complementaryAngleError = Angle.complementary(Parameters.maxAngleError);
+		double complementaryAngleError = DoubleAngle.complementary(Parameters.maxAngleError);
 		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
 		int end = 0;
@@ -176,9 +176,9 @@ class MatchBuffer {
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
 				NeighborEdge probeEdge = probeStar[probeIndex];
-				double referenceDiff = Angle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
+				double referenceDiff = DoubleAngle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
 				if (referenceDiff <= Parameters.maxAngleError || referenceDiff >= complementaryAngleError) {
-					double neighborDiff = Angle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
+					double neighborDiff = DoubleAngle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
 					if (neighborDiff <= Parameters.maxAngleError || neighborDiff >= complementaryAngleError) {
 						MinutiaPair pair = allocate();
 						pair.probe = probeEdge.neighbor;

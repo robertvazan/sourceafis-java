@@ -3,12 +3,12 @@ package com.machinezoo.sourceafis;
 
 class ImmutableTemplate {
 	static final ImmutableTemplate empty = new ImmutableTemplate();
-	final Cell size;
-	final Minutia[] minutiae;
+	final IntPoint size;
+	final ImmutableMinutia[] minutiae;
 	final NeighborEdge[][] edges;
 	private ImmutableTemplate() {
-		size = new Cell(1, 1);
-		minutiae = new Minutia[0];
+		size = new IntPoint(1, 1);
+		minutiae = new ImmutableMinutia[0];
 		edges = new NeighborEdge[0][];
 	}
 	ImmutableTemplate(TemplateBuilder builder) {

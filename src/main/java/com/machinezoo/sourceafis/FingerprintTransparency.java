@@ -113,11 +113,11 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("block-map", ".json", json(() -> blocks));
 	}
 	// https://sourceafis.machinezoo.com/transparency/histogram
-	void logHistogram(Histogram histogram) {
+	void logHistogram(HistogramMap histogram) {
 		logHistogram("histogram", histogram);
 	}
 	// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
-	void logSmoothedHistogram(Histogram histogram) {
+	void logSmoothedHistogram(HistogramMap histogram) {
 		logHistogram("smoothed-histogram", histogram);
 	}
 	// https://sourceafis.machinezoo.com/transparency/clipped-contrast
@@ -145,15 +145,15 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logDoubleMap("equalized-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
-	void logPixelwiseOrientation(PointMap orientations) {
+	void logPixelwiseOrientation(DoublePointMap orientations) {
 		logPointMap("pixelwise-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/block-orientation
-	void logBlockOrientation(PointMap orientations) {
+	void logBlockOrientation(DoublePointMap orientations) {
 		logPointMap("block-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
-	void logSmoothedOrientation(PointMap orientations) {
+	void logSmoothedOrientation(DoublePointMap orientations) {
 		logPointMap("smoothed-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
@@ -278,10 +278,10 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		if (logging())
 			log(name, ".json", json(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
-	private void logHistogram(String name, Histogram histogram) {
+	private void logHistogram(String name, HistogramMap histogram) {
 		log(name, ".dat", histogram::serialize, ".json", json(histogram::json));
 	}
-	private void logPointMap(String name, PointMap map) {
+	private void logPointMap(String name, DoublePointMap map) {
 		log(name, ".dat", map::serialize, ".json", json(map::json));
 	}
 	private void logDoubleMap(String name, DoubleMap map) {

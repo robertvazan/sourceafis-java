@@ -18,8 +18,8 @@ import com.machinezoo.noexception.throwing.*;
 class TemplateBuilder {
 	private static final Logger logger = LoggerFactory.getLogger(TemplateBuilder.class);
 	FingerprintTransparency transparency = FingerprintTransparency.none;
-	Cell size;
-	Minutia[] minutiae;
+	IntPoint size;
+	ImmutableMinutia[] minutiae;
 	NeighborEdge[][] edges;
 	void extract(byte[] image, double dpi) {
 		DoubleMap raw = decodeImage(image);
@@ -33,16 +33,16 @@ class TemplateBuilder {
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 		// https://sourceafis.machinezoo.com/transparency/block-map
 		transparency.logBlockMap(blocks);
-		Histogram histogram = histogram(blocks, raw);
-		Histogram smoothHistogram = smoothHistogram(blocks, histogram);
+		HistogramMap histogram = histogram(blocks, raw);
+		HistogramMap smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMap mask = mask(blocks, histogram);
 		DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
 		DoubleMap orientation = orientationMap(equalized, mask, blocks);
-		Cell[][] smoothedLines = orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep);
+		IntPoint[][] smoothedLines = orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep);
 		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, smoothedLines);
 		// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
 		transparency.logParallelSmoothing(smoothed);
-		Cell[][] orthogonalLines = orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep);
+		IntPoint[][] orthogonalLines = orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep);
 		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
 		// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
 		transparency.logOrthogonalSmoothing(orthogonal);
@@ -77,14 +77,14 @@ class TemplateBuilder {
 	void convert(ForeignTemplate template, ForeignFingerprint fingerprint) {
 		int width = normalizeDpi(fingerprint.dimensions.width, fingerprint.dimensions.dpiX);
 		int height = normalizeDpi(fingerprint.dimensions.height, fingerprint.dimensions.dpiY);
-		size = new Cell(width, height);
-		List<Minutia> list = new ArrayList<>();
+		size = new IntPoint(width, height);
+		List<ImmutableMinutia> list = new ArrayList<>();
 		for (ForeignMinutia minutia : fingerprint.minutiae) {
 			int x = normalizeDpi(minutia.x, fingerprint.dimensions.dpiX);
 			int y = normalizeDpi(minutia.y, fingerprint.dimensions.dpiY);
-			list.add(new Minutia(new Cell(x, y), minutia.angle, minutia.type.convert()));
+			list.add(new ImmutableMinutia(new IntPoint(x, y), minutia.angle, minutia.type.convert()));
 		}
-		minutiae = list.stream().toArray(Minutia[]::new);
+		minutiae = list.stream().toArray(ImmutableMinutia[]::new);
 		shuffleMinutiae();
 		buildEdgeTable();
 	}
@@ -190,10 +190,10 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private Histogram histogram(BlockMap blocks, DoubleMap image) {
-		Histogram histogram = new Histogram(blocks.primary.blocks, Parameters.histogramDepth);
-		for (Cell block : blocks.primary.blocks) {
-			Block area = blocks.primary.block(block);
+	private HistogramMap histogram(BlockMap blocks, DoubleMap image) {
+		HistogramMap histogram = new HistogramMap(blocks.primary.blocks, Parameters.histogramDepth);
+		for (IntPoint block : blocks.primary.blocks) {
+			IntRect area = blocks.primary.block(block);
 			for (int y = area.top(); y < area.bottom(); ++y)
 				for (int x = area.left(); x < area.right(); ++x) {
 					int depth = (int)(image.get(x, y) * histogram.depth);
@@ -204,12 +204,12 @@ class TemplateBuilder {
 		transparency.logHistogram(histogram);
 		return histogram;
 	}
-	private Histogram smoothHistogram(BlockMap blocks, Histogram input) {
-		Cell[] blocksAround = new Cell[] { new Cell(0, 0), new Cell(-1, 0), new Cell(0, -1), new Cell(-1, -1) };
-		Histogram output = new Histogram(blocks.secondary.blocks, input.depth);
-		for (Cell corner : blocks.secondary.blocks) {
-			for (Cell relative : blocksAround) {
-				Cell block = corner.plus(relative);
+	private HistogramMap smoothHistogram(BlockMap blocks, HistogramMap input) {
+		IntPoint[] blocksAround = new IntPoint[] { new IntPoint(0, 0), new IntPoint(-1, 0), new IntPoint(0, -1), new IntPoint(-1, -1) };
+		HistogramMap output = new HistogramMap(blocks.secondary.blocks, input.depth);
+		for (IntPoint corner : blocks.secondary.blocks) {
+			for (IntPoint relative : blocksAround) {
+				IntPoint block = corner.plus(relative);
 				if (blocks.primary.blocks.contains(block)) {
 					for (int i = 0; i < input.depth; ++i)
 						output.add(corner, i, input.get(block, i));
@@ -220,7 +220,7 @@ class TemplateBuilder {
 		transparency.logSmoothedHistogram(output);
 		return output;
 	}
-	private BooleanMap mask(BlockMap blocks, Histogram histogram) {
+	private BooleanMap mask(BlockMap blocks, HistogramMap histogram) {
 		DoubleMap contrast = clipContrast(blocks, histogram);
 		BooleanMap mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
@@ -236,9 +236,9 @@ class TemplateBuilder {
 		transparency.logFilteredMask(mask);
 		return mask;
 	}
-	private DoubleMap clipContrast(BlockMap blocks, Histogram histogram) {
+	private DoubleMap clipContrast(BlockMap blocks, HistogramMap histogram) {
 		DoubleMap result = new DoubleMap(blocks.primary.blocks);
-		for (Cell block : blocks.primary.blocks) {
+		for (IntPoint block : blocks.primary.blocks) {
 			int volume = histogram.sum(block);
 			int clipLimit = (int)Math.round(volume * Parameters.clippedContrast);
 			int accumulator = 0;
@@ -267,7 +267,7 @@ class TemplateBuilder {
 	}
 	private BooleanMap filterAbsoluteContrast(DoubleMap contrast) {
 		BooleanMap result = new BooleanMap(contrast.size());
-		for (Cell block : contrast.size())
+		for (IntPoint block : contrast.size())
 			if (contrast.get(block) < Parameters.minAbsoluteContrast)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
@@ -276,7 +276,7 @@ class TemplateBuilder {
 	}
 	private BooleanMap filterRelativeContrast(DoubleMap contrast, BlockMap blocks) {
 		List<Double> sortedContrast = new ArrayList<>();
-		for (Cell block : contrast.size())
+		for (IntPoint block : contrast.size())
 			sortedContrast.add(contrast.get(block));
 		sortedContrast.sort(Comparator.<Double>naturalOrder().reversed());
 		int pixelsPerBlock = blocks.pixels.area() / blocks.primary.blocks.area();
@@ -285,7 +285,7 @@ class TemplateBuilder {
 		double averageContrast = sortedContrast.stream().mapToDouble(n -> n).limit(consideredBlocks).average().getAsDouble();
 		double limit = averageContrast * Parameters.minRelativeContrast;
 		BooleanMap result = new BooleanMap(blocks.primary.blocks);
-		for (Cell block : blocks.primary.blocks)
+		for (IntPoint block : blocks.primary.blocks)
 			if (contrast.get(block) < limit)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
@@ -293,8 +293,8 @@ class TemplateBuilder {
 		return result;
 	}
 	private BooleanMap vote(BooleanMap input, BooleanMap mask, int radius, double majority, int borderDistance) {
-		Cell size = input.size();
-		Block rect = new Block(borderDistance, borderDistance, size.x - 2 * borderDistance, size.y - 2 * borderDistance);
+		IntPoint size = input.size();
+		IntRect rect = new IntRect(borderDistance, borderDistance, size.x - 2 * borderDistance, size.y - 2 * borderDistance);
 		int[] thresholds = IntStream.range(0, Integers.sq(2 * radius + 1) + 1).map(i -> (int)Math.ceil(majority * i)).toArray();
 		IntMap counts = new IntMap(size);
 		BooleanMap output = new BooleanMap(size);
@@ -341,7 +341,7 @@ class TemplateBuilder {
 	private BooleanMap filterBlockErrors(BooleanMap input) {
 		return vote(input, null, Parameters.blockErrorsVoteRadius, Parameters.blockErrorsVoteMajority, Parameters.blockErrorsVoteBorderDistance);
 	}
-	private DoubleMap equalize(BlockMap blocks, DoubleMap image, Histogram histogram, BooleanMap blockMask) {
+	private DoubleMap equalize(BlockMap blocks, DoubleMap image, HistogramMap histogram, BooleanMap blockMask) {
 		final double rangeMin = -1;
 		final double rangeMax = 1;
 		final double rangeSize = rangeMax - rangeMin;
@@ -355,8 +355,8 @@ class TemplateBuilder {
 			limitedMax[i] = Math.min(i * widthMax + rangeMin, rangeMax - (histogram.depth - 1 - i) * widthMin);
 			dequantized[i] = i / (double)(histogram.depth - 1);
 		}
-		Map<Cell, double[]> mappings = new HashMap<>();
-		for (Cell corner : blocks.secondary.blocks) {
+		Map<IntPoint, double[]> mappings = new HashMap<>();
+		for (IntPoint corner : blocks.secondary.blocks) {
 			double[] mapping = new double[histogram.depth];
 			mappings.put(corner, mapping);
 			if (blockMask.get(corner, false) || blockMask.get(corner.x - 1, corner.y, false)
@@ -376,13 +376,13 @@ class TemplateBuilder {
 			}
 		}
 		DoubleMap result = new DoubleMap(blocks.pixels);
-		for (Cell block : blocks.primary.blocks) {
-			Block area = blocks.primary.block(block);
+		for (IntPoint block : blocks.primary.blocks) {
+			IntRect area = blocks.primary.block(block);
 			if (blockMask.get(block)) {
 				double[] topleft = mappings.get(block);
-				double[] topright = mappings.get(new Cell(block.x + 1, block.y));
-				double[] bottomleft = mappings.get(new Cell(block.x, block.y + 1));
-				double[] bottomright = mappings.get(new Cell(block.x + 1, block.y + 1));
+				double[] topright = mappings.get(new IntPoint(block.x + 1, block.y));
+				double[] bottomleft = mappings.get(new IntPoint(block.x, block.y + 1));
+				double[] bottomright = mappings.get(new IntPoint(block.x + 1, block.y + 1));
 				for (int y = area.top(); y < area.bottom(); ++y)
 					for (int x = area.left(); x < area.right(); ++x) {
 						int depth = histogram.constrain((int)(image.get(x, y) * histogram.depth));
@@ -401,14 +401,14 @@ class TemplateBuilder {
 		return result;
 	}
 	private DoubleMap orientationMap(DoubleMap image, BooleanMap mask, BlockMap blocks) {
-		PointMap accumulated = pixelwiseOrientation(image, mask, blocks);
-		PointMap byBlock = blockOrientations(accumulated, blocks, mask);
-		PointMap smooth = smoothOrientation(byBlock, mask);
+		DoublePointMap accumulated = pixelwiseOrientation(image, mask, blocks);
+		DoublePointMap byBlock = blockOrientations(accumulated, blocks, mask);
+		DoublePointMap smooth = smoothOrientation(byBlock, mask);
 		return orientationAngles(smooth, mask);
 	}
 	private static class ConsideredOrientation {
-		Cell offset;
-		Point orientation;
+		IntPoint offset;
+		DoublePoint orientation;
 	}
 	private static class OrientationRandom {
 		static final int prime = 1610612741;
@@ -431,27 +431,27 @@ class TemplateBuilder {
 				do {
 					double angle = random.next() * Math.PI;
 					double distance = Doubles.interpolateExponential(Parameters.minOrientationRadius, Parameters.maxOrientationRadius, random.next());
-					sample.offset = Angle.toVector(angle).multiply(distance).round();
-				} while (sample.offset.equals(Cell.zero) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
-				sample.orientation = Angle.toVector(Angle.add(Angle.toOrientation(Angle.atan(sample.offset.toPoint())), Math.PI));
+					sample.offset = DoubleAngle.toVector(angle).multiply(distance).round();
+				} while (sample.offset.equals(IntPoint.zero) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
+				sample.orientation = DoubleAngle.toVector(DoubleAngle.add(DoubleAngle.toOrientation(DoubleAngle.atan(sample.offset.toPoint())), Math.PI));
 			}
 		}
 		return splits;
 	}
-	private PointMap pixelwiseOrientation(DoubleMap input, BooleanMap mask, BlockMap blocks) {
+	private DoublePointMap pixelwiseOrientation(DoubleMap input, BooleanMap mask, BlockMap blocks) {
 		ConsideredOrientation[][] neighbors = planOrientations();
-		PointMap orientation = new PointMap(input.size());
+		DoublePointMap orientation = new DoublePointMap(input.size());
 		for (int blockY = 0; blockY < blocks.primary.blocks.y; ++blockY) {
-			Range maskRange = maskRange(mask, blockY);
+			IntRange maskRange = maskRange(mask, blockY);
 			if (maskRange.length() > 0) {
-				Range validXRange = new Range(
+				IntRange validXRange = new IntRange(
 					blocks.primary.block(maskRange.start, blockY).left(),
 					blocks.primary.block(maskRange.end - 1, blockY).right());
 				for (int y = blocks.primary.block(0, blockY).top(); y < blocks.primary.block(0, blockY).bottom(); ++y) {
 					for (ConsideredOrientation neighbor : neighbors[y % neighbors.length]) {
 						int radius = Math.max(Math.abs(neighbor.offset.x), Math.abs(neighbor.offset.y));
 						if (y - radius >= 0 && y + radius < input.height) {
-							Range xRange = new Range(Math.max(radius, validXRange.start), Math.min(input.width - radius, validXRange.end));
+							IntRange xRange = new IntRange(Math.max(radius, validXRange.start), Math.min(input.width - radius, validXRange.end));
 							for (int x = xRange.start; x < xRange.end; ++x) {
 								double before = input.get(x - neighbor.offset.x, y - neighbor.offset.y);
 								double at = input.get(x, y);
@@ -469,7 +469,7 @@ class TemplateBuilder {
 		transparency.logPixelwiseOrientation(orientation);
 		return orientation;
 	}
-	private static Range maskRange(BooleanMap mask, int y) {
+	private static IntRange maskRange(BooleanMap mask, int y) {
 		int first = -1;
 		int last = -1;
 		for (int x = 0; x < mask.width; ++x)
@@ -479,15 +479,15 @@ class TemplateBuilder {
 					first = x;
 			}
 		if (first >= 0)
-			return new Range(first, last + 1);
+			return new IntRange(first, last + 1);
 		else
-			return Range.zero;
+			return IntRange.zero;
 	}
-	private PointMap blockOrientations(PointMap orientation, BlockMap blocks, BooleanMap mask) {
-		PointMap sums = new PointMap(blocks.primary.blocks);
-		for (Cell block : blocks.primary.blocks) {
+	private DoublePointMap blockOrientations(DoublePointMap orientation, BlockMap blocks, BooleanMap mask) {
+		DoublePointMap sums = new DoublePointMap(blocks.primary.blocks);
+		for (IntPoint block : blocks.primary.blocks) {
 			if (mask.get(block)) {
-				Block area = blocks.primary.block(block);
+				IntRect area = blocks.primary.block(block);
 				for (int y = area.top(); y < area.bottom(); ++y)
 					for (int x = area.left(); x < area.right(); ++x)
 						sums.add(block, orientation.get(x, y));
@@ -497,12 +497,12 @@ class TemplateBuilder {
 		transparency.logBlockOrientation(sums);
 		return sums;
 	}
-	private PointMap smoothOrientation(PointMap orientation, BooleanMap mask) {
-		Cell size = mask.size();
-		PointMap smoothed = new PointMap(size);
-		for (Cell block : size)
+	private DoublePointMap smoothOrientation(DoublePointMap orientation, BooleanMap mask) {
+		IntPoint size = mask.size();
+		DoublePointMap smoothed = new DoublePointMap(size);
+		for (IntPoint block : size)
 			if (mask.get(block)) {
-				Block neighbors = Block.around(block, Parameters.orientationSmoothingRadius).intersect(new Block(size));
+				IntRect neighbors = IntRect.around(block, Parameters.orientationSmoothingRadius).intersect(new IntRect(size));
 				for (int ny = neighbors.top(); ny < neighbors.bottom(); ++ny)
 					for (int nx = neighbors.left(); nx < neighbors.right(); ++nx)
 						if (mask.get(nx, ny))
@@ -512,45 +512,45 @@ class TemplateBuilder {
 		transparency.logSmoothedOrientation(smoothed);
 		return smoothed;
 	}
-	private static DoubleMap orientationAngles(PointMap vectors, BooleanMap mask) {
-		Cell size = mask.size();
+	private static DoubleMap orientationAngles(DoublePointMap vectors, BooleanMap mask) {
+		IntPoint size = mask.size();
 		DoubleMap angles = new DoubleMap(size);
-		for (Cell block : size)
+		for (IntPoint block : size)
 			if (mask.get(block))
-				angles.set(block, Angle.atan(vectors.get(block)));
+				angles.set(block, DoubleAngle.atan(vectors.get(block)));
 		return angles;
 	}
-	private Cell[][] orientedLines(int resolution, int radius, double step) {
-		Cell[][] result = new Cell[resolution][];
+	private IntPoint[][] orientedLines(int resolution, int radius, double step) {
+		IntPoint[][] result = new IntPoint[resolution][];
 		for (int orientationIndex = 0; orientationIndex < resolution; ++orientationIndex) {
-			List<Cell> line = new ArrayList<>();
-			line.add(Cell.zero);
-			Point direction = Angle.toVector(Angle.fromOrientation(Angle.bucketCenter(orientationIndex, resolution)));
+			List<IntPoint> line = new ArrayList<>();
+			line.add(IntPoint.zero);
+			DoublePoint direction = DoubleAngle.toVector(DoubleAngle.fromOrientation(DoubleAngle.bucketCenter(orientationIndex, resolution)));
 			for (double r = radius; r >= 0.5; r /= step) {
-				Cell sample = direction.multiply(r).round();
+				IntPoint sample = direction.multiply(r).round();
 				if (!line.contains(sample)) {
 					line.add(sample);
 					line.add(sample.negate());
 				}
 			}
-			result[orientationIndex] = line.toArray(new Cell[line.size()]);
+			result[orientationIndex] = line.toArray(new IntPoint[line.size()]);
 		}
 		return result;
 	}
-	private static DoubleMap smoothRidges(DoubleMap input, DoubleMap orientation, BooleanMap mask, BlockMap blocks, double angle, Cell[][] lines) {
+	private static DoubleMap smoothRidges(DoubleMap input, DoubleMap orientation, BooleanMap mask, BlockMap blocks, double angle, IntPoint[][] lines) {
 		DoubleMap output = new DoubleMap(input.size());
-		for (Cell block : blocks.primary.blocks) {
+		for (IntPoint block : blocks.primary.blocks) {
 			if (mask.get(block)) {
-				Cell[] line = lines[Angle.quantize(Angle.add(orientation.get(block), angle), lines.length)];
-				for (Cell linePoint : line) {
-					Block target = blocks.primary.block(block);
-					Block source = target.move(linePoint).intersect(new Block(blocks.pixels));
+				IntPoint[] line = lines[DoubleAngle.quantize(DoubleAngle.add(orientation.get(block), angle), lines.length)];
+				for (IntPoint linePoint : line) {
+					IntRect target = blocks.primary.block(block);
+					IntRect source = target.move(linePoint).intersect(new IntRect(blocks.pixels));
 					target = source.move(linePoint.negate());
 					for (int y = target.top(); y < target.bottom(); ++y)
 						for (int x = target.left(); x < target.right(); ++x)
 							output.add(x, y, input.get(x + linePoint.x, y + linePoint.y));
 				}
-				Block blockArea = blocks.primary.block(block);
+				IntRect blockArea = blocks.primary.block(block);
 				for (int y = blockArea.top(); y < blockArea.bottom(); ++y)
 					for (int x = blockArea.left(); x < blockArea.right(); ++x)
 						output.multiply(x, y, 1.0 / line.length);
@@ -559,11 +559,11 @@ class TemplateBuilder {
 		return output;
 	}
 	private BooleanMap binarize(DoubleMap input, DoubleMap baseline, BooleanMap mask, BlockMap blocks) {
-		Cell size = input.size();
+		IntPoint size = input.size();
 		BooleanMap binarized = new BooleanMap(size);
-		for (Cell block : blocks.primary.blocks)
+		for (IntPoint block : blocks.primary.blocks)
 			if (mask.get(block)) {
-				Block rect = blocks.primary.block(block);
+				IntRect rect = blocks.primary.block(block);
 				for (int y = rect.top(); y < rect.bottom(); ++y)
 					for (int x = rect.left(); x < rect.right(); ++x)
 						if (input.get(x, y) - baseline.get(x, y) > 0)
@@ -574,7 +574,7 @@ class TemplateBuilder {
 		return binarized;
 	}
 	private void cleanupBinarized(BooleanMap binary, BooleanMap mask) {
-		Cell size = binary.size();
+		IntPoint size = binary.size();
 		BooleanMap inverted = new BooleanMap(binary);
 		inverted.invert();
 		BooleanMap islands = vote(inverted, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
@@ -587,7 +587,7 @@ class TemplateBuilder {
 		transparency.logFilteredBinarydImage(binary);
 	}
 	private static void removeCrosses(BooleanMap input) {
-		Cell size = input.size();
+		IntPoint size = input.size();
 		boolean any = true;
 		while (any) {
 			any = false;
@@ -605,14 +605,14 @@ class TemplateBuilder {
 	}
 	private static BooleanMap fillBlocks(BooleanMap mask, BlockMap blocks) {
 		BooleanMap pixelized = new BooleanMap(blocks.pixels);
-		for (Cell block : blocks.primary.blocks)
+		for (IntPoint block : blocks.primary.blocks)
 			if (mask.get(block))
-				for (Cell pixel : blocks.primary.block(block))
+				for (IntPoint pixel : blocks.primary.block(block))
 					pixelized.set(pixel, true);
 		return pixelized;
 	}
 	private static BooleanMap invert(BooleanMap binary, BooleanMap mask) {
-		Cell size = binary.size();
+		IntPoint size = binary.size();
 		BooleanMap inverted = new BooleanMap(size);
 		for (int y = 0; y < size.y; ++y)
 			for (int x = 0; x < size.x; ++x)
@@ -620,7 +620,7 @@ class TemplateBuilder {
 		return inverted;
 	}
 	private BooleanMap innerMask(BooleanMap outer) {
-		Cell size = outer.size();
+		IntPoint size = outer.size();
 		BooleanMap inner = new BooleanMap(size);
 		for (int y = 1; y < size.y - 1; ++y)
 			for (int x = 1; x < size.x - 1; ++x)
@@ -639,7 +639,7 @@ class TemplateBuilder {
 		return inner;
 	}
 	private static BooleanMap shrinkMask(BooleanMap mask, int amount) {
-		Cell size = mask.size();
+		IntPoint size = mask.size();
 		BooleanMap shrunk = new BooleanMap(size);
 		for (int y = amount; y < size.y - amount; ++y)
 			for (int x = amount; x < size.x - amount; ++x)
@@ -648,39 +648,39 @@ class TemplateBuilder {
 	}
 	private void collectMinutiae(Skeleton skeleton, MinutiaType type) {
 		minutiae = Stream.concat(
-			Arrays.stream(Optional.ofNullable(minutiae).orElse(new Minutia[0])),
+			Arrays.stream(Optional.ofNullable(minutiae).orElse(new ImmutableMinutia[0])),
 			skeleton.minutiae.stream()
 				.filter(m -> m.ridges.size() == 1)
-				.map(m -> new Minutia(m.position, m.ridges.get(0).direction(), type)))
-			.toArray(Minutia[]::new);
+				.map(m -> new ImmutableMinutia(m.position, m.ridges.get(0).direction(), type)))
+			.toArray(ImmutableMinutia[]::new);
 	}
 	private void maskMinutiae(BooleanMap mask) {
 		minutiae = Arrays.stream(minutiae)
 			.filter(minutia -> {
-				Cell arrow = Angle.toVector(minutia.direction).multiply(-Parameters.maskDisplacement).round();
+				IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.maskDisplacement).round();
 				return mask.get(minutia.position.plus(arrow), false);
 			})
-			.toArray(Minutia[]::new);
+			.toArray(ImmutableMinutia[]::new);
 		// https://sourceafis.machinezoo.com/transparency/inner-minutiae
 		transparency.logInnerMinutiae(this);
 	}
 	private void removeMinutiaClouds() {
 		int radiusSq = Integers.sq(Parameters.minutiaCloudRadius);
-		Set<Minutia> removed = Arrays.stream(minutiae)
+		Set<ImmutableMinutia> removed = Arrays.stream(minutiae)
 			.filter(minutia -> Parameters.maxCloudSize < Arrays.stream(minutiae)
 				.filter(neighbor -> neighbor.position.minus(minutia.position).lengthSq() <= radiusSq)
 				.count() - 1)
 			.collect(toSet());
 		minutiae = Arrays.stream(minutiae)
 			.filter(minutia -> !removed.contains(minutia))
-			.toArray(Minutia[]::new);
+			.toArray(ImmutableMinutia[]::new);
 		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
 		transparency.logRemovedMinutiaClouds(this);
 	}
 	private void limitTemplateSize() {
 		if (minutiae.length > Parameters.maxMinutiae) {
 			minutiae = Arrays.stream(minutiae)
-				.sorted(Comparator.<Minutia>comparingInt(
+				.sorted(Comparator.<ImmutableMinutia>comparingInt(
 					minutia -> Arrays.stream(minutiae)
 						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
 						.sorted()
@@ -688,7 +688,7 @@ class TemplateBuilder {
 						.findFirst().orElse(Integer.MAX_VALUE))
 					.reversed())
 				.limit(Parameters.maxMinutiae)
-				.toArray(Minutia[]::new);
+				.toArray(ImmutableMinutia[]::new);
 		}
 		// https://sourceafis.machinezoo.com/transparency/top-minutiae
 		transparency.logTopMinutiae(this);
@@ -696,7 +696,7 @@ class TemplateBuilder {
 	private void shuffleMinutiae() {
 		int prime = 1610612741;
 		Arrays.sort(minutiae, Comparator
-			.comparingInt((Minutia m) -> ((m.position.x * prime) + m.position.y) * prime)
+			.comparingInt((ImmutableMinutia m) -> ((m.position.x * prime) + m.position.y) * prime)
 			.thenComparing(m -> m.position.x)
 			.thenComparing(m -> m.position.y)
 			.thenComparing(m -> m.direction)
@@ -709,7 +709,7 @@ class TemplateBuilder {
 		List<NeighborEdge> star = new ArrayList<>();
 		int[] allSqDistances = new int[minutiae.length];
 		for (int reference = 0; reference < edges.length; ++reference) {
-			Cell referencePosition = minutiae[reference].position;
+			IntPoint referencePosition = minutiae[reference].position;
 			int sqMaxDistance = Integers.sq(Parameters.edgeTableRange);
 			if (minutiae.length - 1 > Parameters.edgeTableNeighbors) {
 				for (int neighbor = 0; neighbor < minutiae.length; ++neighbor)

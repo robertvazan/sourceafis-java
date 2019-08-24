@@ -2,12 +2,12 @@
 package com.machinezoo.sourceafis;
 
 class BlockMap {
-	final Cell pixels;
+	final IntPoint pixels;
 	final BlockGrid primary;
 	final BlockGrid secondary;
 	BlockMap(int width, int height, int maxBlockSize) {
-		pixels = new Cell(width, height);
-		primary = new BlockGrid(new Cell(
+		pixels = new IntPoint(width, height);
+		primary = new BlockGrid(new IntPoint(
 			Integers.roundUpDiv(pixels.x, maxBlockSize),
 			Integers.roundUpDiv(pixels.y, maxBlockSize)));
 		for (int y = 0; y <= primary.blocks.y; ++y)

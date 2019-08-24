@@ -16,7 +16,7 @@ public class BooleanMapTest {
 		assertEquals(5, m.height);
 	}
 	@Test public void constructorFromCell() {
-		BooleanMap m = new BooleanMap(new Cell(4, 5));
+		BooleanMap m = new BooleanMap(new IntPoint(4, 5));
 		assertEquals(4, m.width);
 		assertEquals(5, m.height);
 	}
@@ -37,8 +37,8 @@ public class BooleanMapTest {
 		assertEquals(false, m.get(3, 1));
 	}
 	@Test public void getCell() {
-		assertEquals(true, m.get(new Cell(3, 2)));
-		assertEquals(false, m.get(new Cell(2, 4)));
+		assertEquals(true, m.get(new IntPoint(3, 2)));
+		assertEquals(false, m.get(new IntPoint(2, 4)));
 	}
 	@Test public void getAtFallback() {
 		assertEquals(false, m.get(0, 0, true));
@@ -52,15 +52,15 @@ public class BooleanMapTest {
 		assertEquals(false, m.get(2, 5, false));
 	}
 	@Test public void getCellFallback() {
-		assertEquals(false, m.get(new Cell(0, 0), true));
-		assertEquals(true, m.get(new Cell(3, 0), false));
-		assertEquals(false, m.get(new Cell(0, 4), true));
-		assertEquals(true, m.get(new Cell(3, 4), false));
-		assertEquals(false, m.get(new Cell(-1, 2), false));
-		assertEquals(true, m.get(new Cell(-1, 2), true));
-		assertEquals(false, m.get(new Cell(0, -1), false));
-		assertEquals(true, m.get(new Cell(4, 0), true));
-		assertEquals(false, m.get(new Cell(0, 5), false));
+		assertEquals(false, m.get(new IntPoint(0, 0), true));
+		assertEquals(true, m.get(new IntPoint(3, 0), false));
+		assertEquals(false, m.get(new IntPoint(0, 4), true));
+		assertEquals(true, m.get(new IntPoint(3, 4), false));
+		assertEquals(false, m.get(new IntPoint(-1, 2), false));
+		assertEquals(true, m.get(new IntPoint(-1, 2), true));
+		assertEquals(false, m.get(new IntPoint(0, -1), false));
+		assertEquals(true, m.get(new IntPoint(4, 0), true));
+		assertEquals(false, m.get(new IntPoint(0, 5), false));
 	}
 	@Test public void setAt() {
 		assertEquals(false, m.get(2, 4));
@@ -69,7 +69,7 @@ public class BooleanMapTest {
 	}
 	@Test public void setCell() {
 		assertEquals(true, m.get(1, 2));
-		m.set(new Cell(1, 2), false);
+		m.set(new IntPoint(1, 2), false);
 		assertEquals(false, m.get(1, 2));
 	}
 	@Test public void invert() {

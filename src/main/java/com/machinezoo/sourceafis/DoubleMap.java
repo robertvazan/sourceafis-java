@@ -12,39 +12,39 @@ class DoubleMap {
 		this.height = height;
 		array = new double[width * height];
 	}
-	DoubleMap(Cell size) {
+	DoubleMap(IntPoint size) {
 		this(size.x, size.y);
 	}
-	Cell size() {
-		return new Cell(width, height);
+	IntPoint size() {
+		return new IntPoint(width, height);
 	}
 	double get(int x, int y) {
 		return array[offset(x, y)];
 	}
-	double get(Cell at) {
+	double get(IntPoint at) {
 		return get(at.x, at.y);
 	}
 	void set(int x, int y, double value) {
 		array[offset(x, y)] = value;
 	}
-	void set(Cell at, double value) {
+	void set(IntPoint at, double value) {
 		set(at.x, at.y, value);
 	}
 	void add(int x, int y, double value) {
 		array[offset(x, y)] += value;
 	}
-	void add(Cell at, double value) {
+	void add(IntPoint at, double value) {
 		add(at.x, at.y, value);
 	}
 	void multiply(int x, int y, double value) {
 		array[offset(x, y)] *= value;
 	}
-	void multiply(Cell at, double value) {
+	void multiply(IntPoint at, double value) {
 		multiply(at.x, at.y, value);
 	}
 	ByteBuffer serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(8 * size().area());
-		for (Cell at : size())
+		for (IntPoint at : size())
 			buffer.putDouble(get(at));
 		buffer.flip();
 		return buffer;

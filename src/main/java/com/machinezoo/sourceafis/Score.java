@@ -46,8 +46,8 @@ class Score {
 			EdgeShape probeEdge = new EdgeShape(match.probe.minutiae[pair.probeRef], match.probe.minutiae[pair.probe]);
 			EdgeShape candidateEdge = new EdgeShape(match.candidate.minutiae[pair.candidateRef], match.candidate.minutiae[pair.candidate]);
 			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
-			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
-			angleErrorSum += Math.max(innerAngleRadius, Angle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
+			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
+			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		accurateEdgeLengthScore = 0;
 		accurateMinutiaAngleScore = 0;

@@ -3,28 +3,28 @@ package com.machinezoo.sourceafis;
 
 import java.nio.*;
 
-class PointMap {
+class DoublePointMap {
 	final int width;
 	final int height;
 	private final double[] arrayX;
 	private final double[] arrayY;
-	PointMap(int width, int height) {
+	DoublePointMap(int width, int height) {
 		this.width = width;
 		this.height = height;
 		arrayX = new double[width * height];
 		arrayY = new double[width * height];
 	}
-	PointMap(Cell size) {
+	DoublePointMap(IntPoint size) {
 		this(size.x, size.y);
 	}
-	Cell size() {
-		return new Cell(width, height);
+	IntPoint size() {
+		return new IntPoint(width, height);
 	}
-	Point get(int x, int y) {
+	DoublePoint get(int x, int y) {
 		int i = offset(x, y);
-		return new Point(arrayX[i], arrayY[i]);
+		return new DoublePoint(arrayX[i], arrayY[i]);
 	}
-	Point get(Cell at) {
+	DoublePoint get(IntPoint at) {
 		return get(at.x, at.y);
 	}
 	void set(int x, int y, double px, double py) {
@@ -32,10 +32,10 @@ class PointMap {
 		arrayX[i] = px;
 		arrayY[i] = py;
 	}
-	void set(int x, int y, Point point) {
+	void set(int x, int y, DoublePoint point) {
 		set(x, y, point.x, point.y);
 	}
-	void set(Cell at, Point point) {
+	void set(IntPoint at, DoublePoint point) {
 		set(at.x, at.y, point);
 	}
 	void add(int x, int y, double px, double py) {
@@ -43,16 +43,16 @@ class PointMap {
 		arrayX[i] += px;
 		arrayY[i] += py;
 	}
-	void add(int x, int y, Point point) {
+	void add(int x, int y, DoublePoint point) {
 		add(x, y, point.x, point.y);
 	}
-	void add(Cell at, Point point) {
+	void add(IntPoint at, DoublePoint point) {
 		add(at.x, at.y, point);
 	}
 	ByteBuffer serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(16 * size().area());
-		for (Cell at : size()) {
-			Point point = get(at);
+		for (IntPoint at : size()) {
+			DoublePoint point = get(at);
 			buffer.putDouble(point.x);
 			buffer.putDouble(point.y);
 		}

@@ -7,7 +7,7 @@ import java.util.*;
 class JsonSkeleton {
 	int width;
 	int height;
-	List<Cell> minutiae;
+	List<IntPoint> minutiae;
 	List<JsonSkeletonRidge> ridges;
 	JsonSkeleton(Skeleton skeleton) {
 		width = skeleton.size.x;

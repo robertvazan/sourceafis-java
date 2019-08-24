@@ -68,20 +68,20 @@ public class FingerprintTemplateTest {
 	}
 	@Test public void json_roundTrip() {
 		TemplateBuilder tb = new TemplateBuilder();
-		tb.size = new Cell(800, 600);
-		tb.minutiae = new Minutia[] {
-			new Minutia(new Cell(100, 200), Math.PI, MinutiaType.BIFURCATION),
-			new Minutia(new Cell(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
+		tb.size = new IntPoint(800, 600);
+		tb.minutiae = new ImmutableMinutia[] {
+			new ImmutableMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION),
+			new ImmutableMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
 		};
 		t.immutable = new ImmutableTemplate(tb);
 		t = new FingerprintTemplate().deserialize(t.serialize());
 		assertEquals(2, t.immutable.minutiae.length);
-		Minutia a = t.immutable.minutiae[0];
-		Minutia b = t.immutable.minutiae[1];
-		assertEquals(new Cell(100, 200), a.position);
+		ImmutableMinutia a = t.immutable.minutiae[0];
+		ImmutableMinutia b = t.immutable.minutiae[1];
+		assertEquals(new IntPoint(100, 200), a.position);
 		assertEquals(Math.PI, a.direction, 0.0000001);
 		assertEquals(MinutiaType.BIFURCATION, a.type);
-		assertEquals(new Cell(300, 400), b.position);
+		assertEquals(new IntPoint(300, 400), b.position);
 		assertEquals(0.5 * Math.PI, b.direction, 0.0000001);
 		assertEquals(MinutiaType.ENDING, b.type);
 	}

@@ -5,9 +5,9 @@ import java.nio.*;
 import java.util.*;
 
 class SkeletonMinutia {
-	final Cell position;
+	final IntPoint position;
 	final List<SkeletonRidge> ridges = new ArrayList<>();
-	SkeletonMinutia(Cell position) {
+	SkeletonMinutia(IntPoint position) {
 		this.position = position;
 	}
 	void attachStart(SkeletonRidge ridge) {

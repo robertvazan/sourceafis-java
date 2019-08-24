@@ -4,13 +4,13 @@ package com.machinezoo.sourceafis;
 import static org.junit.Assert.*;
 import org.junit.*;
 
-public class RangeTest {
+public class IntRangeTest {
 	@Test public void constructor() {
-		Range r = new Range(3, 10);
+		IntRange r = new IntRange(3, 10);
 		assertEquals(3, r.start);
 		assertEquals(10, r.end);
 	}
 	@Test public void length() {
-		assertEquals(7, new Range(3, 10).length());
+		assertEquals(7, new IntRange(3, 10).length());
 	}
 }

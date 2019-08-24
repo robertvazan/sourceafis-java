@@ -8,16 +8,16 @@ class JsonTemplate {
 	int width;
 	int height;
 	List<JsonMinutia> minutiae;
-	JsonTemplate(Cell size, Minutia[] minutiae) {
+	JsonTemplate(IntPoint size, ImmutableMinutia[] minutiae) {
 		width = size.x;
 		height = size.y;
 		this.minutiae = Arrays.stream(minutiae).map(JsonMinutia::new).collect(toList());
 	}
-	Cell size() {
-		return new Cell(width, height);
+	IntPoint size() {
+		return new IntPoint(width, height);
 	}
-	Minutia[] minutiae() {
-		return minutiae.stream().map(Minutia::new).toArray(n -> new Minutia[n]);
+	ImmutableMinutia[] minutiae() {
+		return minutiae.stream().map(ImmutableMinutia::new).toArray(n -> new ImmutableMinutia[n]);
 	}
 	void validate() {
 		/*

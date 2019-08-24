@@ -10,7 +10,7 @@ class ForeignMinutia {
 	int x;
 	int y;
 	double angle;
-	ForeignMinutia(Minutia minutia) {
+	ForeignMinutia(ImmutableMinutia minutia) {
 		type = ForeignMinutiaType.convert(minutia.type);
 		x = minutia.position.x;
 		y = minutia.position.y;
@@ -60,18 +60,18 @@ class ForeignMinutia {
 	private void readAngle(DataInputStream in, ForeignFormat format) throws IOException {
 		int quantized = in.readUnsignedByte();
 		if (format == ForeignFormat.ISO_19794_2_2005)
-			angle = Angle.complementary((quantized + 0.5) / 256 * Angle.PI2);
+			angle = DoubleAngle.complementary((quantized + 0.5) / 256 * DoubleAngle.PI2);
 		else {
 			if (quantized >= 180)
 				logger.warn("Bad template: minutia angle must be in range 0-179");
-			angle = Angle.complementary(((2 * quantized - 1 + 360) % 360) / 360.0 * Angle.PI2);
+			angle = DoubleAngle.complementary(((2 * quantized - 1 + 360) % 360) / 360.0 * DoubleAngle.PI2);
 		}
 	}
 	private void writeAngle(DataOutputStream out, ForeignFormat format) throws IOException {
-		double normalized = Angle.complementary(angle < 0 ? angle + Angle.PI2 : angle >= Angle.PI2 ? angle - Angle.PI2 : angle);
-		if (normalized < 0 || normalized >= Angle.PI2)
+		double normalized = DoubleAngle.complementary(angle < 0 ? angle + DoubleAngle.PI2 : angle >= DoubleAngle.PI2 ? angle - DoubleAngle.PI2 : angle);
+		if (normalized < 0 || normalized >= DoubleAngle.PI2)
 			throw new IllegalArgumentException("Cannot create template: angle must be in range [0, 2pi)");
-		int quantized = (int)Math.ceil(normalized / Angle.PI2 * 360 / 2);
+		int quantized = (int)Math.ceil(normalized / DoubleAngle.PI2 * 360 / 2);
 		if (quantized >= 180)
 			quantized -= 180;
 		if (quantized < 0 || quantized >= 180)

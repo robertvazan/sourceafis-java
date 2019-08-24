@@ -2,29 +2,29 @@
 package com.machinezoo.sourceafis;
 
 class BlockGrid {
-	final Cell blocks;
-	final Cell corners;
+	final IntPoint blocks;
+	final IntPoint corners;
 	final int[] x;
 	final int[] y;
-	BlockGrid(Cell size) {
+	BlockGrid(IntPoint size) {
 		blocks = size;
-		corners = new Cell(size.x + 1, size.y + 1);
+		corners = new IntPoint(size.x + 1, size.y + 1);
 		x = new int[size.x + 1];
 		y = new int[size.y + 1];
 	}
 	BlockGrid(int width, int height) {
-		this(new Cell(width, height));
+		this(new IntPoint(width, height));
 	}
-	Cell corner(int atX, int atY) {
-		return new Cell(x[atX], y[atY]);
+	IntPoint corner(int atX, int atY) {
+		return new IntPoint(x[atX], y[atY]);
 	}
-	Cell corner(Cell at) {
+	IntPoint corner(IntPoint at) {
 		return corner(at.x, at.y);
 	}
-	Block block(int atX, int atY) {
-		return Block.between(corner(atX, atY), corner(atX + 1, atY + 1));
+	IntRect block(int atX, int atY) {
+		return IntRect.between(corner(atX, atY), corner(atX + 1, atY + 1));
 	}
-	Block block(Cell at) {
+	IntRect block(IntPoint at) {
 		return block(at.x, at.y);
 	}
 }

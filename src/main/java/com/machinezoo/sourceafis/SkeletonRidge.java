@@ -5,7 +5,7 @@ import java.nio.*;
 import java.util.*;
 
 class SkeletonRidge {
-	final List<Cell> points;
+	final List<IntPoint> points;
 	final SkeletonRidge reversed;
 	private SkeletonMinutia startMinutia;
 	private SkeletonMinutia endMinutia;
@@ -56,13 +56,13 @@ class SkeletonRidge {
 		}
 		if (first < 0)
 			first = 0;
-		return Angle.atan(points.get(first), points.get(last));
+		return DoubleAngle.atan(points.get(first), points.get(last));
 	}
 	void write(ByteBuffer buffer) {
-		for (Cell at : points)
+		for (IntPoint at : points)
 			at.write(buffer);
 	}
 	int serializedSize() {
-		return points.size() * Cell.serializedSize();
+		return points.size() * IntPoint.serializedSize();
 	}
 }

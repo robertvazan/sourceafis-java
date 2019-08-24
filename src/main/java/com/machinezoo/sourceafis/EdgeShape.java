@@ -14,7 +14,7 @@ class EdgeShape {
 			for (int x = 0; x < polarCacheRadius; ++x) {
 				polarDistance[y * polarCacheRadius + x] = (int)Math.round(Math.sqrt(Integers.sq(x) + Integers.sq(y)));
 				if (y > 0 || x > 0)
-					polarAngle[y * polarCacheRadius + x] = Angle.atan(new Point(x, y));
+					polarAngle[y * polarCacheRadius + x] = DoubleAngle.atan(new DoublePoint(x, y));
 				else
 					polarAngle[y * polarCacheRadius + x] = 0;
 			}
@@ -24,8 +24,8 @@ class EdgeShape {
 		this.referenceAngle = referenceAngle;
 		this.neighborAngle = neighborAngle;
 	}
-	EdgeShape(Minutia reference, Minutia neighbor) {
-		Cell vector = neighbor.position.minus(reference.position);
+	EdgeShape(ImmutableMinutia reference, ImmutableMinutia neighbor) {
+		IntPoint vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
 		int x = vector.x;
 		int y = vector.y;
@@ -38,13 +38,13 @@ class EdgeShape {
 			int tmp = -x;
 			x = y;
 			y = tmp;
-			quadrant += Angle.halfPI;
+			quadrant += DoubleAngle.halfPI;
 		}
 		int shift = 32 - Integer.numberOfLeadingZeros((x | y) >>> polarCacheBits);
 		int offset = (y >> shift) * polarCacheRadius + (x >> shift);
 		length = polarDistance[offset] << shift;
 		double angle = polarAngle[offset] + quadrant;
-		referenceAngle = Angle.difference(reference.direction, angle);
-		neighborAngle = Angle.difference(neighbor.direction, Angle.opposite(angle));
+		referenceAngle = DoubleAngle.difference(reference.direction, angle);
+		neighborAngle = DoubleAngle.difference(neighbor.direction, DoubleAngle.opposite(angle));
 	}
 }

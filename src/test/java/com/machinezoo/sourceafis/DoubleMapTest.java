@@ -16,7 +16,7 @@ public class DoubleMapTest {
 		assertEquals(4, m.height);
 	}
 	@Test public void constructorFromCell() {
-		DoubleMap m = new DoubleMap(new Cell(3, 4));
+		DoubleMap m = new DoubleMap(new IntPoint(3, 4));
 		assertEquals(3, m.width);
 		assertEquals(4, m.height);
 	}
@@ -29,15 +29,15 @@ public class DoubleMapTest {
 		assertEquals(21, m.get(2, 1), 0.001);
 	}
 	@Test public void getCell() {
-		assertEquals(3, m.get(new Cell(0, 3)), 0.001);
-		assertEquals(22, m.get(new Cell(2, 2)), 0.001);
+		assertEquals(3, m.get(new IntPoint(0, 3)), 0.001);
+		assertEquals(22, m.get(new IntPoint(2, 2)), 0.001);
 	}
 	@Test public void setAt() {
 		m.set(1, 2, 101);
 		assertEquals(101, m.get(1, 2), 0.001);
 	}
 	@Test public void setCell() {
-		m.set(new Cell(2, 3), 101);
+		m.set(new IntPoint(2, 3), 101);
 		assertEquals(101, m.get(2, 3), 0.001);
 	}
 	@Test public void addAt() {
@@ -45,7 +45,7 @@ public class DoubleMapTest {
 		assertEquals(121, m.get(2, 1), 0.001);
 	}
 	@Test public void addCell() {
-		m.add(new Cell(2, 3), 100);
+		m.add(new IntPoint(2, 3), 100);
 		assertEquals(123, m.get(2, 3), 0.001);
 	}
 	@Test public void multiplyAt() {
@@ -53,7 +53,7 @@ public class DoubleMapTest {
 		assertEquals(130, m.get(1, 3), 0.001);
 	}
 	@Test public void multiplyCell() {
-		m.multiply(new Cell(1, 2), 10);
+		m.multiply(new IntPoint(1, 2), 10);
 		assertEquals(120, m.get(1, 2), 0.001);
 	}
 }
