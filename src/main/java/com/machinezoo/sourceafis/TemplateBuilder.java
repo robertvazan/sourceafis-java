@@ -67,6 +67,7 @@ class TemplateBuilder {
 	}
 	void deserialize(String json) {
 		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
+		data.validate();
 		size = data.size();
 		minutiae = data.minutiae();
 		// https://sourceafis.machinezoo.com/transparency/deserialized-minutiae

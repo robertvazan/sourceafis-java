@@ -19,4 +19,14 @@ class JsonTemplate {
 	Minutia[] minutiae() {
 		return minutiae.stream().map(Minutia::new).toArray(n -> new Minutia[n]);
 	}
+	void validate() {
+		/*
+		 * Width and height are informative only. Don't validate them.
+		 */
+		Objects.requireNonNull(minutiae, "Null minutia array.");
+		for (JsonMinutia minutia : minutiae) {
+			Objects.requireNonNull(minutia, "Null minutia.");
+			minutia.validate();
+		}
+	}
 }

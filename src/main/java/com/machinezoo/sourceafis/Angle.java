@@ -55,4 +55,7 @@ class Angle {
 		double complement = PI2 - angle;
 		return complement < PI2 ? complement : complement - PI2;
 	}
+	static boolean normalized(double angle) {
+		return angle >= 0 && angle < PI2;
+	}
 }
