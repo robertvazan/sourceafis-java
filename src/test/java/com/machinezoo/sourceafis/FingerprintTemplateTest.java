@@ -34,22 +34,22 @@ public class FingerprintTemplateTest {
 		new FingerprintTemplate().create(load("probe.png"));
 	}
 	@Test public void decodeImage_png() {
-		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.png")));
+		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.png")));
 	}
 	@Test public void decodeImage_jpeg() {
-		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.jpeg")));
+		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.jpeg")));
 	}
 	@Test public void decodeImage_bmp() {
-		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.bmp")));
+		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.bmp")));
 	}
 	@Test public void decodeImage_tiff() {
-		decodeImage_validate(TemplateBuilder.decodeImage(load("probe.tiff")));
+		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.tiff")));
 	}
 	@Test public void decodeImage_wsq() {
-		decodeImage_validate(TemplateBuilder.decodeImage(load("wsq-original.wsq")), TemplateBuilder.decodeImage(load("wsq-converted.png")));
+		decodeImage_validate(ImageDecoder.toDoubleMap(load("wsq-original.wsq")), ImageDecoder.toDoubleMap(load("wsq-converted.png")));
 	}
 	private void decodeImage_validate(DoubleMap map) {
-		decodeImage_validate(map, TemplateBuilder.decodeImage(load("probe.png")));
+		decodeImage_validate(map, ImageDecoder.toDoubleMap(load("probe.png")));
 	}
 	private void decodeImage_validate(DoubleMap map, DoubleMap reference) {
 		assertEquals(reference.width, map.width);
@@ -88,7 +88,7 @@ public class FingerprintTemplateTest {
 	@Test public void randomScaleMatch() throws Exception {
 		FingerprintMatcher matcher = new FingerprintMatcher()
 			.index(probe());
-		DoubleMap original = TemplateBuilder.decodeImage(load("matching.png"));
+		DoubleMap original = ImageDecoder.toDoubleMap(load("matching.png"));
 		int clipX = original.width / 10;
 		int clipY = original.height / 10;
 		Random random = new Random(0);

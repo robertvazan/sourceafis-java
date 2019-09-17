@@ -2,27 +2,17 @@
 package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
-import java.awt.image.*;
-import java.io.*;
 import java.util.*;
-import java.util.function.*;
 import java.util.stream.*;
-import javax.imageio.*;
-import org.apache.sanselan.*;
-import org.jnbis.api.*;
-import org.jnbis.api.model.*;
-import org.slf4j.*;
 import com.google.gson.*;
-import com.machinezoo.noexception.throwing.*;
 
 class TemplateBuilder {
-	private static final Logger logger = LoggerFactory.getLogger(TemplateBuilder.class);
 	FingerprintTransparency transparency = FingerprintTransparency.none;
 	IntPoint size;
 	ImmutableMinutia[] minutiae;
 	NeighborEdge[][] edges;
 	void extract(byte[] image, double dpi) {
-		DoubleMap raw = decodeImage(image);
+		DoubleMap raw = ImageDecoder.toDoubleMap(image);
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		transparency.logDecodedImage(raw);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
@@ -93,70 +83,6 @@ class TemplateBuilder {
 			return (int)Math.round(value / dpi * 500);
 		else
 			return value;
-	}
-	static DoubleMap decodeImage(byte[] serialized) {
-		Stream<Function<byte[], DoubleMap>> decoders = Stream.of(
-			decodeSafely("ImageIO", TemplateBuilder::decodeViaImageIO),
-			decodeSafely("Sanselan", TemplateBuilder::decodeViaSanselan),
-			decodeSafely("JNBIS/WSQ", TemplateBuilder::decodeWsq));
-		return decoders
-			.map(decoder -> decoder.apply(serialized))
-			.filter(Objects::nonNull)
-			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("Unsupported image format"));
-	}
-	private static Function<byte[], DoubleMap> decodeSafely(String name, ThrowingFunction<byte[], DoubleMap> decoder) {
-		return serialized -> {
-			try {
-				return decoder.apply(serialized);
-			} catch (Throwable ex) {
-				logger.warn("Image decoder '" + name + "' failed with an exception", ex);
-				return null;
-			}
-		};
-	}
-	private static DoubleMap decodeViaImageIO(byte[] serialized) throws IOException {
-		BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(serialized));
-		if (buffered == null)
-			return null;
-		return decodeBufferedImage(buffered);
-	}
-	private static DoubleMap decodeViaSanselan(byte[] serialized) throws IOException {
-		BufferedImage buffered;
-		try {
-			buffered = Sanselan.getBufferedImage(serialized);
-		} catch (ImageReadException ex) {
-			return null;
-		}
-		return decodeBufferedImage(buffered);
-	}
-	private static DoubleMap decodeBufferedImage(BufferedImage buffered) {
-		int width = buffered.getWidth();
-		int height = buffered.getHeight();
-		int[] pixels = new int[width * height];
-		buffered.getRGB(0, 0, width, height, pixels, 0, width);
-		DoubleMap map = new DoubleMap(width, height);
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
-				int pixel = pixels[y * width + x];
-				int color = (pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff);
-				map.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
-			}
-		}
-		return map;
-	}
-	private static DoubleMap decodeWsq(byte[] serialized) {
-		if (serialized.length < 2 || serialized[0] != (byte)0xff || serialized[1] != (byte)0xa0)
-			return null;
-		Bitmap bitmap = Jnbis.wsq().decode(serialized).asBitmap();
-		int width = bitmap.getWidth();
-		int height = bitmap.getHeight();
-		byte[] buffer = bitmap.getPixels();
-		DoubleMap map = new DoubleMap(width, height);
-		for (int y = 0; y < height; ++y)
-			for (int x = 0; x < width; ++x)
-				map.set(x, y, 1 - (buffer[y * width + x] & 0xff) / 255.0);
-		return map;
 	}
 	static DoubleMap scaleImage(DoubleMap input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
