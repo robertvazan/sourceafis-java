@@ -18,6 +18,7 @@ abstract class ImageDecoder {
 		int height;
 		int[] argb;
 	}
+	abstract boolean available();
 	abstract String name();
 	abstract DecodedImage decode(byte[] image);
 	private static final List<ImageDecoder> all = Arrays.asList(
@@ -29,6 +30,8 @@ abstract class ImageDecoder {
 		Map<ImageDecoder, Throwable> exceptions = new HashMap<>();
 		for (ImageDecoder decoder : all) {
 			try {
+				if (!decoder.available())
+					throw new UnsupportedOperationException("Image decoder is not available.");
 				DecodedImage decoded = decoder.decode(image);
 				DoubleMap map = new DoubleMap(decoded.width, decoded.height);
 				for (int y = 0; y < decoded.height; ++y) {
@@ -55,7 +58,18 @@ abstract class ImageDecoder {
 			.map(ex -> ex.toString())
 			.collect(joining(" -> "));
 	}
+	static boolean hasClass(String name) {
+		try {
+			Class.forName(name);
+			return true;
+		} catch (Throwable ex) {
+			return false;
+		}
+	}
 	private static class ImageIODecoder extends ImageDecoder {
+		@Override boolean available() {
+			return hasClass("javax.imageio.ImageIO");
+		}
 		@Override String name() {
 			return "ImageIO";
 		}
@@ -74,6 +88,9 @@ abstract class ImageDecoder {
 		}
 	}
 	private static class SanselanDecoder extends ImageDecoder {
+		@Override boolean available() {
+			return hasClass("java.awt.image.BufferedImage");
+		}
 		@Override String name() {
 			return "Sanselan";
 		}
@@ -90,6 +107,9 @@ abstract class ImageDecoder {
 		}
 	}
 	private static class WsqDecoder extends ImageDecoder {
+		@Override boolean available() {
+			return true;
+		}
 		@Override String name() {
 			return "WSQ";
 		}
@@ -114,6 +134,9 @@ abstract class ImageDecoder {
 		}
 	}
 	private static class AndroidDecoder extends ImageDecoder {
+		@Override boolean available() {
+			return hasClass("android.graphics.BitmapFactory");
+		}
 		@Override String name() {
 			return "Android";
 		}
