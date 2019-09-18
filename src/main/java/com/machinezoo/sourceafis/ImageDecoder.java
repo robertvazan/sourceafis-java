@@ -44,8 +44,16 @@ abstract class ImageDecoder {
 			}
 		}
 		throw new IllegalArgumentException(String.format("Unsupported image format [%s].", all.stream()
-			.map(d -> String.format("%s = '%s'", d.name(), exceptions.get(d)))
+			.map(d -> String.format("%s = '%s'", d.name(), formatError(exceptions.get(d))))
 			.collect(joining(", "))));
+	}
+	private static String formatError(Throwable exception) {
+		List<Throwable> ancestors = new ArrayList<>();
+		for (Throwable ancestor = exception; ancestor != null; ancestor = ancestor.getCause())
+			ancestors.add(ancestor);
+		return ancestors.stream()
+			.map(ex -> ex.toString())
+			.collect(joining(" -> "));
 	}
 	private static class ImageIODecoder extends ImageDecoder {
 		@Override String name() {
