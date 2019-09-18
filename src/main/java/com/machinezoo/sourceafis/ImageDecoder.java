@@ -4,6 +4,7 @@ package com.machinezoo.sourceafis;
 import static java.util.stream.Collectors.*;
 import java.awt.image.*;
 import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
 import javax.imageio.*;
 import org.apache.sanselan.*;
@@ -22,7 +23,8 @@ abstract class ImageDecoder {
 	private static final List<ImageDecoder> all = Arrays.asList(
 		new ImageIODecoder(),
 		new SanselanDecoder(),
-		new WsqDecoder());
+		new WsqDecoder(),
+		new AndroidDecoder());
 	static DoubleMap toDoubleMap(byte[] image) {
 		Map<ImageDecoder, Throwable> exceptions = new HashMap<>();
 		for (ImageDecoder decoder : all) {
@@ -101,6 +103,46 @@ abstract class ImageDecoder {
 				}
 				return decoded;
 			});
+		}
+	}
+	private static class AndroidDecoder extends ImageDecoder {
+		@Override String name() {
+			return "Android";
+		}
+		@Override DecodedImage decode(byte[] image) {
+			AndroidBitmap bitmap = AndroidBitmapFactory.decodeByteArray(image, 0, image.length);
+			DecodedImage decoded = new DecodedImage();
+			decoded.width = bitmap.getWidth();
+			decoded.height = bitmap.getHeight();
+			decoded.argb = new int[decoded.width * decoded.height];
+			bitmap.getPixels(decoded.argb, 0, decoded.width, 0, 0, decoded.width, decoded.height);
+			return decoded;
+		}
+		static class AndroidBitmapFactory {
+			static Class<?> clazz = Exceptions.sneak().get(() -> Class.forName("android.graphics.BitmapFactory"));
+			static Method decodeByteArray = Exceptions.sneak().get(() -> clazz.getMethod("decodeByteArray", byte[].class, int.class, int.class));
+			static AndroidBitmap decodeByteArray(byte[] data, int offset, int length) {
+				return new AndroidBitmap(Exceptions.sneak().get(() -> decodeByteArray.invoke(null, data, offset, length)));
+			}
+		}
+		static class AndroidBitmap {
+			static Class<?> clazz = Exceptions.sneak().get(() -> Class.forName("android.graphics.Bitmap"));
+			static Method getWidth = Exceptions.sneak().get(() -> clazz.getMethod("getWidth"));
+			static Method getHeight = Exceptions.sneak().get(() -> clazz.getMethod("getHeight"));
+			static Method getPixels = Exceptions.sneak().get(() -> clazz.getMethod("getPixels", int[].class, int.class, int.class, int.class, int.class, int.class, int.class));
+			final Object instance;
+			AndroidBitmap(Object instance) {
+				this.instance = instance;
+			}
+			int getWidth() {
+				return Exceptions.sneak().getAsInt(() -> (int)getWidth.invoke(instance));
+			}
+			int getHeight() {
+				return Exceptions.sneak().getAsInt(() -> (int)getHeight.invoke(instance));
+			}
+			void getPixels(int[] pixels, int offset, int stride, int x, int y, int width, int height) {
+				Exceptions.sneak().run(() -> getPixels.invoke(instance, pixels, offset, stride, x, y, width, height));
+			}
 		}
 	}
 }
