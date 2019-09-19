@@ -6,7 +6,15 @@ import gnu.trove.map.hash.*;
 import gnu.trove.set.hash.*;
 
 class MatchBuffer {
-	private static final ThreadLocal<MatchBuffer> local = ThreadLocal.withInitial(MatchBuffer::new);
+	private static final ThreadLocal<MatchBuffer> local = new ThreadLocal<MatchBuffer>() {
+		/*
+		 * ThreadLocal has method withInitial() that is more convenient,
+		 * but that method alone would force whole SourceAFIS to require Android API level 26 instead of 24.
+		 */
+		@Override protected MatchBuffer initialValue() {
+			return new MatchBuffer();
+		}
+	};
 	FingerprintTransparency transparency = FingerprintTransparency.none;
 	ImmutableTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
