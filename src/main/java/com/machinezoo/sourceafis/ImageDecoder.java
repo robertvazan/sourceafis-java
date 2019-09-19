@@ -208,6 +208,8 @@ abstract class ImageDecoder {
 		}
 		@Override DecodedImage decode(byte[] image) {
 			AndroidBitmap bitmap = AndroidBitmapFactory.decodeByteArray(image, 0, image.length);
+			if (bitmap.instance == null)
+				throw new IllegalArgumentException("Unsupported image format.");
 			int width = bitmap.getWidth();
 			int height = bitmap.getHeight();
 			int[] pixels = new int[width * height];
