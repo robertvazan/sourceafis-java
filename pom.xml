@@ -27,8 +27,8 @@
 	</developers>
 
 	<scm>
-		<connection>scm:hg:https://bitbucket.org/robertvazan/sourceafis-java</connection>
-		<developerConnection>scm:hg:https://bitbucket.org/robertvazan/sourceafis-java</developerConnection>
+		<connection>scm:git:https://bitbucket.org/robertvazan/sourceafis-java</connection>
+		<developerConnection>scm:git:https://bitbucket.org/robertvazan/sourceafis-java</developerConnection>
 		<url>https://bitbucket.org/robertvazan/sourceafis-java</url>
 	</scm>
 
