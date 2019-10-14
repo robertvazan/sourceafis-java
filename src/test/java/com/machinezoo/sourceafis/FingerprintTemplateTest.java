@@ -6,65 +6,21 @@ import java.awt.image.*;
 import java.io.*;
 import java.util.*;
 import javax.imageio.*;
-import org.apache.commons.io.*;
 import org.junit.*;
-import com.machinezoo.noexception.*;
 
 public class FingerprintTemplateTest {
 	private static FingerprintTemplate t = new FingerprintTemplate();
 	public static FingerprintTemplate probe() {
-		return new FingerprintTemplate().create(load("probe.png"));
+		return new FingerprintTemplate(FingerprintImageTest.probe());
 	}
 	public static FingerprintTemplate matching() {
-		return new FingerprintTemplate().create(load("matching.png"));
+		return new FingerprintTemplate(FingerprintImageTest.matching());
 	}
 	public static FingerprintTemplate nonmatching() {
-		return new FingerprintTemplate().create(load("nonmatching.png"));
-	}
-	public static FingerprintTemplate probeIso() {
-		return FingerprintCompatibility.convert(load("iso-probe.dat"));
-	}
-	public static FingerprintTemplate matchingIso() {
-		return FingerprintCompatibility.convert(load("iso-matching.dat"));
-	}
-	public static FingerprintTemplate nonmatchingIso() {
-		return FingerprintCompatibility.convert(load("iso-nonmatching.dat"));
+		return new FingerprintTemplate(FingerprintImageTest.nonmatching());
 	}
 	@Test public void constructor() {
-		new FingerprintTemplate().create(load("probe.png"));
-	}
-	@Test public void decodeImage_png() {
-		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.png")));
-	}
-	@Test public void decodeImage_jpeg() {
-		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.jpeg")));
-	}
-	@Test public void decodeImage_bmp() {
-		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.bmp")));
-	}
-	@Test public void decodeImage_tiff() {
-		decodeImage_validate(ImageDecoder.toDoubleMap(load("probe.tiff")));
-	}
-	@Test public void decodeImage_wsq() {
-		decodeImage_validate(ImageDecoder.toDoubleMap(load("wsq-original.wsq")), ImageDecoder.toDoubleMap(load("wsq-converted.png")));
-	}
-	private void decodeImage_validate(DoubleMap map) {
-		decodeImage_validate(map, ImageDecoder.toDoubleMap(load("probe.png")));
-	}
-	private void decodeImage_validate(DoubleMap map, DoubleMap reference) {
-		assertEquals(reference.width, map.width);
-		assertEquals(reference.height, map.height);
-		double delta = 0, max = -1, min = 1;
-		for (int x = 0; x < map.width; ++x) {
-			for (int y = 0; y < map.height; ++y) {
-				delta += Math.abs(map.get(x, y) - reference.get(x, y));
-				max = Math.max(max, map.get(x, y));
-				min = Math.min(min, map.get(x, y));
-			}
-		}
-		assertTrue(max > 0.75);
-		assertTrue(min < 0.1);
-		assertTrue(delta / (map.width * map.height) < 0.01);
+		probe();
 	}
 	@Test public void json_roundTrip() {
 		TemplateBuilder tb = new TemplateBuilder();
@@ -88,7 +44,7 @@ public class FingerprintTemplateTest {
 	@Test public void randomScaleMatch() throws Exception {
 		FingerprintMatcher matcher = new FingerprintMatcher()
 			.index(probe());
-		DoubleMap original = ImageDecoder.toDoubleMap(load("matching.png"));
+		DoubleMap original = FingerprintImageTest.matching().decoded;
 		int clipX = original.width / 10;
 		int clipY = original.height / 10;
 		Random random = new Random(0);
@@ -97,9 +53,9 @@ public class FingerprintTemplateTest {
 			double dpi = 500 + 2 * (random.nextDouble() - 0.5) * 200;
 			DoubleMap scaled = TemplateBuilder.scaleImage(clipped, 500 * 1 / (dpi / 500));
 			byte[] reencoded = encodeImage(scaled);
-			FingerprintTemplate candidate = new FingerprintTemplate()
+			FingerprintTemplate candidate = new FingerprintTemplate(new FingerprintImage()
 				.dpi(dpi)
-				.create(reencoded);
+				.decode(reencoded));
 			double score = matcher.match(candidate);
 			assertTrue("Score " + score + " @ DPI " + dpi, score >= 40);
 		}
@@ -123,12 +79,5 @@ public class FingerprintTemplateTest {
 	    ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ImageIO.write(buffered, "BMP", stream);
 		return stream.toByteArray();
-	}
-	private static byte[] load(String name) {
-		return Exceptions.sneak().get(() -> {
-			try (InputStream input = FingerprintTemplateTest.class.getResourceAsStream("/com/machinezoo/sourceafis/" + name)) {
-				return IOUtils.toByteArray(input);
-			}
-		});
 	}
 }

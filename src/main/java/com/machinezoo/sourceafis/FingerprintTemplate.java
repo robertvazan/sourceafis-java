@@ -9,9 +9,7 @@ import com.google.gson.*;
  * Fingerprint template holds high-level fingerprint features, specifically ridge endings and bifurcations (together called minutiae).
  * Original image is not preserved in the fingerprint template and there is no way to reconstruct the original fingerprint from its template.
  * <p>
- * Fingerprint image can be converted to template by calling {@link #create(byte[])} method
- * on an empty fingerprint template instantiated with {@link #FingerprintTemplate()} constructor.
- * Image DPI may be specified first by calling {@link #dpi(double)}.
+ * {@link FingerprintImage} can be converted to template by calling {@link #FingerprintTemplate(FingerprintImage)} constructor.
  * <p>
  * Since image processing is expensive, applications should cache serialized templates.
  * Serialization into JSON format is performed by {@link #serialize()} method.
@@ -27,16 +25,39 @@ import com.google.gson.*;
  * Only fingerprint features are serialized. Search data structures are recomputed after every deserialization.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
+ * @see FingerprintImage
  * @see FingerprintMatcher
  */
 public class FingerprintTemplate {
-	private double dpi = 500;
+	/*
+	 * We should drop this indirection once deprecated methods are dropped
+	 * and FingerprintTemplate itself becomes immutable.
+	 */
 	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
+	/**
+	 * Create fingerprint template from fingerprint image.
+	 * <p>
+	 * This constructor runs an expensive feature extractor algorithm,
+	 * which analyzes the image and collects identifiable biometric features from it.
+	 * 
+	 * @param image
+	 *            fingerprint image to process
+	 */
+	public FingerprintTemplate(FingerprintImage image) {
+		TemplateBuilder builder = new TemplateBuilder();
+		builder.extract(image.decoded, image.dpi);
+		immutable = new ImmutableTemplate(builder);
+	}
 	/**
 	 * Instantiate an empty fingerprint template.
 	 * Empty template represents fingerprint with no features that does not match any other fingerprint (not even itself).
 	 * You can then call {@link #create(byte[])} or {@link #deserialize(String)}
 	 * to actually fill the template with useful biometric data.
+	 * <p>
+	 * This constructor is largely deprecated. Use {@link #FingerprintTemplate(FingerprintImage)} instead.
+	 * This constructor should be only used with {@link #deserialize(String)} method.
+	 * 
+	 * @see #FingerprintTemplate(FingerprintImage)
 	 */
 	public FingerprintTemplate() {
 	}
@@ -55,18 +76,22 @@ public class FingerprintTemplate {
 	@Deprecated public FingerprintTemplate transparency(FingerprintTransparency transparency) {
 		return this;
 	}
+	private double dpi = 500;
 	/**
 	 * Set DPI (dots per inch) of the fingerprint image.
 	 * This is the DPI of the image later passed to {@link #create(byte[])}.
 	 * Check your fingerprint reader specification for correct DPI value. Default DPI is 500.
+	 * <p>
+	 * This method is deprecated. Use {@link FingerprintImage#dpi(double)} and {@link #FingerprintTemplate(FingerprintImage)} instead.
 	 * 
 	 * @param dpi
 	 *            DPI of the fingerprint image, usually around 500
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see #create(byte[])
+	 * @see FingerprintImage#dpi(double)
+	 * @see #FingerprintTemplate(FingerprintImage)
 	 */
-	public FingerprintTemplate dpi(double dpi) {
+	@Deprecated public FingerprintTemplate dpi(double dpi) {
 		this.dpi = dpi;
 		return this;
 	}
@@ -82,16 +107,19 @@ public class FingerprintTemplate {
 	 * Note that these libraries might not support all versions and variations of the mentioned formats.
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
+	 * <p>
+	 * This method is deprecated. Use {@link FingerprintImage#decode(byte[])} and {@link #FingerprintTemplate(FingerprintImage)} instead.
 	 * 
 	 * @param image
 	 *            fingerprint image in {@link ImageIO}-supported format
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see #dpi(double)
+	 * @see FingerprintImage#decode(byte[])
+	 * @see #FingerprintTemplate(FingerprintImage)
 	 */
-	public FingerprintTemplate create(byte[] image) {
+	@Deprecated public FingerprintTemplate create(byte[] image) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.extract(image, dpi);
+		builder.extract(ImageDecoder.toDoubleMap(image), dpi);
 		immutable = new ImmutableTemplate(builder);
 		return this;
 	}
@@ -143,9 +171,10 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Import ANSI INCITS 378 or ISO 19794-2 fingerprint template from another fingerprint recognition system.
-	 * This method is deprecated. Use {@link FingerprintCompatibility#convert(byte[])} instead.
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
+	 * <p>
+	 * This method is deprecated. Use {@link FingerprintCompatibility#convert(byte[])} instead.
 	 * 
 	 * @param template
 	 *            foreign template to import

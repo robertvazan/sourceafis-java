@@ -16,13 +16,13 @@ public class FingerprintMatcherTest {
 		assertTrue("Score: " + score, score < 20);
 	}
 	@Test public void matchingPairIso() {
-		FingerprintMatcher matcher = new FingerprintMatcher().index(FingerprintTemplateTest.probeIso());
-		double score = matcher.match(FingerprintTemplateTest.matchingIso());
+		FingerprintMatcher matcher = new FingerprintMatcher().index(FingerprintCompatibilityTest.probeIso());
+		double score = matcher.match(FingerprintCompatibilityTest.matchingIso());
 		assertTrue("Score: " + score, score > 40);
 	}
 	@Test public void nonmatchingPairIso() {
-		FingerprintMatcher matcher = new FingerprintMatcher().index(FingerprintTemplateTest.probeIso());
-		double score = matcher.match(FingerprintTemplateTest.nonmatchingIso());
+		FingerprintMatcher matcher = new FingerprintMatcher().index(FingerprintCompatibilityTest.probeIso());
+		double score = matcher.match(FingerprintCompatibilityTest.nonmatchingIso());
 		assertTrue("Score: " + score, score < 20);
 	}
 }

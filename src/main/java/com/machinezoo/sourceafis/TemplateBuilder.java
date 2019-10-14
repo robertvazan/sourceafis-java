@@ -10,8 +10,7 @@ class TemplateBuilder {
 	IntPoint size;
 	ImmutableMinutia[] minutiae;
 	NeighborEdge[][] edges;
-	void extract(byte[] image, double dpi) {
-		DoubleMap raw = ImageDecoder.toDoubleMap(image);
+	void extract(DoubleMap raw, double dpi) {
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		FingerprintTransparency.current().logDecodedImage(raw);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)

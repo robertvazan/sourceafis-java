@@ -2,10 +2,29 @@
 package com.machinezoo.sourceafis;
 
 import static org.junit.Assert.*;
+import java.io.*;
 import java.util.function.*;
+import org.apache.commons.io.*;
 import org.junit.*;
+import com.machinezoo.noexception.*;
 
 public class FingerprintCompatibilityTest {
+	private static byte[] load(String name) {
+		return Exceptions.sneak().get(() -> {
+			try (InputStream input = FingerprintCompatibilityTest.class.getResourceAsStream(name)) {
+				return IOUtils.toByteArray(input);
+			}
+		});
+	}
+	public static FingerprintTemplate probeIso() {
+		return FingerprintCompatibility.convert(load("iso-probe.dat"));
+	}
+	public static FingerprintTemplate matchingIso() {
+		return FingerprintCompatibility.convert(load("iso-matching.dat"));
+	}
+	public static FingerprintTemplate nonmatchingIso() {
+		return FingerprintCompatibility.convert(load("iso-nonmatching.dat"));
+	}
 	private static class RoundtripTemplates {
 		FingerprintTemplate extracted;
 		FingerprintTemplate roundtripped;
