@@ -59,8 +59,6 @@ class TemplateBuilder {
 		data.validate();
 		size = data.size();
 		minutiae = data.minutiae();
-		// https://sourceafis.machinezoo.com/transparency/deserialized-minutiae
-		FingerprintTransparency.current().logDeserializedMinutiae(this);
 		buildEdgeTable();
 	}
 	void convert(ForeignTemplate template, ForeignFingerprint fingerprint) {

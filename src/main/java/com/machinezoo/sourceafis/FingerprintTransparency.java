@@ -288,10 +288,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logEdgeTable(NeighborEdge[][] table) {
 		log("edge-table", ".json", json(() -> table));
 	}
-	// https://sourceafis.machinezoo.com/transparency/deserialized-minutiae
-	void logDeserializedMinutiae(TemplateBuilder template) {
-		logMinutiae("deserialized-minutiae", template);
-	}
 	// https://sourceafis.machinezoo.com/transparency/edge-hash
 	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
 		log("edge-hash", ".dat", () -> IndexedEdge.serialize(edgeHash));
