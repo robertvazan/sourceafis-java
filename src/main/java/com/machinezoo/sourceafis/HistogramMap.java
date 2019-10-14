@@ -54,11 +54,8 @@ class HistogramMap {
 		increment(at.x, at.y, z);
 	}
 	ByteBuffer serialize() {
-		ByteBuffer buffer = ByteBuffer.allocate(4 * width * height * depth);
-		for (int y = 0; y < height; ++y)
-			for (int x = 0; x < width; ++x)
-				for (int z = 0; z < depth; ++z)
-					buffer.putInt(get(x, y, z));
+		ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * array.length);
+		buffer.asIntBuffer().put(array);
 		buffer.flip();
 		return buffer;
 	}

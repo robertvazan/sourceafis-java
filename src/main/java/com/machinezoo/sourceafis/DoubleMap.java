@@ -43,9 +43,8 @@ class DoubleMap {
 		multiply(at.x, at.y, value);
 	}
 	ByteBuffer serialize() {
-		ByteBuffer buffer = ByteBuffer.allocate(8 * size().area());
-		for (IntPoint at : size())
-			buffer.putDouble(get(at));
+		ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES * array.length);
+		buffer.asDoubleBuffer().put(array);
 		buffer.flip();
 		return buffer;
 	}
