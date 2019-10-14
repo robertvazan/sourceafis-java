@@ -6,13 +6,11 @@ import java.nio.*;
 class DoublePointMap {
 	final int width;
 	final int height;
-	private final double[] arrayX;
-	private final double[] arrayY;
+	private final double[] array;
 	DoublePointMap(int width, int height) {
 		this.width = width;
 		this.height = height;
-		arrayX = new double[width * height];
-		arrayY = new double[width * height];
+		array = new double[2 * width * height];
 	}
 	DoublePointMap(IntPoint size) {
 		this(size.x, size.y);
@@ -22,15 +20,15 @@ class DoublePointMap {
 	}
 	DoublePoint get(int x, int y) {
 		int i = offset(x, y);
-		return new DoublePoint(arrayX[i], arrayY[i]);
+		return new DoublePoint(array[i], array[i + 1]);
 	}
 	DoublePoint get(IntPoint at) {
 		return get(at.x, at.y);
 	}
 	void set(int x, int y, double px, double py) {
 		int i = offset(x, y);
-		arrayX[i] = px;
-		arrayY[i] = py;
+		array[i] = px;
+		array[i + 1] = py;
 	}
 	void set(int x, int y, DoublePoint point) {
 		set(x, y, point.x, point.y);
@@ -40,8 +38,8 @@ class DoublePointMap {
 	}
 	void add(int x, int y, double px, double py) {
 		int i = offset(x, y);
-		arrayX[i] += px;
-		arrayY[i] += py;
+		array[i] += px;
+		array[i + 1] += py;
 	}
 	void add(int x, int y, DoublePoint point) {
 		add(x, y, point.x, point.y);
@@ -50,12 +48,8 @@ class DoublePointMap {
 		add(at.x, at.y, point);
 	}
 	ByteBuffer serialize() {
-		ByteBuffer buffer = ByteBuffer.allocate(16 * size().area());
-		for (IntPoint at : size()) {
-			DoublePoint point = get(at);
-			buffer.putDouble(point.x);
-			buffer.putDouble(point.y);
-		}
+		ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES * array.length);
+		buffer.asDoubleBuffer().put(array);
 		buffer.flip();
 		return buffer;
 	}
@@ -70,6 +64,6 @@ class DoublePointMap {
 		return info;
 	}
 	private int offset(int x, int y) {
-		return y * width + x;
+		return 2 * (y * width + x);
 	}
 }
