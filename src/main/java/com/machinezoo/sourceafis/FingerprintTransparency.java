@@ -18,29 +18,40 @@ import gnu.trove.map.hash.*;
  * {@link #log(String, Map)} method to define new transparency data logger.
  * One default implementation of {@code FingerprintTransparency} is returned by {@link #zip(OutputStream)} method.
  * <p>
- * An instance of {@code FingerprintTransparency} must be passed to
- * {@link FingerprintTemplate#transparency(FingerprintTransparency)} or {@link FingerprintMatcher#transparency(FingerprintTransparency)}
- * for transparency data to be actually collected.
- * <p>
- * This class implements {@link AutoCloseable} and callers must ensure that {@link #close()} is called,
- * perhaps by using try-with-resources construct, unless the particular subclass is known to not need any cleanup.
+ * {@code FingerprintTransparency} instance should be created in try-with-resource construct.
+ * It will be capturing transparency data from all operations on current thread
+ * between invocation of the constructor and invocation of {@link #close()} method,
+ * which happens automatically in try-with-resource construct.
  *
  * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
- * @see FingerprintTemplate#transparency(FingerprintTransparency)
- * @see FingerprintMatcher#transparency(FingerprintTransparency)
  */
 public abstract class FingerprintTransparency implements AutoCloseable {
-	private List<JsonEdge> supportingEdges = new ArrayList<>();
-	static final FingerprintTransparency none = new FingerprintTransparency() {
-		@Override protected void log(String name, Map<String, Supplier<ByteBuffer>> data) {
-		}
-	};
+	/*
+	 * Having transparency objects tied to current thread spares us of contaminating all classes with transparency APIs.
+	 * Transparency object is activated on the thread the moment it is created.
+	 * Having no explicit activation makes for a bit simpler API.
+	 */
+	private static final ThreadLocal<FingerprintTransparency> current = new ThreadLocal<>();
+	private FingerprintTransparency outer;
 	/**
-	 * Creates an instance of {@code FingerprintTransparency}.
+	 * Creates an instance of {@code FingerprintTransparency} and activates it.
+	 * 
+	 * Activation places the new {@code FingerprintTransparency} instance in thread-local storage,
+	 * which causes all operations executed by current thread to log data to this {@code FingerprintTransparency} instance.
+	 * If activations are nested, data is only logged to the currently innermost {@code FingerprintTransparency}.
+	 * 
+	 * Deactivation happens in {@link #close()} method.
+	 * Instances of {@code FingerprintTransparency} should be created in try-with-resources construct
+	 * to ensure that {@link #close()} is always called.
+	 * 
 	 * {@code FingerprintTransparency} is an abstract class.
-	 * This empty constructor is only called by subclasses.
+	 * This constructor is only called by subclasses.
+	 * 
+	 * @see #close()
 	 */
 	protected FingerprintTransparency() {
+		outer = current.get();
+		current.set(this);
 	}
 	/**
 	 * Record transparency data. This is an abstract method that subclasses must override.
@@ -70,12 +81,29 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @see #zip(OutputStream)
 	 */
 	protected abstract void log(String keyword, Map<String, Supplier<ByteBuffer>> data);
+	/*
+	 * We implement AutoCloseable in order to support try-with-resources,
+	 * but our close() doesn't throw any checked exceptions
+	 * in order to spare callers of mandatory exception handling.
+	 * Derived classes can still wrap any checked exceptions in unchecked ones if needed.
+	 */
 	/**
-	 * Release system resources held by this instance if any.
+	 * Deactivate transparency logging and release system resources held by this instance if any.
+	 * This method is normally called automatically when {@code FingerprintTransparency} is used in try-with-resources construct.
+	 * 
+	 * Deactivation stops transparency data logging to this instance of {@code FingerprintTransparency},
+	 * which was started by the constructor ({@link #FingerprintTransparency()}).
+	 * If activations were nested, this method reactivates the outer {@code FingerprintTransparency}.
+	 * 
 	 * Subclasses can override this method to perform cleanup.
-	 * Default implementation of this method is empty.
+	 * Default implementation of this method performs deactivation.
+	 * It must be called by overriding methods for deactivation to work correctly.
+	 * 
+	 * @see #FingerprintTransparency()
 	 */
 	@Override public void close() {
+		current.set(outer);
+		outer = null;
 	}
 	/**
 	 * Write all transparency data to a ZIP file.
@@ -97,6 +125,30 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	public static FingerprintTransparency zip(OutputStream stream) {
 		return new TransparencyZip(stream);
 	}
+	/*
+	 * To avoid null checks everywhere, we have one noop class as a fallback.
+	 */
+	private static final FingerprintTransparency none;
+	private static class NoFingerprintTransparency extends FingerprintTransparency {
+		@Override protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
+		}
+	}
+	static {
+		none = new NoFingerprintTransparency();
+		/*
+		 * Deactivate logging to the noop logger as soon as it is created.
+		 */
+		none.close();
+	}
+	static FingerprintTransparency current() {
+		return Optional.ofNullable(current.get()).orElse(none);
+	}
+	/*
+	 * Just preparing the data for logging may be expensive.
+	 * Such code should use this method to check for active transparency data logging
+	 * before any expensive logging-related operations are performed.
+	 * Right now all such checks are done inside this class.
+	 */
 	boolean logging() {
 		return this != none;
 	}
@@ -249,6 +301,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		if (logging())
 			log("root-pairs", ".json", json(() -> JsonPair.roots(count, roots)));
 	}
+	private List<JsonEdge> supportingEdges = new ArrayList<>();
 	// Accumulated and then added to https://sourceafis.machinezoo.com/transparency/pairing
 	void logSupportingEdge(MinutiaPair pair) {
 		if (logging())

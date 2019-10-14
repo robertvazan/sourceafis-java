@@ -7,22 +7,21 @@ import java.util.stream.*;
 import com.google.gson.*;
 
 class TemplateBuilder {
-	FingerprintTransparency transparency = FingerprintTransparency.none;
 	IntPoint size;
 	ImmutableMinutia[] minutiae;
 	NeighborEdge[][] edges;
 	void extract(byte[] image, double dpi) {
 		DoubleMap raw = ImageDecoder.toDoubleMap(image);
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
-		transparency.logDecodedImage(raw);
+		FingerprintTransparency.current().logDecodedImage(raw);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
 			raw = scaleImage(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
-		transparency.logScaledImage(raw);
+		FingerprintTransparency.current().logScaledImage(raw);
 		size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 		// https://sourceafis.machinezoo.com/transparency/block-map
-		transparency.logBlockMap(blocks);
+		FingerprintTransparency.current().logBlockMap(blocks);
 		HistogramMap histogram = histogram(blocks, raw);
 		HistogramMap smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMap mask = mask(blocks, histogram);
@@ -31,24 +30,24 @@ class TemplateBuilder {
 		IntPoint[][] smoothedLines = orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep);
 		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, smoothedLines);
 		// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
-		transparency.logParallelSmoothing(smoothed);
+		FingerprintTransparency.current().logParallelSmoothing(smoothed);
 		IntPoint[][] orthogonalLines = orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep);
 		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
 		// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
-		transparency.logOrthogonalSmoothing(orthogonal);
+		FingerprintTransparency.current().logOrthogonalSmoothing(orthogonal);
 		BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
 		BooleanMap pixelMask = fillBlocks(mask, blocks);
 		cleanupBinarized(binary, pixelMask);
 		// https://sourceafis.machinezoo.com/transparency/pixel-mask
-		transparency.logPixelMask(pixelMask);
+		FingerprintTransparency.current().logPixelMask(pixelMask);
 		BooleanMap inverted = invert(binary, pixelMask);
 		BooleanMap innerMask = innerMask(pixelMask);
-		Skeleton ridges = new Skeleton(binary, SkeletonType.RIDGES, transparency);
-		Skeleton valleys = new Skeleton(inverted, SkeletonType.VALLEYS, transparency);
+		Skeleton ridges = new Skeleton(binary, SkeletonType.RIDGES);
+		Skeleton valleys = new Skeleton(inverted, SkeletonType.VALLEYS);
 		collectMinutiae(ridges, MinutiaType.ENDING);
 		collectMinutiae(valleys, MinutiaType.BIFURCATION);
 		// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
-		transparency.logSkeletonMinutiae(this);
+		FingerprintTransparency.current().logSkeletonMinutiae(this);
 		maskMinutiae(innerMask);
 		removeMinutiaClouds();
 		limitTemplateSize();
@@ -61,7 +60,7 @@ class TemplateBuilder {
 		size = data.size();
 		minutiae = data.minutiae();
 		// https://sourceafis.machinezoo.com/transparency/deserialized-minutiae
-		transparency.logDeserializedMinutiae(this);
+		FingerprintTransparency.current().logDeserializedMinutiae(this);
 		buildEdgeTable();
 	}
 	void convert(ForeignTemplate template, ForeignFingerprint fingerprint) {
@@ -127,7 +126,7 @@ class TemplateBuilder {
 				}
 		}
 		// https://sourceafis.machinezoo.com/transparency/histogram
-		transparency.logHistogram(histogram);
+		FingerprintTransparency.current().logHistogram(histogram);
 		return histogram;
 	}
 	private HistogramMap smoothHistogram(BlockMap blocks, HistogramMap input) {
@@ -143,7 +142,7 @@ class TemplateBuilder {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
-		transparency.logSmoothedHistogram(output);
+		FingerprintTransparency.current().logSmoothedHistogram(output);
 		return output;
 	}
 	private BooleanMap mask(BlockMap blocks, HistogramMap histogram) {
@@ -151,7 +150,7 @@ class TemplateBuilder {
 		BooleanMap mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		// https://sourceafis.machinezoo.com/transparency/combined-mask
-		transparency.logCombinedMask(mask);
+		FingerprintTransparency.current().logCombinedMask(mask);
 		mask.merge(vote(mask, null, Parameters.contrastVoteRadius, Parameters.contrastVoteMajority, Parameters.contrastVoteBorderDistance));
 		mask.merge(filterBlockErrors(mask));
 		mask.invert();
@@ -159,7 +158,7 @@ class TemplateBuilder {
 		mask.merge(filterBlockErrors(mask));
 		mask.merge(vote(mask, null, Parameters.maskVoteRadius, Parameters.maskVoteMajority, Parameters.maskVoteBorderDistance));
 		// https://sourceafis.machinezoo.com/transparency/filtered-mask
-		transparency.logFilteredMask(mask);
+		FingerprintTransparency.current().logFilteredMask(mask);
 		return mask;
 	}
 	private DoubleMap clipContrast(BlockMap blocks, HistogramMap histogram) {
@@ -188,7 +187,7 @@ class TemplateBuilder {
 			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.depth - 1)));
 		}
 		// https://sourceafis.machinezoo.com/transparency/clipped-contrast
-		transparency.logClippedContrast(result);
+		FingerprintTransparency.current().logClippedContrast(result);
 		return result;
 	}
 	private BooleanMap filterAbsoluteContrast(DoubleMap contrast) {
@@ -197,7 +196,7 @@ class TemplateBuilder {
 			if (contrast.get(block) < Parameters.minAbsoluteContrast)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
-		transparency.logAbsoluteContrastMask(result);
+		FingerprintTransparency.current().logAbsoluteContrastMask(result);
 		return result;
 	}
 	private BooleanMap filterRelativeContrast(DoubleMap contrast, BlockMap blocks) {
@@ -215,7 +214,7 @@ class TemplateBuilder {
 			if (contrast.get(block) < limit)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
-		transparency.logRelativeContrastMask(result);
+		FingerprintTransparency.current().logRelativeContrastMask(result);
 		return result;
 	}
 	private BooleanMap vote(BooleanMap input, BooleanMap mask, int radius, double majority, int borderDistance) {
@@ -323,7 +322,7 @@ class TemplateBuilder {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/equalized-image
-		transparency.logEqualizedImage(result);
+		FingerprintTransparency.current().logEqualizedImage(result);
 		return result;
 	}
 	private DoubleMap orientationMap(DoubleMap image, BooleanMap mask, BlockMap blocks) {
@@ -392,7 +391,7 @@ class TemplateBuilder {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
-		transparency.logPixelwiseOrientation(orientation);
+		FingerprintTransparency.current().logPixelwiseOrientation(orientation);
 		return orientation;
 	}
 	private static IntRange maskRange(BooleanMap mask, int y) {
@@ -420,7 +419,7 @@ class TemplateBuilder {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/block-orientation
-		transparency.logBlockOrientation(sums);
+		FingerprintTransparency.current().logBlockOrientation(sums);
 		return sums;
 	}
 	private DoublePointMap smoothOrientation(DoublePointMap orientation, BooleanMap mask) {
@@ -435,7 +434,7 @@ class TemplateBuilder {
 							smoothed.add(block, orientation.get(nx, ny));
 			}
 		// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
-		transparency.logSmoothedOrientation(smoothed);
+		FingerprintTransparency.current().logSmoothedOrientation(smoothed);
 		return smoothed;
 	}
 	private static DoubleMap orientationAngles(DoublePointMap vectors, BooleanMap mask) {
@@ -496,7 +495,7 @@ class TemplateBuilder {
 							binarized.set(x, y, true);
 			}
 		// https://sourceafis.machinezoo.com/transparency/binarized-image
-		transparency.logBinarizedImage(binarized);
+		FingerprintTransparency.current().logBinarizedImage(binarized);
 		return binarized;
 	}
 	private void cleanupBinarized(BooleanMap binary, BooleanMap mask) {
@@ -510,7 +509,7 @@ class TemplateBuilder {
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
 		removeCrosses(binary);
 		// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
-		transparency.logFilteredBinarydImage(binary);
+		FingerprintTransparency.current().logFilteredBinarydImage(binary);
 	}
 	private static void removeCrosses(BooleanMap input) {
 		IntPoint size = input.size();
@@ -561,7 +560,7 @@ class TemplateBuilder {
 		if (total < Parameters.innerMaskBorderDistance)
 			inner = shrinkMask(inner, Parameters.innerMaskBorderDistance - total);
 		// https://sourceafis.machinezoo.com/transparency/inner-mask
-		transparency.logInnerMask(inner);
+		FingerprintTransparency.current().logInnerMask(inner);
 		return inner;
 	}
 	private static BooleanMap shrinkMask(BooleanMap mask, int amount) {
@@ -588,7 +587,7 @@ class TemplateBuilder {
 			})
 			.toArray(ImmutableMinutia[]::new);
 		// https://sourceafis.machinezoo.com/transparency/inner-minutiae
-		transparency.logInnerMinutiae(this);
+		FingerprintTransparency.current().logInnerMinutiae(this);
 	}
 	private void removeMinutiaClouds() {
 		int radiusSq = Integers.sq(Parameters.minutiaCloudRadius);
@@ -601,7 +600,7 @@ class TemplateBuilder {
 			.filter(minutia -> !removed.contains(minutia))
 			.toArray(ImmutableMinutia[]::new);
 		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
-		transparency.logRemovedMinutiaClouds(this);
+		FingerprintTransparency.current().logRemovedMinutiaClouds(this);
 	}
 	private void limitTemplateSize() {
 		if (minutiae.length > Parameters.maxMinutiae) {
@@ -617,7 +616,7 @@ class TemplateBuilder {
 				.toArray(ImmutableMinutia[]::new);
 		}
 		// https://sourceafis.machinezoo.com/transparency/top-minutiae
-		transparency.logTopMinutiae(this);
+		FingerprintTransparency.current().logTopMinutiae(this);
 	}
 	private void shuffleMinutiae() {
 		int prime = 1610612741;
@@ -628,7 +627,7 @@ class TemplateBuilder {
 			.thenComparing(m -> m.direction)
 			.thenComparing(m -> m.type));
 		// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
-		transparency.logShuffledMinutiae(this);
+		FingerprintTransparency.current().logShuffledMinutiae(this);
 	}
 	private void buildEdgeTable() {
 		edges = new NeighborEdge[minutiae.length][];
@@ -654,6 +653,6 @@ class TemplateBuilder {
 			star.clear();
 		}
 		// https://sourceafis.machinezoo.com/transparency/edge-table
-		transparency.logEdgeTable(edges);
+		FingerprintTransparency.current().logEdgeTable(edges);
 	}
 }

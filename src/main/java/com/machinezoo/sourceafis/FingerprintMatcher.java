@@ -10,14 +10,13 @@ import gnu.trove.map.hash.*;
  * It can efficiently match one probe fingerprint to many candidate fingerprints.
  * <p>
  * New matcher is created by passing probe fingerprint template to {@link #index(FingerprintTemplate)}
- * on an empty fingerprint matcher instantiated  with {@link #FingerprintMatcher()} constructor.
+ * on an empty fingerprint matcher instantiated with {@link #FingerprintMatcher()} constructor.
  * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)}.
  * 
  * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
-	private FingerprintTransparency transparency = FingerprintTransparency.none;
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.empty;
 	/**
 	 * Instantiate an empty fingerprint matcher.
@@ -31,8 +30,9 @@ public class FingerprintMatcher {
 	}
 	/**
 	 * Enable algorithm transparency.
-	 * Subsequent operations on this matcher will report intermediate data structures created by the algorithm
-	 * to the provided {@link FingerprintTransparency} instance.
+	 * Since {@link FingerprintTransparency} is activated automatically via thread-local variable
+	 * in recent versions of SourceAFIS, this method does nothing in current version of SourceAFIS.
+	 * It will be removed in some later version.
 	 * 
 	 * @param transparency
 	 *            target {@link FingerprintTransparency} or {@code null} to disable algorithm transparency
@@ -40,8 +40,7 @@ public class FingerprintMatcher {
 	 * 
 	 * @see FingerprintTransparency
 	 */
-	public FingerprintMatcher transparency(FingerprintTransparency transparency) {
-		this.transparency = Optional.ofNullable(transparency).orElse(FingerprintTransparency.none);
+	@Deprecated public FingerprintMatcher transparency(FingerprintTransparency transparency) {
 		return this;
 	}
 	/**
@@ -76,7 +75,7 @@ public class FingerprintMatcher {
 					}
 				}
 		// https://sourceafis.machinezoo.com/transparency/edge-hash
-		transparency.logEdgeHash(map);
+		FingerprintTransparency.current().logEdgeHash(map);
 		return map;
 	}
 	private List<Integer> shapeCoverage(EdgeShape edge) {
@@ -119,13 +118,8 @@ public class FingerprintMatcher {
 	 */
 	public double match(FingerprintTemplate candidate) {
 		MatchBuffer buffer = MatchBuffer.current();
-		try {
-			buffer.transparency = transparency;
-			buffer.selectMatcher(immutable);
-			buffer.selectCandidate(candidate.immutable);
-			return buffer.match();
-		} finally {
-			buffer.transparency = FingerprintTransparency.none;
-		}
+		buffer.selectMatcher(immutable);
+		buffer.selectCandidate(candidate.immutable);
+		return buffer.match();
 	}
 }

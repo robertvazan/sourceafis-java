@@ -1,7 +1,6 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-import java.util.*;
 import javax.imageio.*;
 import com.google.gson.*;
 
@@ -32,7 +31,6 @@ import com.google.gson.*;
  */
 public class FingerprintTemplate {
 	private double dpi = 500;
-	private FingerprintTransparency transparency = FingerprintTransparency.none;
 	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
 	/**
 	 * Instantiate an empty fingerprint template.
@@ -44,8 +42,9 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Enable algorithm transparency.
-	 * Subsequent operations on this template will report intermediate data structures created by the algorithm
-	 * to the provided {@link FingerprintTransparency} instance.
+	 * Since {@link FingerprintTransparency} is activated automatically via thread-local variable
+	 * in recent versions of SourceAFIS, this method does nothing in current version of SourceAFIS.
+	 * It will be removed in some later version.
 	 * 
 	 * @param transparency
 	 *            target {@link FingerprintTransparency} or {@code null} to disable algorithm transparency
@@ -53,8 +52,7 @@ public class FingerprintTemplate {
 	 * 
 	 * @see FingerprintTransparency
 	 */
-	public FingerprintTemplate transparency(FingerprintTransparency transparency) {
-		this.transparency = Optional.ofNullable(transparency).orElse(FingerprintTransparency.none);
+	@Deprecated public FingerprintTemplate transparency(FingerprintTransparency transparency) {
 		return this;
 	}
 	/**
@@ -93,7 +91,6 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate create(byte[] image) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.transparency = transparency;
 		builder.extract(image, dpi);
 		immutable = new ImmutableTemplate(builder);
 		return this;
@@ -116,7 +113,6 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate deserialize(String json) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.transparency = transparency;
 		builder.deserialize(json);
 		immutable = new ImmutableTemplate(builder);
 		return this;

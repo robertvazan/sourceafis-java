@@ -15,7 +15,7 @@ class MatchBuffer {
 			return new MatchBuffer();
 		}
 	};
-	FingerprintTransparency transparency = FingerprintTransparency.none;
+	private FingerprintTransparency transparency;
 	ImmutableTemplate probe;
 	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
 	ImmutableTemplate candidate;
@@ -47,6 +47,11 @@ class MatchBuffer {
 	}
 	double match() {
 		try {
+			/*
+			 * Thread-local storage is fairly fast, but it's still a hash lookup,
+			 * so do not access FingerprintTransparency.current() repeatedly in tight loops.
+			 */
+			transparency = FingerprintTransparency.current();
 			int totalRoots = enumerateRoots();
 			// https://sourceafis.machinezoo.com/transparency/root-pairs
 			transparency.logRootPairs(totalRoots, roots);
@@ -66,6 +71,8 @@ class MatchBuffer {
 		} catch (Throwable e) {
 			local.remove();
 			throw e;
+		} finally {
+			transparency = null;
 		}
 	}
 	private int enumerateRoots() {
