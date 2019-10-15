@@ -12,12 +12,14 @@ It can do 1:1 comparisons as well as efficient 1:N search. This is the Java impl
 ```java
 byte[] probeImage = Files.readAllBytes(Paths.get("probe.jpeg"));
 byte[] candidateImage = Files.readAllBytes(Paths.get("candidate.jpeg"));
-FingerprintTemplate probe = new FingerprintTemplate()
-	.dpi(500)
-	.create(probeImage);
-FingerprintTemplate candidate = new FingerprintTemplate()
-	.dpi(500)
-	.create(candidateImage);
+FingerprintTemplate probe = new FingerprintTemplate(
+	new FingerprintImage()
+		.dpi(500)
+		.create(probeImage));
+FingerprintTemplate candidate = new FingerprintTemplate(
+	new FingerprintImage()
+		.dpi(500)
+		.create(candidateImage));
 double score = new FingerprintMatcher()
 	.index(probe)
 	.match(candidate);
