@@ -1,29 +1,20 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import java.io.*;
 import java.util.function.*;
-import org.apache.commons.io.*;
 import org.junit.*;
-import com.machinezoo.noexception.*;
 
 public class FingerprintCompatibilityTest {
-	private static byte[] load(String name) {
-		return Exceptions.sneak().get(() -> {
-			try (InputStream input = FingerprintCompatibilityTest.class.getResourceAsStream(name)) {
-				return IOUtils.toByteArray(input);
-			}
-		});
-	}
 	public static FingerprintTemplate probeIso() {
-		return FingerprintCompatibility.convert(load("iso-probe.dat"));
+		return FingerprintCompatibility.convert(TestResources.probeIso());
 	}
 	public static FingerprintTemplate matchingIso() {
-		return FingerprintCompatibility.convert(load("iso-matching.dat"));
+		return FingerprintCompatibility.convert(TestResources.matchingIso());
 	}
 	public static FingerprintTemplate nonmatchingIso() {
-		return FingerprintCompatibility.convert(load("iso-nonmatching.dat"));
+		return FingerprintCompatibility.convert(TestResources.nonmatchingIso());
 	}
 	private static class RoundtripTemplates {
 		FingerprintTemplate extracted;
@@ -41,9 +32,9 @@ public class FingerprintCompatibilityTest {
 	private void match(String kind, FingerprintTemplate probe, FingerprintTemplate candidate, boolean matching) {
 		double score = new FingerprintMatcher().index(probe).match(candidate);
 		if (matching)
-			assertTrue("Score (" + kind + "): " + score, score > 40);
+			assertThat(kind, score, greaterThan(40.0));
 		else
-			assertTrue("Score (" + kind + "): " + score, score < 20);
+			assertThat(kind,score, lessThan(20.0));
 	}
 	private void roundtrip(Function<FingerprintTemplate[], byte[]> exporter) {
 		RoundtripTemplates probe = new RoundtripTemplates(FingerprintTemplateTest.probe(), exporter);

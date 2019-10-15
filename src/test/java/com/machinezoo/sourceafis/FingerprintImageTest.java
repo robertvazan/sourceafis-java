@@ -1,39 +1,12 @@
 package com.machinezoo.sourceafis;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import java.io.*;
-import org.apache.commons.io.*;
 import org.junit.*;
-import com.machinezoo.noexception.*;
 
 public class FingerprintImageTest {
-	private static byte[] load(String name) {
-		return Exceptions.sneak().get(() -> {
-			try (InputStream input = FingerprintImageTest.class.getResourceAsStream(name)) {
-				return IOUtils.toByteArray(input);
-			}
-		});
-	}
-	public static byte[] png() {
-		return load("probe.png");
-	}
-	public static byte[] jpeg() {
-		return load("probe.jpeg");
-	}
-	public static byte[] bmp() {
-		return load("probe.bmp");
-	}
-	public static byte[] tiff() {
-		return load("probe.tiff");
-	}
-	public static byte[] originalWSQ() {
-		return load("wsq-original.wsq");
-	}
-	public static byte[] convertedWSQ() {
-		return load("wsq-converted.png");
-	}
 	@Test public void decodePNG() {
-		new FingerprintImage().decode(png());
+		new FingerprintImage().decode(TestResources.png());
 	}
 	private void assertSimilar(DoubleMap map, DoubleMap reference) {
 		assertEquals(reference.width, map.width);
@@ -54,24 +27,39 @@ public class FingerprintImageTest {
 		assertSimilar(new FingerprintImage().decode(image).decoded, new FingerprintImage().decode(reference).decoded);
 	}
 	@Test public void decodeJPEG() {
-		assertSimilar(jpeg(), png());
+		assertSimilar(TestResources.jpeg(), TestResources.png());
 	}
 	@Test public void decodeBMP() {
-		assertSimilar(bmp(), png());
+		assertSimilar(TestResources.bmp(), TestResources.png());
 	}
 	@Test public void decodeTIFF() {
-		assertSimilar(tiff(), png());
+		assertSimilar(TestResources.tiff(), TestResources.png());
 	}
 	@Test public void decodeWSQ() {
-		assertSimilar(originalWSQ(), convertedWSQ());
+		assertSimilar(TestResources.originalWsq(), TestResources.convertedWsq());
 	}
 	public static FingerprintImage probe() {
-		return new FingerprintImage().decode(load("probe.png"));
+		return new FingerprintImage().decode(TestResources.probe());
 	}
 	public static FingerprintImage matching() {
-		return new FingerprintImage().decode(load("matching.png"));
+		return new FingerprintImage().decode(TestResources.matching());
 	}
 	public static FingerprintImage nonmatching() {
-		return new FingerprintImage().decode(load("nonmatching.png"));
+		return new FingerprintImage().decode(TestResources.nonmatching());
+	}
+	public static FingerprintImage probeGray() {
+		return new FingerprintImage().grayscale(332, 533, TestResources.probeGray());
+	}
+	public static FingerprintImage matchingGray() {
+		return new FingerprintImage().grayscale(320, 407, TestResources.matchingGray());
+	}
+	public static FingerprintImage nonmatchingGray() {
+		return new FingerprintImage().grayscale(333, 435, TestResources.nonmatchingGray());
+	}
+	@Test public void decodeGray() {
+		double score = new FingerprintMatcher()
+			.index(new FingerprintTemplate(probeGray()))
+			.match(new FingerprintTemplate(matchingGray()));
+		assertThat(score, greaterThan(40.0));
 	}
 }

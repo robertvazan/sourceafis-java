@@ -19,6 +19,15 @@ public class FingerprintTemplateTest {
 	public static FingerprintTemplate nonmatching() {
 		return new FingerprintTemplate(FingerprintImageTest.nonmatching());
 	}
+	public static FingerprintTemplate probeGray() {
+		return new FingerprintTemplate(FingerprintImageTest.probeGray());
+	}
+	public static FingerprintTemplate matchingGray() {
+		return new FingerprintTemplate(FingerprintImageTest.matchingGray());
+	}
+	public static FingerprintTemplate nonmatchingGray() {
+		return new FingerprintTemplate(FingerprintImageTest.nonmatchingGray());
+	}
 	@Test public void constructor() {
 		probe();
 	}

@@ -10,6 +10,10 @@ import javax.imageio.*;
  * <p>
  * Application should start fingerprint processing by constructing an instance of {@code FingerprintImage}
  * and then passing it to {@link FingerprintTemplate#FingerprintTemplate(FingerprintImage)}.
+ * <p>
+ * Fingerprint image can be either in one of the supported image formats (PNG, JPEG, ...),
+ * in which case method {@link #decode(byte[])} is used,
+ * or it can be a raw grayscale image, for which method {@link #grayscale(int, int, byte[])} is used.
  * 
  * @see FingerprintTemplate
  */
@@ -17,7 +21,7 @@ public class FingerprintImage {
 	double dpi = 500;
 	/**
 	 * Set DPI (dots per inch) of the fingerprint image.
-	 * This is the DPI of the image later passed to {@link #decode(byte[])}.
+	 * This is the DPI of the image passed to {@link #decode(byte[])} or {@link #grayscale(int, int, byte[])}.
 	 * Check your fingerprint reader specification for correct DPI value. Default DPI is 500.
 	 * 
 	 * @param dpi
@@ -45,11 +49,50 @@ public class FingerprintImage {
 	 * @param image
 	 *            fingerprint image in one of the supported formats
 	 * @return {@code this} (fluent method)
+	 * @throws NullPointerException
+	 *             if {@code image} is {@code null}
+	 * @throws IllegalArgumentException
+	 *             if the image format is unsupported or the image is corrupted
 	 * 
 	 * @see #dpi(double)
+	 * @see #grayscale(int, int, byte[])
 	 */
 	public FingerprintImage decode(byte[] image) {
 		decoded = ImageDecoder.toDoubleMap(image);
+		return this;
+	}
+	/**
+	 * Load raw grayscale fingerprint image from byte array.
+	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
+	 * <p>
+	 * Pixels are represented as 8-bit unsigned bytes with 0 meaning black and 255 meaning white.
+	 * Java's byte is a signed 8-bit number, but this method interprets all 8 bits as an unsigned number
+	 * as if by calling {@link Byte#toUnsignedInt(byte)}.
+	 * Pixels in {@code pixels} array are ordered from top-left to bottom-right in horizontal rows.
+	 * Size of {@code pixels} must be equal to {@code width * height}.
+	 * 
+	 * @param width
+	 *            width of the image
+	 * @param height
+	 *            height of the image
+	 * @param pixels
+	 *            image pixels ordered from top-left to bottom-right in horizontal rows
+	 * @return {@code this} (fluent method)
+	 * @throws NullPointerException
+	 *             if {@code image} is {@code null}
+	 * @throws IndexOutOfBoundsException
+	 *             if {@code width} or {@code height} is not positive or if {@code pixels} length is not {@code width * height}
+	 * 
+	 * @see #dpi(double)
+	 * @see #decode(byte[])
+	 */
+	public FingerprintImage grayscale(int width, int height, byte[] pixels) {
+		if (width <= 0 || height <= 0 || pixels.length != width * height)
+			throw new IndexOutOfBoundsException();
+		decoded = new DoubleMap(width, height);
+		for (int y = 0; y < height; ++y)
+			for (int x = 0; x < width; ++x)
+				decoded.set(x, y, 1 - Byte.toUnsignedInt(pixels[y * width + x]) / 255.0);
 		return this;
 	}
 }
