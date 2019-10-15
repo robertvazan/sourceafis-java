@@ -4,7 +4,6 @@ package com.machinezoo.sourceafis;
 import static java.util.stream.Collectors.*;
 import java.io.*;
 import java.nio.*;
-import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
@@ -19,7 +18,7 @@ import gnu.trove.map.hash.*;
  * on SourceAFIS website for more information and a tutorial on how to use this class.
  * <p>
  * Applications can subclass {@code FingerprintTransparency} and override
- * {@link #log(String, Map)} method to define new transparency data logger.
+ * {@link #capture(String, Map)} method to define new transparency data logger.
  * One default implementation of {@code FingerprintTransparency} is returned by {@link #zip(OutputStream)} method.
  * <p>
  * {@code FingerprintTransparency} instance should be created in try-with-resource construct.
@@ -58,9 +57,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		current.set(this);
 	}
 	/**
-	 * Record transparency data. This is an abstract method that subclasses must override.
-	 * If algorithm transparency is enabled by passing an instance of {@code FingerprintTransparency}
-	 * to {@link FingerprintTemplate#transparency(FingerprintTransparency)} or {@link FingerprintMatcher#transparency(FingerprintTransparency)},
+	 * Record transparency data. Subclasses must override this method, because the default implementation does nothing.
+	 * While this {@code FingerprintTransparency} object is active (between call to the constructor and call to {@link #close()}),
 	 * this method is called with transparency data in its parameters.
 	 * <p>
 	 * Parameter {@code keyword} specifies the kind of transparency data being logged,
@@ -86,7 +84,31 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
 	 * @see #zip(OutputStream)
 	 */
-	protected abstract void log(String keyword, Map<String, Supplier<ByteBuffer>> data);
+	protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
+		/*
+		 * If nobody overrode this method, assume it is legacy code and call the old log() method.
+		 */
+		Map<String, Supplier<ByteBuffer>> translated = new HashMap<>();
+		for (Map.Entry<String, Supplier<byte[]>> entry : data.entrySet())
+			translated.put(entry.getKey(), () -> ByteBuffer.wrap(entry.getValue().get()));
+		log(keyword, translated);
+	}
+	/**
+	 * Record transparency data in buffers.
+	 * This is a deprecated variant of {@link #capture(String, Map)}
+	 * that uses {@link ByteBuffer} instead of plain byte arrays.
+	 * This method is only called if {@link #capture(String, Map)} is not overridden.
+	 * 
+	 * @param keyword
+	 *            specifies the kind of transparency data being reported
+	 * @param data
+	 *            a map of suffixes (like {@code .json} or {@code .dat}) to {@link Supplier} of the available transparency data
+	 * 
+	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
+	 * @see #capture(String, Map)
+	 */
+	@Deprecated protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
+	}
 	/**
 	 * Deactivate transparency logging and release system resources held by this instance if any.
 	 * This method is normally called automatically when {@code FingerprintTransparency} is used in try-with-resources construct.
@@ -99,7 +121,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * Default implementation of this method performs deactivation.
 	 * It must be called by overriding methods for deactivation to work correctly.
 	 * <p>
-	 * This method doesn't declare any checked exceptions in order to spare callers of mandatory exception checking. 
+	 * This method doesn't declare any checked exceptions in order to spare callers of mandatory exception checking.
 	 * If your code needs to throw a checked exception, wrap it in an unchecked exception.
 	 * 
 	 * @see #FingerprintTransparency()
@@ -112,7 +134,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * Write all transparency data to a ZIP file.
 	 * This is a convenience method to enable easy exploration of the available data.
 	 * Programmatic processing of transparency data should be done by subclassing {@code FingerprintTransparency}
-	 * and overriding {@link #log(String, Map)} method.
+	 * and overriding {@link #capture(String, Map)} method.
 	 * <p>
 	 * The returned {@code FingerprintTransparency} object holds system resources
 	 * and callers are responsible for calling {@link #close()} method, perhaps using try-with-resources construct.
@@ -126,7 +148,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @return algorithm transparency logger that writes data to a ZIP file
 	 * 
 	 * @see #close()
-	 * @see #log(String, Map)
+	 * @see #capture(String, Map)
 	 */
 	public static FingerprintTransparency zip(OutputStream stream) {
 		return new TransparencyZip(stream);
@@ -137,7 +159,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		TransparencyZip(OutputStream stream) {
 			zip = new ZipOutputStream(stream);
 		}
-		@Override protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
+		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
 			Exceptions.wrap().run(() -> {
 				List<String> suffixes = data.keySet().stream()
 					.sorted(Comparator.comparing(ext -> {
@@ -151,10 +173,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				for (String suffix : suffixes) {
 					++offset;
 					zip.putNextEntry(new ZipEntry(String.format("%03d", offset) + "-" + keyword + suffix));
-					ByteBuffer buffer = data.get(suffix).get();
-					WritableByteChannel output = Channels.newChannel(zip);
-					while (buffer.hasRemaining())
-						output.write(buffer);
+					zip.write(data.get(suffix).get());
 					zip.closeEntry();
 				}
 			});
@@ -168,7 +187,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 */
 	private static final FingerprintTransparency none;
 	private static class NoFingerprintTransparency extends FingerprintTransparency {
-		@Override protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
+		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
 		}
 	}
 	static {
@@ -377,18 +396,18 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private void logBooleanMap(String name, BooleanMap map) {
 		log(name, ".dat", map::serialize, ".json", json(map::json));
 	}
-	private Supplier<ByteBuffer> json(Supplier<Object> supplier) {
-		return () -> ByteBuffer.wrap(new GsonBuilder().setPrettyPrinting().create().toJson(supplier.get()).getBytes(StandardCharsets.UTF_8));
+	private Supplier<byte[]> json(Supplier<Object> supplier) {
+		return () -> new GsonBuilder().setPrettyPrinting().create().toJson(supplier.get()).getBytes(StandardCharsets.UTF_8);
 	}
-	private void log(String name, String suffix, Supplier<ByteBuffer> supplier) {
-		Map<String, Supplier<ByteBuffer>> map = new HashMap<>();
+	private void log(String name, String suffix, Supplier<byte[]> supplier) {
+		Map<String, Supplier<byte[]>> map = new HashMap<>();
 		map.put(suffix, supplier);
-		log(name, map);
+		capture(name, map);
 	}
-	private void log(String name, String suffix1, Supplier<ByteBuffer> supplier1, String suffix2, Supplier<ByteBuffer> supplier2) {
-		Map<String, Supplier<ByteBuffer>> map = new HashMap<>();
+	private void log(String name, String suffix1, Supplier<byte[]> supplier1, String suffix2, Supplier<byte[]> supplier2) {
+		Map<String, Supplier<byte[]>> map = new HashMap<>();
 		map.put(suffix1, supplier1);
 		map.put(suffix2, supplier2);
-		log(name, map);
+		capture(name, map);
 	}
 }

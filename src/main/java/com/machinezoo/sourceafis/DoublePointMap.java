@@ -47,10 +47,10 @@ class DoublePointMap {
 	void add(IntPoint at, DoublePoint point) {
 		add(at.x, at.y, point);
 	}
-	ByteBuffer serialize() {
+	byte[] serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES * array.length);
 		buffer.asDoubleBuffer().put(array);
-		return buffer;
+		return buffer.array();
 	}
 	JsonArrayInfo json() {
 		JsonArrayInfo info = new JsonArrayInfo();

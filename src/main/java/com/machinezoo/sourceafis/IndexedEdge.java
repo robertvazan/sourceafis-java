@@ -2,7 +2,6 @@
 package com.machinezoo.sourceafis;
 
 import java.io.*;
-import java.nio.*;
 import java.util.*;
 import com.machinezoo.noexception.*;
 import gnu.trove.map.hash.*;
@@ -24,7 +23,7 @@ class IndexedEdge extends EdgeShape {
 			stream.writeDouble(neighborAngle);
 		});
 	}
-	static ByteBuffer serialize(TIntObjectHashMap<List<IndexedEdge>> hash) {
+	static byte[] serialize(TIntObjectHashMap<List<IndexedEdge>> hash) {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		DataOutputStream formatter = new DataOutputStream(buffer);
 		int[] keys = hash.keys();
@@ -40,6 +39,6 @@ class IndexedEdge extends EdgeShape {
 			}
 			formatter.close();
 		});
-		return ByteBuffer.wrap(buffer.toByteArray());
+		return buffer.toByteArray();
 	}
 }

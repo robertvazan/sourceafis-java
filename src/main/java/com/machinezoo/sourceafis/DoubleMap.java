@@ -42,10 +42,10 @@ class DoubleMap {
 	void multiply(IntPoint at, double value) {
 		multiply(at.x, at.y, value);
 	}
-	ByteBuffer serialize() {
+	byte[] serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES * array.length);
 		buffer.asDoubleBuffer().put(array);
-		return buffer;
+		return buffer.array();
 	}
 	JsonArrayInfo json() {
 		JsonArrayInfo info = new JsonArrayInfo();

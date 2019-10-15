@@ -3,7 +3,6 @@ package com.machinezoo.sourceafis;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import java.nio.*;
 import java.util.*;
 import java.util.function.*;
 import org.junit.*;
@@ -11,11 +10,11 @@ import org.junit.*;
 public class FingerprintTransparencyTest {
 	private static class TransparencyChecker extends FingerprintTransparency {
 		final List<String> keywords = new ArrayList<>();
-		@Override protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
+		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
 			keywords.add(keyword);
-			for (Map.Entry<String, Supplier<ByteBuffer>> entry : data.entrySet()) {
+			for (Map.Entry<String, Supplier<byte[]>> entry : data.entrySet()) {
 				assertThat(keyword, entry.getKey(), is(oneOf(".json", ".dat")));
-				assertThat(keyword, entry.getValue().get().remaining(), greaterThan(0));
+				assertThat(keyword, entry.getValue().get().length, greaterThan(0));
 			}
 		}
 	}

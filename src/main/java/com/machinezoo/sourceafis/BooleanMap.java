@@ -53,12 +53,11 @@ class BooleanMap {
 		for (int i = 0; i < array.length; ++i)
 			array[i] |= other.array[i];
 	}
-	ByteBuffer serialize() {
+	byte[] serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(size().area());
 		for (IntPoint at : size())
 			buffer.put((byte)(get(at) ? 1 : 0));
-		buffer.flip();
-		return buffer;
+		return buffer.array();
 	}
 	JsonArrayInfo json() {
 		JsonArrayInfo info = new JsonArrayInfo();

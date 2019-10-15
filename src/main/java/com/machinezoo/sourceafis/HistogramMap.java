@@ -53,10 +53,10 @@ class HistogramMap {
 	void increment(IntPoint at, int z) {
 		increment(at.x, at.y, z);
 	}
-	ByteBuffer serialize() {
+	byte[] serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * array.length);
 		buffer.asIntBuffer().put(array);
-		return buffer;
+		return buffer.array();
 	}
 	JsonArrayInfo json() {
 		JsonArrayInfo info = new JsonArrayInfo();
