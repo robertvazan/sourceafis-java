@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 
 class JsonTemplate {
+	String version = "3.7";
 	int width;
 	int height;
 	List<JsonMinutia> minutiae;
