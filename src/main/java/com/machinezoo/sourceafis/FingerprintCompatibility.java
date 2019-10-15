@@ -3,6 +3,7 @@ package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
 import java.util.*;
+import org.slf4j.*;
 
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.
@@ -25,6 +26,7 @@ import java.util.*;
  * @see <a href="https://templates.machinezoo.com/standard-fingerprint-templates-bad-idea">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
+	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	private FingerprintCompatibility() {
 	}
 	/**
@@ -94,7 +96,16 @@ public class FingerprintCompatibility {
 			 * in case native template gets here by accident.
 			 */
 			try {
-				return Arrays.asList(new FingerprintTemplate(template));
+				/*
+				 * Pass false to FingerprintTemplate constructor to prevent infinite recursion
+				 * of mutual fallbacks between FingerprintTemplate and FingerprintCompatibility.
+				 */
+				List<FingerprintTemplate> deserialized = Arrays.asList(new FingerprintTemplate(template, false));
+				/*
+				 * It is an error to pass native template here, so at least log a warning.
+				 */
+				logger.warn("Native SourceAFIS template was passed to convert() or convertAll() in FingerprintCompatibility. It was accepted, but FingerprintTemplate constructor should be used instead.");
+				return deserialized;
 			} catch (Throwable ex2) {
 				/*
 				 * Throw the original exception. We don't want to hide it with exception from this fallback.

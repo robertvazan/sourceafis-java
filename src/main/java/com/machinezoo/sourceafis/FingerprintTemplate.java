@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.zip.*;
 import javax.imageio.*;
 import org.apache.commons.io.*;
+import org.slf4j.*;
 import com.google.gson.*;
 import com.machinezoo.noexception.*;
 
@@ -40,6 +41,7 @@ public class FingerprintTemplate {
 	 * and FingerprintTemplate itself becomes immutable.
 	 */
 	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
+	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	/**
 	 * Create fingerprint template from fingerprint image.
 	 * <p>
@@ -79,16 +81,35 @@ public class FingerprintTemplate {
 	 * @see FingerprintCompatibility#convert(byte[])
 	 */
 	public FingerprintTemplate(byte[] serialized) {
-		Objects.requireNonNull(serialized);
-		byte[] decompressed = Exceptions.wrap().get(() -> {
-			try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(serialized))) {
-				return IOUtils.toByteArray(gzip);
+		this(serialized, true);
+	}
+	FingerprintTemplate(byte[] serialized, boolean foreignToo) {
+		try {
+			Objects.requireNonNull(serialized);
+			byte[] decompressed = Exceptions.wrap().get(() -> {
+				try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(serialized))) {
+					return IOUtils.toByteArray(gzip);
+				}
+			});
+			String json = new String(decompressed, StandardCharsets.UTF_8);
+			TemplateBuilder builder = new TemplateBuilder();
+			builder.deserialize(json);
+			immutable = new ImmutableTemplate(builder);
+		} catch (Throwable ex) {
+			try {
+				FingerprintTemplate converted = FingerprintCompatibility.convert(serialized);
+				immutable = converted.immutable;
+				/*
+				 * It is an error to pass foreign template here, so at least log a warning.
+				 */
+				logger.warn("Template in foreign format was passed to FingerprintTemplate constructor. It was accepted, but FingerprintCompatibility.convert() should be used instead.");
+			} catch (Throwable ex2) {
+				/*
+				 * Throw the original exception. We don't want to hide it with exception from this fallback.
+				 */
+				throw ex;
 			}
-		});
-		String json = new String(decompressed, StandardCharsets.UTF_8);
-		TemplateBuilder builder = new TemplateBuilder();
-		builder.deserialize(json);
-		immutable = new ImmutableTemplate(builder);
+		}
 	}
 	/**
 	 * Instantiate an empty fingerprint template. This constructor is deprecated.
