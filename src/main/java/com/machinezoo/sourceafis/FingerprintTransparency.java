@@ -39,15 +39,15 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private FingerprintTransparency outer;
 	/**
 	 * Creates an instance of {@code FingerprintTransparency} and activates it.
-	 * 
+	 * <p>
 	 * Activation places the new {@code FingerprintTransparency} instance in thread-local storage,
 	 * which causes all operations executed by current thread to log data to this {@code FingerprintTransparency} instance.
 	 * If activations are nested, data is only logged to the currently innermost {@code FingerprintTransparency}.
-	 * 
+	 * <p>
 	 * Deactivation happens in {@link #close()} method.
 	 * Instances of {@code FingerprintTransparency} should be created in try-with-resources construct
 	 * to ensure that {@link #close()} is always called.
-	 * 
+	 * <p>
 	 * {@code FingerprintTransparency} is an abstract class.
 	 * This constructor is only called by subclasses.
 	 * 
@@ -75,6 +75,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * Transparency data is offered indirectly via {@link Supplier}.
 	 * If this {@code Supplier} is not evaluated, the data is never serialized.
 	 * This allows applications to efficiently collect only transparency data that is actually needed.
+	 * <p>
+	 * If this method throws, exception is propagated through SourceAFIS code.
 	 * 
 	 * @param keyword
 	 *            specifies the kind of transparency data being reported
@@ -85,23 +87,20 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @see #zip(OutputStream)
 	 */
 	protected abstract void log(String keyword, Map<String, Supplier<ByteBuffer>> data);
-	/*
-	 * We implement AutoCloseable in order to support try-with-resources,
-	 * but our close() doesn't throw any checked exceptions
-	 * in order to spare callers of mandatory exception handling.
-	 * Derived classes can still wrap any checked exceptions in unchecked ones if needed.
-	 */
 	/**
 	 * Deactivate transparency logging and release system resources held by this instance if any.
 	 * This method is normally called automatically when {@code FingerprintTransparency} is used in try-with-resources construct.
-	 * 
+	 * <p>
 	 * Deactivation stops transparency data logging to this instance of {@code FingerprintTransparency},
 	 * which was started by the constructor ({@link #FingerprintTransparency()}).
 	 * If activations were nested, this method reactivates the outer {@code FingerprintTransparency}.
-	 * 
+	 * <p>
 	 * Subclasses can override this method to perform cleanup.
 	 * Default implementation of this method performs deactivation.
 	 * It must be called by overriding methods for deactivation to work correctly.
+	 * <p>
+	 * This method doesn't declare any checked exceptions in order to spare callers of mandatory exception checking. 
+	 * If your code needs to throw a checked exception, wrap it in an unchecked exception.
 	 * 
 	 * @see #FingerprintTransparency()
 	 */
@@ -118,6 +117,9 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * The returned {@code FingerprintTransparency} object holds system resources
 	 * and callers are responsible for calling {@link #close()} method, perhaps using try-with-resources construct.
 	 * Failure to close the returned {@code FingerprintTransparency} instance may result in damaged ZIP file.
+	 * <p>
+	 * If the provided {@code stream} throws {@link IOException},
+	 * the exception will be wrapped in an unchecked exception and propagated.
 	 * 
 	 * @param stream
 	 *            output stream where ZIP file will be written (will be closed when the returned {@code FingerprintTransparency} is closed)
@@ -136,7 +138,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			zip = new ZipOutputStream(stream);
 		}
 		@Override protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
-			Exceptions.sneak().run(() -> {
+			Exceptions.wrap().run(() -> {
 				List<String> suffixes = data.keySet().stream()
 					.sorted(Comparator.comparing(ext -> {
 						if (ext.equals(".json"))

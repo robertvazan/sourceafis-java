@@ -53,10 +53,13 @@ public class FingerprintMatcher {
 	 * @param probe
 	 *            probe fingerprint template to be matched to candidate fingerprints
 	 * @return {@code this} (fluent method)
+	 * @throws NullPointerException
+	 *             if {@code probe} is {@code null}
 	 * 
 	 * @see #match(FingerprintTemplate)
 	 */
 	public FingerprintMatcher index(FingerprintTemplate probe) {
+		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
 		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
 		return this;
@@ -113,10 +116,13 @@ public class FingerprintMatcher {
 	 * @param candidate
 	 *            fingerprint template to be matched with probe fingerprint indexed by this {@code FingerprintMatcher}
 	 * @return similarity score between probe and candidate fingerprints
+	 * @throws NullPointerException
+	 *             if {@code candidate} is {@code null}
 	 * 
 	 * @see #index(FingerprintTemplate)
 	 */
 	public double match(FingerprintTemplate candidate) {
+		Objects.requireNonNull(candidate);
 		MatchBuffer buffer = MatchBuffer.current();
 		buffer.selectMatcher(immutable);
 		buffer.selectCandidate(candidate.immutable);

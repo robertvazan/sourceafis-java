@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.util.*;
 import javax.imageio.*;
 import com.google.gson.*;
 
@@ -42,8 +43,12 @@ public class FingerprintTemplate {
 	 * 
 	 * @param image
 	 *            fingerprint image to process
+	 * @throws NullPointerException
+	 *             if {@code image} is {@code null} or image data in it was not set
 	 */
 	public FingerprintTemplate(FingerprintImage image) {
+		Objects.requireNonNull(image);
+		Objects.requireNonNull(image.matrix);
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.extract(image.matrix, image.dpi);
 		immutable = new ImmutableTemplate(builder);
@@ -135,11 +140,16 @@ public class FingerprintTemplate {
 	 * @param json
 	 *            serialized fingerprint template in JSON format produced by {@link #serialize()}
 	 * @return {@code this} (fluent method)
+	 * @throws NullPointerException
+	 *             if {@code json} is {@code null}
+	 * @throws RuntimeException
+	 *             if {@code json} is is not in the correct format or it is corrupted
 	 * 
 	 * @see #serialize()
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 */
 	public FingerprintTemplate deserialize(String json) {
+		Objects.requireNonNull(json);
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.deserialize(json);
 		immutable = new ImmutableTemplate(builder);

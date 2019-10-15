@@ -41,12 +41,19 @@ public class FingerprintCompatibility {
 	 * @param template
 	 *            imported foreign template in one of the supported formats
 	 * @return converted native template
+	 * @throws NullPointerException
+	 *             if {@code template} is {@code null}
+	 * @throws IllegalArgumentException
+	 *             if {@code template} contains no fingerprints
+	 * @throws RuntimeException
+	 *             if {@code template} is in an unsupported format or it is corrupted
 	 *
 	 * @see #convertAll(byte[])
 	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
 	 * @see <a href="https://templates.machinezoo.com/">Supported fingerprint template formats</a>
 	 */
 	public static FingerprintTemplate convert(byte[] template) {
+		Objects.requireNonNull(template);
 		return convertAll(template).stream()
 			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("No fingerprints found in the template"));
@@ -62,12 +69,17 @@ public class FingerprintCompatibility {
 	 * @param template
 	 *            imported foreign template in one of the supported formats
 	 * @return list of native templates containing fingerprints from the foreign template
+	 * @throws NullPointerException
+	 *             if {@code template} is {@code null}
+	 * @throws RuntimeException
+	 *             if {@code template} is in an unsupported format or it is corrupted
 	 *
 	 * @see #convert(byte[])
 	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
 	 * @see <a href="https://templates.machinezoo.com/">Supported fingerprint template formats</a>
 	 */
 	public static List<FingerprintTemplate> convertAll(byte[] template) {
+		Objects.requireNonNull(template);
 		/*
 		 * If we receive native template here by accident, just deserialize it instead of throwing an exception.
 		 */
@@ -94,6 +106,8 @@ public class FingerprintCompatibility {
 	 * @param templates
 	 *            list of native SourceAFIS templates to export
 	 * @return ANSI 378-2004 template
+	 * @throws NullPointerException
+	 *             if {@code templates} or any of its items is {@code null}
 	 * 
 	 * @see #toAnsiIncits378v2009(FingerprintTemplate...)
 	 * @see #toAnsiIncits378v2009AM1(FingerprintTemplate...)
@@ -115,6 +129,8 @@ public class FingerprintCompatibility {
 	 * @param templates
 	 *            list of native SourceAFIS templates to export
 	 * @return ANSI 378-2009 template
+	 * @throws NullPointerException
+	 *             if {@code templates} or any of its items is {@code null}
 	 * 
 	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
 	 * @see #toAnsiIncits378v2009AM1(FingerprintTemplate...)
@@ -136,6 +152,8 @@ public class FingerprintCompatibility {
 	 * @param templates
 	 *            list of native SourceAFIS templates to export
 	 * @return ANSI 378-2009/AM1 template
+	 * @throws NullPointerException
+	 *             if {@code templates} or any of its items is {@code null}
 	 * 
 	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
 	 * @see #toAnsiIncits378v2009(FingerprintTemplate...)

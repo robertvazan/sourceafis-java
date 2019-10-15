@@ -1,6 +1,7 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.util.*;
 import javax.imageio.*;
 
 /**
@@ -27,10 +28,14 @@ public class FingerprintImage {
 	 * @param dpi
 	 *            DPI of the fingerprint image, usually around 500
 	 * @return {@code this} (fluent method)
+	 * @throws IllegalArgumentException
+	 *             if {@code dpi} is non-positive, impossibly low, or impossibly high
 	 * 
 	 * @see #decode(byte[])
 	 */
 	public FingerprintImage dpi(double dpi) {
+		if (dpi < 20 || dpi > 20_000)
+			throw new IllegalArgumentException();
 		this.dpi = dpi;
 		return this;
 	}
@@ -58,6 +63,7 @@ public class FingerprintImage {
 	 * @see #grayscale(int, int, byte[])
 	 */
 	public FingerprintImage decode(byte[] image) {
+		Objects.requireNonNull(image);
 		ImageDecoder.DecodedImage decoded = ImageDecoder.decodeAny(image);
 		matrix = new DoubleMap(decoded.width, decoded.height);
 		for (int y = 0; y < decoded.height; ++y) {
@@ -95,6 +101,7 @@ public class FingerprintImage {
 	 * @see #decode(byte[])
 	 */
 	public FingerprintImage grayscale(int width, int height, byte[] pixels) {
+		Objects.requireNonNull(pixels);
 		if (width <= 0 || height <= 0 || pixels.length != width * height)
 			throw new IndexOutOfBoundsException();
 		matrix = new DoubleMap(width, height);
