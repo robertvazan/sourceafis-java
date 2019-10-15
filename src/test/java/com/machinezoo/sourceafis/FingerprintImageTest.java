@@ -1,3 +1,4 @@
+// Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
 import static org.hamcrest.Matchers.*;
