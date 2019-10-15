@@ -23,7 +23,7 @@ import com.machinezoo.noexception.*;
  * configurable via maven's provided dependencies.
  */
 abstract class ImageDecoder {
-	private static class DecodedImage {
+	static class DecodedImage {
 		int width;
 		int height;
 		/*
@@ -59,22 +59,13 @@ abstract class ImageDecoder {
 		new SanselanDecoder(),
 		new WsqDecoder(),
 		new AndroidDecoder());
-	static DoubleMap toDoubleMap(byte[] image) {
+	static DecodedImage decodeAny(byte[] image) {
 		Map<ImageDecoder, Throwable> exceptions = new HashMap<>();
 		for (ImageDecoder decoder : all) {
 			try {
 				if (!decoder.available())
 					throw new UnsupportedOperationException("Image decoder is not available.");
-				DecodedImage decoded = decoder.decode(image);
-				DoubleMap map = new DoubleMap(decoded.width, decoded.height);
-				for (int y = 0; y < decoded.height; ++y) {
-					for (int x = 0; x < decoded.width; ++x) {
-						int pixel = decoded.pixels[y * decoded.width + x];
-						int color = (pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff);
-						map.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
-					}
-				}
-				return map;
+				return decoder.decode(image);
 			} catch (Throwable ex) {
 				exceptions.put(decoder, ex);
 			}

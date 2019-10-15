@@ -53,7 +53,7 @@ public class FingerprintTemplateTest {
 	@Test public void randomScaleMatch() throws Exception {
 		FingerprintMatcher matcher = new FingerprintMatcher()
 			.index(probe());
-		DoubleMap original = FingerprintImageTest.matching().decoded;
+		DoubleMap original = FingerprintImageTest.matching().matrix;
 		int clipX = original.width / 10;
 		int clipY = original.height / 10;
 		Random random = new Random(0);

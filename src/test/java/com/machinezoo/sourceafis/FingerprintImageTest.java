@@ -24,7 +24,7 @@ public class FingerprintImageTest {
 		assertTrue(delta / (map.width * map.height) < 0.01);
 	}
 	private void assertSimilar(byte[] image, byte[] reference) {
-		assertSimilar(new FingerprintImage().decode(image).decoded, new FingerprintImage().decode(reference).decoded);
+		assertSimilar(new FingerprintImage().decode(image).matrix, new FingerprintImage().decode(reference).matrix);
 	}
 	@Test public void decodeJPEG() {
 		assertSimilar(TestResources.jpeg(), TestResources.png());

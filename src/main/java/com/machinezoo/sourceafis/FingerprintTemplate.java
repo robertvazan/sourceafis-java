@@ -45,7 +45,7 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate(FingerprintImage image) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.extract(image.decoded, image.dpi);
+		builder.extract(image.matrix, image.dpi);
 		immutable = new ImmutableTemplate(builder);
 	}
 	/**
@@ -119,7 +119,7 @@ public class FingerprintTemplate {
 	 */
 	@Deprecated public FingerprintTemplate create(byte[] image) {
 		TemplateBuilder builder = new TemplateBuilder();
-		builder.extract(ImageDecoder.toDoubleMap(image), dpi);
+		builder.extract(new FingerprintImage().decode(image).matrix, dpi);
 		immutable = new ImmutableTemplate(builder);
 		return this;
 	}

@@ -34,7 +34,7 @@ public class FingerprintImage {
 		this.dpi = dpi;
 		return this;
 	}
-	DoubleMap decoded;
+	DoubleMap matrix;
 	/**
 	 * Decode fingerprint image in standard format.
 	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
@@ -58,7 +58,15 @@ public class FingerprintImage {
 	 * @see #grayscale(int, int, byte[])
 	 */
 	public FingerprintImage decode(byte[] image) {
-		decoded = ImageDecoder.toDoubleMap(image);
+		ImageDecoder.DecodedImage decoded = ImageDecoder.decodeAny(image);
+		matrix = new DoubleMap(decoded.width, decoded.height);
+		for (int y = 0; y < decoded.height; ++y) {
+			for (int x = 0; x < decoded.width; ++x) {
+				int pixel = decoded.pixels[y * decoded.width + x];
+				int color = (pixel & 0xff) + ((pixel >> 8) & 0xff) + ((pixel >> 16) & 0xff);
+				matrix.set(x, y, 1 - color * (1.0 / (3.0 * 255.0)));
+			}
+		}
 		return this;
 	}
 	/**
@@ -89,10 +97,10 @@ public class FingerprintImage {
 	public FingerprintImage grayscale(int width, int height, byte[] pixels) {
 		if (width <= 0 || height <= 0 || pixels.length != width * height)
 			throw new IndexOutOfBoundsException();
-		decoded = new DoubleMap(width, height);
+		matrix = new DoubleMap(width, height);
 		for (int y = 0; y < height; ++y)
 			for (int x = 0; x < width; ++x)
-				decoded.set(x, y, 1 - Byte.toUnsignedInt(pixels[y * width + x]) / 255.0);
+				matrix.set(x, y, 1 - Byte.toUnsignedInt(pixels[y * width + x]) / 255.0);
 		return this;
 	}
 }
