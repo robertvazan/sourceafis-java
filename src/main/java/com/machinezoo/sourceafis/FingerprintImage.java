@@ -39,7 +39,7 @@ public class FingerprintImage {
 		this.dpi = dpi;
 		return this;
 	}
-	DoubleMap matrix;
+	DoubleMatrix matrix;
 	/**
 	 * Decode fingerprint image in standard format.
 	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
@@ -67,7 +67,7 @@ public class FingerprintImage {
 	public FingerprintImage decode(byte[] image) {
 		Objects.requireNonNull(image);
 		ImageDecoder.DecodedImage decoded = ImageDecoder.decodeAny(image);
-		matrix = new DoubleMap(decoded.width, decoded.height);
+		matrix = new DoubleMatrix(decoded.width, decoded.height);
 		for (int y = 0; y < decoded.height; ++y) {
 			for (int x = 0; x < decoded.width; ++x) {
 				int pixel = decoded.pixels[y * decoded.width + x];
@@ -106,7 +106,7 @@ public class FingerprintImage {
 		Objects.requireNonNull(pixels);
 		if (width <= 0 || height <= 0 || pixels.length != width * height)
 			throw new IndexOutOfBoundsException();
-		matrix = new DoubleMap(width, height);
+		matrix = new DoubleMatrix(width, height);
 		for (int y = 0; y < height; ++y)
 			for (int x = 0; x < width; ++x)
 				matrix.set(x, y, 1 - Byte.toUnsignedInt(pixels[y * width + x]) / 255.0);

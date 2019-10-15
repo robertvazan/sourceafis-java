@@ -3,18 +3,18 @@ package com.machinezoo.sourceafis;
 
 import java.nio.*;
 
-class HistogramMap {
+class HistogramCube {
 	final int width;
 	final int height;
 	final int depth;
 	private final int[] array;
-	HistogramMap(int width, int height, int depth) {
+	HistogramCube(int width, int height, int depth) {
 		this.width = width;
 		this.height = height;
 		this.depth = depth;
 		array = new int[width * height * depth];
 	}
-	HistogramMap(IntPoint size, int depth) {
+	HistogramCube(IntPoint size, int depth) {
 		this(size.x, size.y, depth);
 	}
 	int constrain(int z) {

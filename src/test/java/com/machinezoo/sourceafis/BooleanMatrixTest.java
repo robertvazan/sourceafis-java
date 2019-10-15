@@ -4,9 +4,9 @@ package com.machinezoo.sourceafis;
 import static org.junit.Assert.*;
 import org.junit.*;
 
-public class BooleanMapTest {
-	private final BooleanMap m = new BooleanMap(4, 5);
-	public BooleanMapTest() {
+public class BooleanMatrixTest {
+	private final BooleanMatrix m = new BooleanMatrix(4, 5);
+	public BooleanMatrixTest() {
 		for (int x = 0; x < m.width; ++x)
 			for (int y = 0; y < m.height; ++y)
 				m.set(x, y, (x + y) % 2 > 0);
@@ -16,12 +16,12 @@ public class BooleanMapTest {
 		assertEquals(5, m.height);
 	}
 	@Test public void constructorFromCell() {
-		BooleanMap m = new BooleanMap(new IntPoint(4, 5));
+		BooleanMatrix m = new BooleanMatrix(new IntPoint(4, 5));
 		assertEquals(4, m.width);
 		assertEquals(5, m.height);
 	}
 	@Test public void constructorCloning() {
-		BooleanMap m = new BooleanMap(this.m);
+		BooleanMatrix m = new BooleanMatrix(this.m);
 		assertEquals(4, m.width);
 		assertEquals(5, m.height);
 		for (int x = 0; x < m.width; ++x)
@@ -83,7 +83,7 @@ public class BooleanMapTest {
 	}
 	@Test public void merge() {
 		assertEquals(true, m.get(3, 2));
-		BooleanMap o = new BooleanMap(4, 5);
+		BooleanMatrix o = new BooleanMatrix(4, 5);
 		for (int x = 0; x < m.width; ++x)
 			for (int y = 0; y < m.height; ++y)
 				o.set(x, y, x < 2 && y < 3);

@@ -8,7 +8,7 @@ public class FingerprintImageTest {
 	@Test public void decodePNG() {
 		new FingerprintImage().decode(TestResources.png());
 	}
-	private void assertSimilar(DoubleMap map, DoubleMap reference) {
+	private void assertSimilar(DoubleMatrix map, DoubleMatrix reference) {
 		assertEquals(reference.width, map.width);
 		assertEquals(reference.height, map.height);
 		double delta = 0, max = -1, min = 1;

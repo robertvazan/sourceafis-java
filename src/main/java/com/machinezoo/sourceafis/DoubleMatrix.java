@@ -3,16 +3,16 @@ package com.machinezoo.sourceafis;
 
 import java.nio.*;
 
-class DoubleMap {
+class DoubleMatrix {
 	final int width;
 	final int height;
 	private final double[] array;
-	DoubleMap(int width, int height) {
+	DoubleMatrix(int width, int height) {
 		this.width = width;
 		this.height = height;
 		array = new double[width * height];
 	}
-	DoubleMap(IntPoint size) {
+	DoubleMatrix(IntPoint size) {
 		this(size.x, size.y);
 	}
 	IntPoint size() {

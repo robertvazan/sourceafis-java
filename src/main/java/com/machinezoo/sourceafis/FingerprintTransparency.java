@@ -210,11 +210,11 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		return this != none;
 	}
 	// https://sourceafis.machinezoo.com/transparency/decoded-image
-	void logDecodedImage(DoubleMap image) {
+	void logDecodedImage(DoubleMatrix image) {
 		logDoubleMap("decoded-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/scaled-image
-	void logScaledImage(DoubleMap image) {
+	void logScaledImage(DoubleMatrix image) {
 		logDoubleMap("scaled-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/block-map
@@ -222,79 +222,79 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("block-map", ".json", json(() -> blocks));
 	}
 	// https://sourceafis.machinezoo.com/transparency/histogram
-	void logHistogram(HistogramMap histogram) {
+	void logHistogram(HistogramCube histogram) {
 		logHistogram("histogram", histogram);
 	}
 	// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
-	void logSmoothedHistogram(HistogramMap histogram) {
+	void logSmoothedHistogram(HistogramCube histogram) {
 		logHistogram("smoothed-histogram", histogram);
 	}
 	// https://sourceafis.machinezoo.com/transparency/clipped-contrast
-	void logClippedContrast(DoubleMap contrast) {
+	void logClippedContrast(DoubleMatrix contrast) {
 		logDoubleMap("clipped-contrast", contrast);
 	}
 	// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
-	void logAbsoluteContrastMask(BooleanMap mask) {
+	void logAbsoluteContrastMask(BooleanMatrix mask) {
 		logBooleanMap("absolute-contrast-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
-	void logRelativeContrastMask(BooleanMap mask) {
+	void logRelativeContrastMask(BooleanMatrix mask) {
 		logBooleanMap("relative-contrast-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/combined-mask
-	void logCombinedMask(BooleanMap mask) {
+	void logCombinedMask(BooleanMatrix mask) {
 		logBooleanMap("combined-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/filtered-mask
-	void logFilteredMask(BooleanMap mask) {
+	void logFilteredMask(BooleanMatrix mask) {
 		logBooleanMap("filtered-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/equalized-image
-	void logEqualizedImage(DoubleMap image) {
+	void logEqualizedImage(DoubleMatrix image) {
 		logDoubleMap("equalized-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
-	void logPixelwiseOrientation(DoublePointMap orientations) {
+	void logPixelwiseOrientation(DoublePointMatrix orientations) {
 		logPointMap("pixelwise-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/block-orientation
-	void logBlockOrientation(DoublePointMap orientations) {
+	void logBlockOrientation(DoublePointMatrix orientations) {
 		logPointMap("block-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
-	void logSmoothedOrientation(DoublePointMap orientations) {
+	void logSmoothedOrientation(DoublePointMatrix orientations) {
 		logPointMap("smoothed-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
-	void logParallelSmoothing(DoubleMap smoothed) {
+	void logParallelSmoothing(DoubleMatrix smoothed) {
 		logDoubleMap("parallel-smoothing", smoothed);
 	}
 	// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
-	void logOrthogonalSmoothing(DoubleMap smoothed) {
+	void logOrthogonalSmoothing(DoubleMatrix smoothed) {
 		logDoubleMap("orthogonal-smoothing", smoothed);
 	}
 	// https://sourceafis.machinezoo.com/transparency/binarized-image
-	void logBinarizedImage(BooleanMap image) {
+	void logBinarizedImage(BooleanMatrix image) {
 		logBooleanMap("binarized-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
-	void logFilteredBinarydImage(BooleanMap image) {
+	void logFilteredBinarydImage(BooleanMatrix image) {
 		logBooleanMap("filtered-binary-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/pixel-mask
-	void logPixelMask(BooleanMap image) {
+	void logPixelMask(BooleanMatrix image) {
 		logBooleanMap("pixel-mask", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/inner-mask
-	void logInnerMask(BooleanMap image) {
+	void logInnerMask(BooleanMatrix image) {
 		logBooleanMap("inner-mask", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
-	void logBinarizedSkeleton(SkeletonType type, BooleanMap image) {
+	void logBinarizedSkeleton(SkeletonType type, BooleanMatrix image) {
 		logBooleanMap(type.prefix + "binarized-skeleton", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/thinned-skeleton
-	void logThinnedSkeleton(SkeletonType type, BooleanMap image) {
+	void logThinnedSkeleton(SkeletonType type, BooleanMatrix image) {
 		logBooleanMap(type.prefix + "thinned-skeleton", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/traced-skeleton
@@ -384,17 +384,17 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		if (logging())
 			log(name, ".json", json(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
-	private void logHistogram(String name, HistogramMap histogram) {
+	private void logHistogram(String name, HistogramCube histogram) {
 		log(name, ".dat", histogram::serialize, ".json", json(histogram::json));
 	}
-	private void logPointMap(String name, DoublePointMap map) {
-		log(name, ".dat", map::serialize, ".json", json(map::json));
+	private void logPointMap(String name, DoublePointMatrix matrix) {
+		log(name, ".dat", matrix::serialize, ".json", json(matrix::json));
 	}
-	private void logDoubleMap(String name, DoubleMap map) {
-		log(name, ".dat", map::serialize, ".json", json(map::json));
+	private void logDoubleMap(String name, DoubleMatrix matrix) {
+		log(name, ".dat", matrix::serialize, ".json", json(matrix::json));
 	}
-	private void logBooleanMap(String name, BooleanMap map) {
-		log(name, ".dat", map::serialize, ".json", json(map::json));
+	private void logBooleanMap(String name, BooleanMatrix matrix) {
+		log(name, ".dat", matrix::serialize, ".json", json(matrix::json));
 	}
 	private Supplier<byte[]> json(Supplier<Object> supplier) {
 		return () -> new GsonBuilder().setPrettyPrinting().create().toJson(supplier.get()).getBytes(StandardCharsets.UTF_8);

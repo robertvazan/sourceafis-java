@@ -8,12 +8,12 @@ class Skeleton {
 	final SkeletonType type;
 	final IntPoint size;
 	final List<SkeletonMinutia> minutiae = new ArrayList<>();
-	Skeleton(BooleanMap binary, SkeletonType type) {
+	Skeleton(BooleanMatrix binary, SkeletonType type) {
 		this.type = type;
 		// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
 		FingerprintTransparency.current().logBinarizedSkeleton(type, binary);
 		size = binary.size();
-		BooleanMap thinned = thin(binary);
+		BooleanMatrix thinned = thin(binary);
 		List<IntPoint> minutiaPoints = findMinutiae(thinned);
 		Map<IntPoint, List<IntPoint>> linking = linkNeighboringMinutiae(minutiaPoints);
 		Map<IntPoint, SkeletonMinutia> minutiaMap = minutiaCenters(linking);
@@ -28,13 +28,13 @@ class Skeleton {
 		Ending,
 		Removable
 	}
-	private BooleanMap thin(BooleanMap input) {
+	private BooleanMatrix thin(BooleanMatrix input) {
 		NeighborhoodType[] neighborhoodTypes = neighborhoodTypes();
-		BooleanMap partial = new BooleanMap(size);
+		BooleanMatrix partial = new BooleanMatrix(size);
 		for (int y = 1; y < size.y - 1; ++y)
 			for (int x = 1; x < size.x - 1; ++x)
 				partial.set(x, y, input.get(x, y));
-		BooleanMap thinned = new BooleanMap(size);
+		BooleanMatrix thinned = new BooleanMatrix(size);
 		boolean removedAnything = true;
 		for (int i = 0; i < Parameters.thinningIterations && removedAnything; ++i) {
 			removedAnything = false;
@@ -89,7 +89,7 @@ class Skeleton {
 		}
 		return types;
 	}
-	private static boolean isFalseEnding(BooleanMap binary, IntPoint ending) {
+	private static boolean isFalseEnding(BooleanMatrix binary, IntPoint ending) {
 		for (IntPoint relativeNeighbor : IntPoint.cornerNeighbors) {
 			IntPoint neighbor = ending.plus(relativeNeighbor);
 			if (binary.get(neighbor)) {
@@ -102,7 +102,7 @@ class Skeleton {
 		}
 		return false;
 	}
-	private List<IntPoint> findMinutiae(BooleanMap thinned) {
+	private List<IntPoint> findMinutiae(BooleanMatrix thinned) {
 		List<IntPoint> result = new ArrayList<>();
 		for (IntPoint at : size)
 			if (thinned.get(at)) {
@@ -158,7 +158,7 @@ class Skeleton {
 		}
 		return centers;
 	}
-	private void traceRidges(BooleanMap thinned, Map<IntPoint, SkeletonMinutia> minutiaePoints) {
+	private void traceRidges(BooleanMatrix thinned, Map<IntPoint, SkeletonMinutia> minutiaePoints) {
 		Map<IntPoint, SkeletonRidge> leads = new HashMap<>();
 		for (IntPoint minutiaPoint : minutiaePoints.keySet()) {
 			for (IntPoint startRelative : IntPoint.cornerNeighbors) {
@@ -265,7 +265,7 @@ class Skeleton {
 						gap.end2 = end2;
 						queue.add(gap);
 					}
-		BooleanMap shadow = shadow();
+		BooleanMatrix shadow = shadow();
 		while (!queue.isEmpty()) {
 			Gap gap = queue.remove();
 			if (gap.end1.ridges.size() == 1 && gap.end2.ridges.size() == 1) {
@@ -300,13 +300,13 @@ class Skeleton {
 		else
 			return ridge.end().position;
 	}
-	private boolean isRidgeOverlapping(IntPoint[] line, BooleanMap shadow) {
+	private boolean isRidgeOverlapping(IntPoint[] line, BooleanMatrix shadow) {
 		for (int i = Parameters.toleratedGapOverlap; i < line.length - Parameters.toleratedGapOverlap; ++i)
 			if (shadow.get(line[i]))
 				return true;
 		return false;
 	}
-	private static void addGapRidge(BooleanMap shadow, Gap gap, IntPoint[] line) {
+	private static void addGapRidge(BooleanMatrix shadow, Gap gap, IntPoint[] line) {
 		SkeletonRidge ridge = new SkeletonRidge();
 		for (IntPoint point : line)
 			ridge.points.add(point);
@@ -364,8 +364,8 @@ class Skeleton {
 	private void removeMinutia(SkeletonMinutia minutia) {
 		minutiae.remove(minutia);
 	}
-	private BooleanMap shadow() {
-		BooleanMap shadow = new BooleanMap(size);
+	private BooleanMatrix shadow() {
+		BooleanMatrix shadow = new BooleanMatrix(size);
 		for (SkeletonMinutia minutia : minutiae) {
 			shadow.set(minutia.position, true);
 			for (SkeletonRidge ridge : minutia.ridges)

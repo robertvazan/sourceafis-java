@@ -1,16 +1,16 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
-class IntMap {
+class IntMatrix {
 	final int width;
 	final int height;
 	private final int[] array;
-	IntMap(int width, int height) {
+	IntMatrix(int width, int height) {
 		this.width = width;
 		this.height = height;
 		array = new int[width * height];
 	}
-	IntMap(IntPoint size) {
+	IntMatrix(IntPoint size) {
 		this(size.x, size.y);
 	}
 	IntPoint size() {

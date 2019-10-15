@@ -4,9 +4,9 @@ package com.machinezoo.sourceafis;
 import static org.junit.Assert.*;
 import org.junit.*;
 
-public class HistogramMapTest {
-	private final HistogramMap h = new HistogramMap(4, 5, 6);
-	public HistogramMapTest() {
+public class HistogramCubeTest {
+	private final HistogramCube h = new HistogramCube(4, 5, 6);
+	public HistogramCubeTest() {
 		for (int x = 0; x < h.width; ++x)
 			for (int y = 0; y < h.height; ++y)
 				for (int z = 0; z < h.depth; ++z)

@@ -4,9 +4,9 @@ package com.machinezoo.sourceafis;
 import static org.junit.Assert.*;
 import org.junit.*;
 
-public class DoublePointMapTest {
-	private final DoublePointMap m = new DoublePointMap(4, 5);
-	public DoublePointMapTest() {
+public class DoublePointMatrixTest {
+	private final DoublePointMatrix m = new DoublePointMatrix(4, 5);
+	public DoublePointMatrixTest() {
 		for (int x = 0; x < m.width; ++x)
 			for (int y = 0; y < m.height; ++y)
 				m.set(x, y, new DoublePoint(10 * x, 10 * y));
@@ -16,7 +16,7 @@ public class DoublePointMapTest {
 		assertEquals(5, m.height);
 	}
 	@Test public void constructorFromCell() {
-		DoublePointMap m = new DoublePointMap(new IntPoint(4, 5));
+		DoublePointMatrix m = new DoublePointMatrix(new IntPoint(4, 5));
 		assertEquals(4, m.width);
 		assertEquals(5, m.height);
 	}

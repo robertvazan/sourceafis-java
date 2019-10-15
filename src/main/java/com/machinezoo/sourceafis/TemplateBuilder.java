@@ -10,7 +10,7 @@ class TemplateBuilder {
 	IntPoint size;
 	ImmutableMinutia[] minutiae;
 	NeighborEdge[][] edges;
-	void extract(DoubleMap raw, double dpi) {
+	void extract(DoubleMatrix raw, double dpi) {
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		FingerprintTransparency.current().logDecodedImage(raw);
 		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
@@ -21,26 +21,26 @@ class TemplateBuilder {
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
 		// https://sourceafis.machinezoo.com/transparency/block-map
 		FingerprintTransparency.current().logBlockMap(blocks);
-		HistogramMap histogram = histogram(blocks, raw);
-		HistogramMap smoothHistogram = smoothHistogram(blocks, histogram);
-		BooleanMap mask = mask(blocks, histogram);
-		DoubleMap equalized = equalize(blocks, raw, smoothHistogram, mask);
-		DoubleMap orientation = orientationMap(equalized, mask, blocks);
+		HistogramCube histogram = histogram(blocks, raw);
+		HistogramCube smoothHistogram = smoothHistogram(blocks, histogram);
+		BooleanMatrix mask = mask(blocks, histogram);
+		DoubleMatrix equalized = equalize(blocks, raw, smoothHistogram, mask);
+		DoubleMatrix orientation = orientationMap(equalized, mask, blocks);
 		IntPoint[][] smoothedLines = orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep);
-		DoubleMap smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, smoothedLines);
+		DoubleMatrix smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, smoothedLines);
 		// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
 		FingerprintTransparency.current().logParallelSmoothing(smoothed);
 		IntPoint[][] orthogonalLines = orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep);
-		DoubleMap orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
+		DoubleMatrix orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
 		// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
 		FingerprintTransparency.current().logOrthogonalSmoothing(orthogonal);
-		BooleanMap binary = binarize(smoothed, orthogonal, mask, blocks);
-		BooleanMap pixelMask = fillBlocks(mask, blocks);
+		BooleanMatrix binary = binarize(smoothed, orthogonal, mask, blocks);
+		BooleanMatrix pixelMask = fillBlocks(mask, blocks);
 		cleanupBinarized(binary, pixelMask);
 		// https://sourceafis.machinezoo.com/transparency/pixel-mask
 		FingerprintTransparency.current().logPixelMask(pixelMask);
-		BooleanMap inverted = invert(binary, pixelMask);
-		BooleanMap innerMask = innerMask(pixelMask);
+		BooleanMatrix inverted = invert(binary, pixelMask);
+		BooleanMatrix innerMask = innerMask(pixelMask);
 		Skeleton ridges = new Skeleton(binary, SkeletonType.RIDGES);
 		Skeleton valleys = new Skeleton(inverted, SkeletonType.VALLEYS);
 		collectMinutiae(ridges, MinutiaType.ENDING);
@@ -80,11 +80,11 @@ class TemplateBuilder {
 		else
 			return value;
 	}
-	static DoubleMap scaleImage(DoubleMap input, double dpi) {
+	static DoubleMatrix scaleImage(DoubleMatrix input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
 	}
-	static DoubleMap scaleImage(DoubleMap input, int newWidth, int newHeight) {
-		DoubleMap output = new DoubleMap(newWidth, newHeight);
+	static DoubleMatrix scaleImage(DoubleMatrix input, int newWidth, int newHeight) {
+		DoubleMatrix output = new DoubleMatrix(newWidth, newHeight);
 		double scaleX = newWidth / (double)input.width;
 		double scaleY = newHeight / (double)input.height;
 		double descaleX = 1 / scaleX;
@@ -112,8 +112,8 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private HistogramMap histogram(BlockMap blocks, DoubleMap image) {
-		HistogramMap histogram = new HistogramMap(blocks.primary.blocks, Parameters.histogramDepth);
+	private HistogramCube histogram(BlockMap blocks, DoubleMatrix image) {
+		HistogramCube histogram = new HistogramCube(blocks.primary.blocks, Parameters.histogramDepth);
 		for (IntPoint block : blocks.primary.blocks) {
 			IntRect area = blocks.primary.block(block);
 			for (int y = area.top(); y < area.bottom(); ++y)
@@ -126,9 +126,9 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logHistogram(histogram);
 		return histogram;
 	}
-	private HistogramMap smoothHistogram(BlockMap blocks, HistogramMap input) {
+	private HistogramCube smoothHistogram(BlockMap blocks, HistogramCube input) {
 		IntPoint[] blocksAround = new IntPoint[] { new IntPoint(0, 0), new IntPoint(-1, 0), new IntPoint(0, -1), new IntPoint(-1, -1) };
-		HistogramMap output = new HistogramMap(blocks.secondary.blocks, input.depth);
+		HistogramCube output = new HistogramCube(blocks.secondary.blocks, input.depth);
 		for (IntPoint corner : blocks.secondary.blocks) {
 			for (IntPoint relative : blocksAround) {
 				IntPoint block = corner.plus(relative);
@@ -142,9 +142,9 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logSmoothedHistogram(output);
 		return output;
 	}
-	private BooleanMap mask(BlockMap blocks, HistogramMap histogram) {
-		DoubleMap contrast = clipContrast(blocks, histogram);
-		BooleanMap mask = filterAbsoluteContrast(contrast);
+	private BooleanMatrix mask(BlockMap blocks, HistogramCube histogram) {
+		DoubleMatrix contrast = clipContrast(blocks, histogram);
+		BooleanMatrix mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		// https://sourceafis.machinezoo.com/transparency/combined-mask
 		FingerprintTransparency.current().logCombinedMask(mask);
@@ -158,8 +158,8 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logFilteredMask(mask);
 		return mask;
 	}
-	private DoubleMap clipContrast(BlockMap blocks, HistogramMap histogram) {
-		DoubleMap result = new DoubleMap(blocks.primary.blocks);
+	private DoubleMatrix clipContrast(BlockMap blocks, HistogramCube histogram) {
+		DoubleMatrix result = new DoubleMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks) {
 			int volume = histogram.sum(block);
 			int clipLimit = (int)Math.round(volume * Parameters.clippedContrast);
@@ -187,8 +187,8 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logClippedContrast(result);
 		return result;
 	}
-	private BooleanMap filterAbsoluteContrast(DoubleMap contrast) {
-		BooleanMap result = new BooleanMap(contrast.size());
+	private BooleanMatrix filterAbsoluteContrast(DoubleMatrix contrast) {
+		BooleanMatrix result = new BooleanMatrix(contrast.size());
 		for (IntPoint block : contrast.size())
 			if (contrast.get(block) < Parameters.minAbsoluteContrast)
 				result.set(block, true);
@@ -196,7 +196,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logAbsoluteContrastMask(result);
 		return result;
 	}
-	private BooleanMap filterRelativeContrast(DoubleMap contrast, BlockMap blocks) {
+	private BooleanMatrix filterRelativeContrast(DoubleMatrix contrast, BlockMap blocks) {
 		List<Double> sortedContrast = new ArrayList<>();
 		for (IntPoint block : contrast.size())
 			sortedContrast.add(contrast.get(block));
@@ -206,7 +206,7 @@ class TemplateBuilder {
 		int consideredBlocks = Math.max((int)Math.round(sampleCount * Parameters.relativeContrastPercentile), 1);
 		double averageContrast = sortedContrast.stream().mapToDouble(n -> n).limit(consideredBlocks).average().getAsDouble();
 		double limit = averageContrast * Parameters.minRelativeContrast;
-		BooleanMap result = new BooleanMap(blocks.primary.blocks);
+		BooleanMatrix result = new BooleanMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks)
 			if (contrast.get(block) < limit)
 				result.set(block, true);
@@ -214,12 +214,12 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logRelativeContrastMask(result);
 		return result;
 	}
-	private BooleanMap vote(BooleanMap input, BooleanMap mask, int radius, double majority, int borderDistance) {
+	private BooleanMatrix vote(BooleanMatrix input, BooleanMatrix mask, int radius, double majority, int borderDistance) {
 		IntPoint size = input.size();
 		IntRect rect = new IntRect(borderDistance, borderDistance, size.x - 2 * borderDistance, size.y - 2 * borderDistance);
 		int[] thresholds = IntStream.range(0, Integers.sq(2 * radius + 1) + 1).map(i -> (int)Math.ceil(majority * i)).toArray();
-		IntMap counts = new IntMap(size);
-		BooleanMap output = new BooleanMap(size);
+		IntMatrix counts = new IntMatrix(size);
+		BooleanMatrix output = new BooleanMatrix(size);
 		for (int y = rect.top(); y < rect.bottom(); ++y) {
 			int superTop = y - radius - 1;
 			int superBottom = y + radius;
@@ -260,10 +260,10 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private BooleanMap filterBlockErrors(BooleanMap input) {
+	private BooleanMatrix filterBlockErrors(BooleanMatrix input) {
 		return vote(input, null, Parameters.blockErrorsVoteRadius, Parameters.blockErrorsVoteMajority, Parameters.blockErrorsVoteBorderDistance);
 	}
-	private DoubleMap equalize(BlockMap blocks, DoubleMap image, HistogramMap histogram, BooleanMap blockMask) {
+	private DoubleMatrix equalize(BlockMap blocks, DoubleMatrix image, HistogramCube histogram, BooleanMatrix blockMask) {
 		final double rangeMin = -1;
 		final double rangeMax = 1;
 		final double rangeSize = rangeMax - rangeMin;
@@ -297,7 +297,7 @@ class TemplateBuilder {
 				}
 			}
 		}
-		DoubleMap result = new DoubleMap(blocks.pixels);
+		DoubleMatrix result = new DoubleMatrix(blocks.pixels);
 		for (IntPoint block : blocks.primary.blocks) {
 			IntRect area = blocks.primary.block(block);
 			if (blockMask.get(block)) {
@@ -322,10 +322,10 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logEqualizedImage(result);
 		return result;
 	}
-	private DoubleMap orientationMap(DoubleMap image, BooleanMap mask, BlockMap blocks) {
-		DoublePointMap accumulated = pixelwiseOrientation(image, mask, blocks);
-		DoublePointMap byBlock = blockOrientations(accumulated, blocks, mask);
-		DoublePointMap smooth = smoothOrientation(byBlock, mask);
+	private DoubleMatrix orientationMap(DoubleMatrix image, BooleanMatrix mask, BlockMap blocks) {
+		DoublePointMatrix accumulated = pixelwiseOrientation(image, mask, blocks);
+		DoublePointMatrix byBlock = blockOrientations(accumulated, blocks, mask);
+		DoublePointMatrix smooth = smoothOrientation(byBlock, mask);
 		return orientationAngles(smooth, mask);
 	}
 	private static class ConsideredOrientation {
@@ -360,9 +360,9 @@ class TemplateBuilder {
 		}
 		return splits;
 	}
-	private DoublePointMap pixelwiseOrientation(DoubleMap input, BooleanMap mask, BlockMap blocks) {
+	private DoublePointMatrix pixelwiseOrientation(DoubleMatrix input, BooleanMatrix mask, BlockMap blocks) {
 		ConsideredOrientation[][] neighbors = planOrientations();
-		DoublePointMap orientation = new DoublePointMap(input.size());
+		DoublePointMatrix orientation = new DoublePointMatrix(input.size());
 		for (int blockY = 0; blockY < blocks.primary.blocks.y; ++blockY) {
 			IntRange maskRange = maskRange(mask, blockY);
 			if (maskRange.length() > 0) {
@@ -391,7 +391,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logPixelwiseOrientation(orientation);
 		return orientation;
 	}
-	private static IntRange maskRange(BooleanMap mask, int y) {
+	private static IntRange maskRange(BooleanMatrix mask, int y) {
 		int first = -1;
 		int last = -1;
 		for (int x = 0; x < mask.width; ++x)
@@ -405,8 +405,8 @@ class TemplateBuilder {
 		else
 			return IntRange.zero;
 	}
-	private DoublePointMap blockOrientations(DoublePointMap orientation, BlockMap blocks, BooleanMap mask) {
-		DoublePointMap sums = new DoublePointMap(blocks.primary.blocks);
+	private DoublePointMatrix blockOrientations(DoublePointMatrix orientation, BlockMap blocks, BooleanMatrix mask) {
+		DoublePointMatrix sums = new DoublePointMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks) {
 			if (mask.get(block)) {
 				IntRect area = blocks.primary.block(block);
@@ -419,9 +419,9 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logBlockOrientation(sums);
 		return sums;
 	}
-	private DoublePointMap smoothOrientation(DoublePointMap orientation, BooleanMap mask) {
+	private DoublePointMatrix smoothOrientation(DoublePointMatrix orientation, BooleanMatrix mask) {
 		IntPoint size = mask.size();
-		DoublePointMap smoothed = new DoublePointMap(size);
+		DoublePointMatrix smoothed = new DoublePointMatrix(size);
 		for (IntPoint block : size)
 			if (mask.get(block)) {
 				IntRect neighbors = IntRect.around(block, Parameters.orientationSmoothingRadius).intersect(new IntRect(size));
@@ -434,9 +434,9 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logSmoothedOrientation(smoothed);
 		return smoothed;
 	}
-	private static DoubleMap orientationAngles(DoublePointMap vectors, BooleanMap mask) {
+	private static DoubleMatrix orientationAngles(DoublePointMatrix vectors, BooleanMatrix mask) {
 		IntPoint size = mask.size();
-		DoubleMap angles = new DoubleMap(size);
+		DoubleMatrix angles = new DoubleMatrix(size);
 		for (IntPoint block : size)
 			if (mask.get(block))
 				angles.set(block, DoubleAngle.atan(vectors.get(block)));
@@ -459,8 +459,8 @@ class TemplateBuilder {
 		}
 		return result;
 	}
-	private static DoubleMap smoothRidges(DoubleMap input, DoubleMap orientation, BooleanMap mask, BlockMap blocks, double angle, IntPoint[][] lines) {
-		DoubleMap output = new DoubleMap(input.size());
+	private static DoubleMatrix smoothRidges(DoubleMatrix input, DoubleMatrix orientation, BooleanMatrix mask, BlockMap blocks, double angle, IntPoint[][] lines) {
+		DoubleMatrix output = new DoubleMatrix(input.size());
 		for (IntPoint block : blocks.primary.blocks) {
 			if (mask.get(block)) {
 				IntPoint[] line = lines[DoubleAngle.quantize(DoubleAngle.add(orientation.get(block), angle), lines.length)];
@@ -480,9 +480,9 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private BooleanMap binarize(DoubleMap input, DoubleMap baseline, BooleanMap mask, BlockMap blocks) {
+	private BooleanMatrix binarize(DoubleMatrix input, DoubleMatrix baseline, BooleanMatrix mask, BlockMap blocks) {
 		IntPoint size = input.size();
-		BooleanMap binarized = new BooleanMap(size);
+		BooleanMatrix binarized = new BooleanMatrix(size);
 		for (IntPoint block : blocks.primary.blocks)
 			if (mask.get(block)) {
 				IntRect rect = blocks.primary.block(block);
@@ -495,12 +495,12 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logBinarizedImage(binarized);
 		return binarized;
 	}
-	private void cleanupBinarized(BooleanMap binary, BooleanMap mask) {
+	private void cleanupBinarized(BooleanMatrix binary, BooleanMatrix mask) {
 		IntPoint size = binary.size();
-		BooleanMap inverted = new BooleanMap(binary);
+		BooleanMatrix inverted = new BooleanMatrix(binary);
 		inverted.invert();
-		BooleanMap islands = vote(inverted, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
-		BooleanMap holes = vote(binary, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
+		BooleanMatrix islands = vote(inverted, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
+		BooleanMatrix holes = vote(binary, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
 		for (int y = 0; y < size.y; ++y)
 			for (int x = 0; x < size.x; ++x)
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
@@ -508,7 +508,7 @@ class TemplateBuilder {
 		// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
 		FingerprintTransparency.current().logFilteredBinarydImage(binary);
 	}
-	private static void removeCrosses(BooleanMap input) {
+	private static void removeCrosses(BooleanMatrix input) {
 		IntPoint size = input.size();
 		boolean any = true;
 		while (any) {
@@ -525,25 +525,25 @@ class TemplateBuilder {
 					}
 		}
 	}
-	private static BooleanMap fillBlocks(BooleanMap mask, BlockMap blocks) {
-		BooleanMap pixelized = new BooleanMap(blocks.pixels);
+	private static BooleanMatrix fillBlocks(BooleanMatrix mask, BlockMap blocks) {
+		BooleanMatrix pixelized = new BooleanMatrix(blocks.pixels);
 		for (IntPoint block : blocks.primary.blocks)
 			if (mask.get(block))
 				for (IntPoint pixel : blocks.primary.block(block))
 					pixelized.set(pixel, true);
 		return pixelized;
 	}
-	private static BooleanMap invert(BooleanMap binary, BooleanMap mask) {
+	private static BooleanMatrix invert(BooleanMatrix binary, BooleanMatrix mask) {
 		IntPoint size = binary.size();
-		BooleanMap inverted = new BooleanMap(size);
+		BooleanMatrix inverted = new BooleanMatrix(size);
 		for (int y = 0; y < size.y; ++y)
 			for (int x = 0; x < size.x; ++x)
 				inverted.set(x, y, !binary.get(x, y) && mask.get(x, y));
 		return inverted;
 	}
-	private BooleanMap innerMask(BooleanMap outer) {
+	private BooleanMatrix innerMask(BooleanMatrix outer) {
 		IntPoint size = outer.size();
-		BooleanMap inner = new BooleanMap(size);
+		BooleanMatrix inner = new BooleanMatrix(size);
 		for (int y = 1; y < size.y - 1; ++y)
 			for (int x = 1; x < size.x - 1; ++x)
 				inner.set(x, y, outer.get(x, y));
@@ -560,9 +560,9 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logInnerMask(inner);
 		return inner;
 	}
-	private static BooleanMap shrinkMask(BooleanMap mask, int amount) {
+	private static BooleanMatrix shrinkMask(BooleanMatrix mask, int amount) {
 		IntPoint size = mask.size();
-		BooleanMap shrunk = new BooleanMap(size);
+		BooleanMatrix shrunk = new BooleanMatrix(size);
 		for (int y = amount; y < size.y - amount; ++y)
 			for (int x = amount; x < size.x - amount; ++x)
 				shrunk.set(x, y, mask.get(x, y - amount) && mask.get(x, y + amount) && mask.get(x - amount, y) && mask.get(x + amount, y));
@@ -576,7 +576,7 @@ class TemplateBuilder {
 				.map(m -> new ImmutableMinutia(m.position, m.ridges.get(0).direction(), type)))
 			.toArray(ImmutableMinutia[]::new);
 	}
-	private void maskMinutiae(BooleanMap mask) {
+	private void maskMinutiae(BooleanMatrix mask) {
 		minutiae = Arrays.stream(minutiae)
 			.filter(minutia -> {
 				IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.maskDisplacement).round();

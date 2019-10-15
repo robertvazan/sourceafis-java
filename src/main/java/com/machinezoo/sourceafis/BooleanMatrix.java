@@ -3,19 +3,19 @@ package com.machinezoo.sourceafis;
 
 import java.nio.*;
 
-class BooleanMap {
+class BooleanMatrix {
 	final int width;
 	final int height;
 	private final boolean[] array;
-	BooleanMap(int width, int height) {
+	BooleanMatrix(int width, int height) {
 		this.width = width;
 		this.height = height;
 		array = new boolean[width * height];
 	}
-	BooleanMap(IntPoint size) {
+	BooleanMatrix(IntPoint size) {
 		this(size.x, size.y);
 	}
-	BooleanMap(BooleanMap other) {
+	BooleanMatrix(BooleanMatrix other) {
 		this(other.size());
 		for (int i = 0; i < array.length; ++i)
 			array[i] = other.array[i];
@@ -47,7 +47,7 @@ class BooleanMap {
 		for (int i = 0; i < array.length; ++i)
 			array[i] = !array[i];
 	}
-	void merge(BooleanMap other) {
+	void merge(BooleanMatrix other) {
 		if (other.width != width || other.height != height)
 			throw new IllegalArgumentException();
 		for (int i = 0; i < array.length; ++i)
