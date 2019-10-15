@@ -24,6 +24,16 @@ public class FingerprintImage {
 	 * + position(FingerprintPosition)
 	 * + other fingerprint properties
 	 */
+	/**
+	 * Create new container for fingerprint image data.
+	 * The newly constructed instance cannot be used to create {@link FingerprintTemplate}
+	 * until at least fingerprint data is provided by calling {@link #decode(byte[])} or {@link #grayscale(int, int, byte[])}.
+	 * 
+	 * @see #decode(byte[])
+	 * @see #grayscale(int, int, byte[])
+	 */
+	public FingerprintImage() {
+	}
 	double dpi = 500;
 	/**
 	 * Set DPI (dots per inch) of the fingerprint image.
