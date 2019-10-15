@@ -10,18 +10,16 @@ It can do 1:1 comparisons as well as efficient 1:N search. This is the Java impl
 * License: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 ```java
-byte[] probeImage = Files.readAllBytes(Paths.get("probe.jpeg"));
-byte[] candidateImage = Files.readAllBytes(Paths.get("candidate.jpeg"));
 FingerprintTemplate probe = new FingerprintTemplate(
-	new FingerprintImage()
-		.dpi(500)
-		.create(probeImage));
+    new FingerprintImage()
+        .dpi(500)
+        .decode(Files.readAllBytes(Paths.get("probe.jpeg"))));
 FingerprintTemplate candidate = new FingerprintTemplate(
-	new FingerprintImage()
-		.dpi(500)
-		.create(candidateImage));
+    new FingerprintImage()
+        .dpi(500)
+        .decode(Files.readAllBytes(Paths.get("candidate.jpeg"))));
 double score = new FingerprintMatcher()
-	.index(probe)
-	.match(candidate);
+    .index(probe)
+    .match(candidate);
 boolean matches = score >= 40;
 ```
