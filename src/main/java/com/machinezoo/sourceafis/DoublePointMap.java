@@ -50,7 +50,6 @@ class DoublePointMap {
 	ByteBuffer serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES * array.length);
 		buffer.asDoubleBuffer().put(array);
-		buffer.flip();
 		return buffer;
 	}
 	JsonArrayInfo json() {

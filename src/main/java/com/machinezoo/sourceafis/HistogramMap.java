@@ -56,7 +56,6 @@ class HistogramMap {
 	ByteBuffer serialize() {
 		ByteBuffer buffer = ByteBuffer.allocate(Integer.BYTES * array.length);
 		buffer.asIntBuffer().put(array);
-		buffer.flip();
 		return buffer;
 	}
 	JsonArrayInfo json() {
