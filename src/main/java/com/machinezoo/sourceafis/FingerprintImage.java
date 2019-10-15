@@ -19,6 +19,11 @@ import javax.imageio.*;
  * @see FingerprintTemplate
  */
 public class FingerprintImage {
+	/*
+	 * API roadmap:
+	 * + position(FingerprintPosition)
+	 * + other fingerprint properties
+	 */
 	double dpi = 500;
 	/**
 	 * Set DPI (dots per inch) of the fingerprint image.

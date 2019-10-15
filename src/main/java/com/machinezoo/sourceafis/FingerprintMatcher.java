@@ -17,6 +17,28 @@ import gnu.trove.map.hash.*;
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
+	/*
+	 * API roadmap:
+	 * + FingerprintMatcher(FingerprintTemplate)
+	 * - index(FingerprintTemplate)
+	 * + FingerprintMatcher(FingerprintTemplate, FingerprintMatcherOptions)
+	 * + compare(FingerprintTemplate) - returns bits of evidence instead of current score
+	 * - match(FingerprintTemplate)
+	 * + maybe features to support 1:N identification (parallelization, score adjustment, person model, ...)
+	 * 
+	 * FingerprintMatcherOptions:
+	 * + matchX(boolean) - enable or disable various parts of the matcher for performance reasons
+	 * + cpu(long) - automated feature/algorithm selection to target CPU cycles per candidate
+	 * 
+	 * FingerprintEvidence:
+	 * = calculation of effective score in multi-finger or 1:N matching
+	 * + add(double)
+	 * + add(FingerprintPosition, double)
+	 * + add(FingerprintEvidence)
+	 * + top(int subset, int population)
+	 * + sum()
+	 * + thresholdAtFMR(double) - might have variant, still unclear
+	 */
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.empty;
 	/**
 	 * Instantiate an empty fingerprint matcher.

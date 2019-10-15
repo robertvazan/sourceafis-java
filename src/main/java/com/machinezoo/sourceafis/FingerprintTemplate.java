@@ -37,6 +37,42 @@ import com.machinezoo.noexception.*;
  */
 public class FingerprintTemplate {
 	/*
+	 * API roadmap:
+	 * + FingerprintTemplate(FingerprintImage, FingerprintTemplateOptions)
+	 * + double surface() - in metric units
+	 * + FingerprintPosition position()
+	 * + other fingerprint properties set in FingerprintImage (only those relevant to matching, so no width/height)
+	 * + FingerprintModel model()
+	 * + FingerprintTemplate(FingerprintModel)
+	 * + FingerprintTemplate narrow(FingerprintTemplateOptions) - for reducing RAM usage by dropping features
+	 * + byte[] pack(int limit) - for producing super-compact templates (even under 100 bytes)
+	 * + FingerprintTemplate unpack(byte[] packed)
+	 * 
+	 * FingerprintTemplateOptions:
+	 * + featureX(boolean) - enable/disable production of expensive fingerprint features
+	 * + parallelize(boolean)
+	 * + cpu(long) - limit on CPU cycles consumed (approximate)
+	 * 
+	 * FingerprintModel:
+	 * = editing-optimized fingerprint representation as opposed to matching- and serialization-optimized FingerprintTemplate
+	 * = to be used in forensics and other settings for fingerprint editing
+	 * - no DPI, all values in metric units
+	 * + double width/height()
+	 * + List<FingerprintMinutia> minutiae() - mutable list of mutable minutiae
+	 * + all properties exposed by FingerprintTemplate
+	 * + setters for everything
+	 * + String svg() - maybe, unless there is dedicated visualization library/API
+	 * 
+	 * FingerprintMinutia:
+	 * + double x/y()
+	 * + double direction()
+	 * + also setters
+	 * 
+	 * FingerprintFusion:
+	 * + add(FingerprintTemplate)
+	 * + FingerprintTemplate fuse()
+	 */
+	/*
 	 * We should drop this indirection once deprecated methods are dropped
 	 * and FingerprintTemplate itself becomes immutable.
 	 */
