@@ -27,7 +27,7 @@ public class FingerprintImage {
 	/**
 	 * Create new container for fingerprint image data.
 	 * The newly constructed instance cannot be used to create {@link FingerprintTemplate}
-	 * until at least fingerprint data is provided by calling {@link #decode(byte[])} or {@link #grayscale(int, int, byte[])}.
+	 * until at least pixel data is provided by calling {@link #decode(byte[])} or {@link #grayscale(int, int, byte[])}.
 	 * 
 	 * @see #decode(byte[])
 	 * @see #grayscale(int, int, byte[])
