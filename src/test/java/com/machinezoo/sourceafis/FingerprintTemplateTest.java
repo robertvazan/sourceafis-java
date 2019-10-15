@@ -9,7 +9,6 @@ import javax.imageio.*;
 import org.junit.*;
 
 public class FingerprintTemplateTest {
-	private static FingerprintTemplate t = new FingerprintTemplate();
 	public static FingerprintTemplate probe() {
 		return new FingerprintTemplate(FingerprintImageTest.probe());
 	}
@@ -31,15 +30,15 @@ public class FingerprintTemplateTest {
 	@Test public void constructor() {
 		probe();
 	}
-	@Test public void json_roundTrip() {
+	@Test public void roundTripSerialization() {
 		TemplateBuilder tb = new TemplateBuilder();
 		tb.size = new IntPoint(800, 600);
 		tb.minutiae = new ImmutableMinutia[] {
 			new ImmutableMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION),
 			new ImmutableMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
 		};
-		t.immutable = new ImmutableTemplate(tb);
-		t = new FingerprintTemplate().deserialize(t.serialize());
+		FingerprintTemplate t = new FingerprintTemplate(new ImmutableTemplate(tb));
+		t = new FingerprintTemplate(t.toByteArray());
 		assertEquals(2, t.immutable.minutiae.length);
 		ImmutableMinutia a = t.immutable.minutiae[0];
 		ImmutableMinutia b = t.immutable.minutiae[1];

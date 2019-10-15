@@ -2,7 +2,6 @@
 package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
-import java.nio.charset.*;
 import java.util.*;
 
 /**
@@ -80,21 +79,29 @@ public class FingerprintCompatibility {
 	 */
 	public static List<FingerprintTemplate> convertAll(byte[] template) {
 		Objects.requireNonNull(template);
-		/*
-		 * If we receive native template here by accident, just deserialize it instead of throwing an exception.
-		 */
-		if (template.length >= 2 && template[0] == '{' && template[template.length - 1] == '}')
-			return Arrays.asList(new FingerprintTemplate().deserialize(new String(template, StandardCharsets.UTF_8)));
-		ForeignTemplate foreign = ForeignTemplate.read(template);
-		return foreign.fingerprints.stream()
-			.map(fingerprint -> {
-				TemplateBuilder builder = new TemplateBuilder();
-				builder.convert(foreign, fingerprint);
-				FingerprintTemplate converted = new FingerprintTemplate();
-				converted.immutable = new ImmutableTemplate(builder);
-				return converted;
-			})
-			.collect(toList());
+		try {
+			ForeignTemplate foreign = ForeignTemplate.read(template);
+			return foreign.fingerprints.stream()
+				.map(fingerprint -> {
+					TemplateBuilder builder = new TemplateBuilder();
+					builder.convert(foreign, fingerprint);
+					return new FingerprintTemplate(new ImmutableTemplate(builder));
+				})
+				.collect(toList());
+		} catch (Throwable ex) {
+			/*
+			 * If it's none of the known foreign formats, try our own native format
+			 * in case native template gets here by accident.
+			 */
+			try {
+				return Arrays.asList(new FingerprintTemplate(template));
+			} catch (Throwable ex2) {
+				/*
+				 * Throw the original exception. We don't want to hide it with exception from this fallback.
+				 */
+				throw ex;
+			}
+		}
 	}
 	/**
 	 * Convert native fingerprint template to ANSI 378-2004 template.

@@ -61,6 +61,8 @@ public class FingerprintImage {
 	 * 
 	 * @see #dpi(double)
 	 * @see #grayscale(int, int, byte[])
+	 * @see FingerprintCompatibility#convert(byte[])
+	 * @see FingerprintTemplate#FingerprintTemplate(byte[])
 	 */
 	public FingerprintImage decode(byte[] image) {
 		Objects.requireNonNull(image);

@@ -35,10 +35,9 @@ public class FingerprintTransparencyTest {
 		}
 	}
 	@Test public void deserialization() {
-		String serialized = FingerprintTemplateTest.probe().serialize();
+		byte[] serialized = FingerprintTemplateTest.probe().toByteArray();
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
-			new FingerprintTemplate()
-				.deserialize(serialized);
+			new FingerprintTemplate(serialized);
 		}
 	}
 }

@@ -1,9 +1,14 @@
 // Part of SourceAFIS: https://sourceafis.machinezoo.com
 package com.machinezoo.sourceafis;
 
+import java.io.*;
+import java.nio.charset.*;
 import java.util.*;
+import java.util.zip.*;
 import javax.imageio.*;
+import org.apache.commons.io.*;
 import com.google.gson.*;
+import com.machinezoo.noexception.*;
 
 /**
  * Biometric description of a fingerprint suitable for efficient matching.
@@ -54,17 +59,62 @@ public class FingerprintTemplate {
 		immutable = new ImmutableTemplate(builder);
 	}
 	/**
-	 * Instantiate an empty fingerprint template.
-	 * Empty template represents fingerprint with no features that does not match any other fingerprint (not even itself).
-	 * You can then call {@link #create(byte[])} or {@link #deserialize(String)}
-	 * to actually fill the template with useful biometric data.
+	 * Deserialize fingerprint template from compressed JSON.
+	 * This constructor reads gzip-compressed JSON template produced by {@link #toByteArray()}
+	 * and reconstructs an exact copy of the original fingerprint template.
 	 * <p>
-	 * This constructor is largely deprecated. Use {@link #FingerprintTemplate(FingerprintImage)} instead.
-	 * This constructor should be only used with {@link #deserialize(String)} method.
+	 * Templates produced by previous versions of SourceAFIS may fail to deserialize correctly.
+	 * Applications should re-extract all templates from original raw images when upgrading SourceAFIS.
+	 * 
+	 * @param serialized
+	 *            serialized fingerprint template in gzip-compressed JSON format produced by {@link #toByteArray()}
+	 * @throws NullPointerException
+	 *             if {@code serialized} is {@code null}
+	 * @throws RuntimeException
+	 *             if {@code serialized} is is not in the correct format or it is corrupted
+	 * 
+	 * @see #toByteArray()
+	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
+	 * @see FingerprintImage#decode(byte[])
+	 * @see FingerprintCompatibility#convert(byte[])
+	 */
+	public FingerprintTemplate(byte[] serialized) {
+		Objects.requireNonNull(serialized);
+		byte[] decompressed = Exceptions.wrap().get(() -> {
+			try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(serialized))) {
+				return IOUtils.toByteArray(gzip);
+			}
+		});
+		String json = new String(decompressed, StandardCharsets.UTF_8);
+		TemplateBuilder builder = new TemplateBuilder();
+		builder.deserialize(json);
+		immutable = new ImmutableTemplate(builder);
+	}
+	/**
+	 * Instantiate an empty fingerprint template. This constructor is deprecated.
+	 * In the past, it was used together with methods {@link #create(byte[])}, {@link #deserialize(String)},
+	 * and {@link #convert(byte[])}, which are all deprecated now.
+	 * Use {@link #FingerprintTemplate(FingerprintImage)} and {@link #FingerprintTemplate(byte[])} instead.
 	 * 
 	 * @see #FingerprintTemplate(FingerprintImage)
+	 * @see #FingerprintTemplate(byte[])
 	 */
-	public FingerprintTemplate() {
+	@Deprecated public FingerprintTemplate() {
+	}
+	/**
+	 * Get the empty template with no biometric data.
+	 * Empty template is useful as a fallback to simplify code.
+	 * It contains no biometric data and it doesn't match any other template including itself.
+	 * There is only one global instance. This method doesn't instantiate any new objects.
+	 * 
+	 * @return empty template
+	 */
+	public static FingerprintTemplate empty() {
+		return empty;
+	}
+	private static final FingerprintTemplate empty = new FingerprintTemplate(ImmutableTemplate.empty);
+	FingerprintTemplate(ImmutableTemplate immutable) {
+		this.immutable = immutable;
 	}
 	/**
 	 * Enable algorithm transparency.
@@ -130,10 +180,9 @@ public class FingerprintTemplate {
 	}
 	/**
 	 * Deserialize fingerprint template from JSON string.
-	 * This method reads JSON string produced by {@link #serialize()} to reconstruct an exact copy of the original fingerprint template.
-	 * <p>
-	 * Templates produced by previous versions of SourceAFIS may fail to deserialize correctly.
-	 * Applications should re-extract all templates from original raw images when upgrading SourceAFIS.
+	 * This method does the same thing as {@link #FingerprintTemplate(byte[])} constructor
+	 * except it uses plain JSON format produced by {@link #serialize()}.
+	 * Use {@link #toByteArray()}} and {@link #FingerprintTemplate(byte[])} instead.
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
 	 * 
@@ -146,9 +195,9 @@ public class FingerprintTemplate {
 	 *             if {@code json} is is not in the correct format or it is corrupted
 	 * 
 	 * @see #serialize()
-	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
+	 * @see #FingerprintTemplate(byte[])
 	 */
-	public FingerprintTemplate deserialize(String json) {
+	@Deprecated public FingerprintTemplate deserialize(String json) {
 		Objects.requireNonNull(json);
 		TemplateBuilder builder = new TemplateBuilder();
 		builder.deserialize(json);
@@ -156,9 +205,9 @@ public class FingerprintTemplate {
 		return this;
 	}
 	/**
-	 * Serialize fingerprint template to JSON string.
+	 * Serialize fingerprint template as compressed JSON.
 	 * Serialized template can be stored in a database or sent over network.
-	 * It can be deserialized by calling {@link #deserialize(String)}.
+	 * It can be deserialized by calling {@link #FingerprintTemplate(byte[])} constructor.
 	 * Persisting templates alongside fingerprint images allows applications to start faster,
 	 * because template deserialization is more than 100x faster than re-extraction from fingerprint image.
 	 * <p>
@@ -170,12 +219,33 @@ public class FingerprintTemplate {
 	 * Template format for current version of SourceAFIS is
 	 * <a href="https://sourceafis.machinezoo.com/template">documented on SourceAFIS website</a>.
 	 * 
-	 * @return serialized fingerprint template in JSON format
+	 * @return serialized fingerprint template in gzip-compressed JSON format
 	 * 
-	 * @see #deserialize(String)
+	 * @see #FingerprintTemplate(byte[])
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 */
-	public String serialize() {
+	public byte[] toByteArray() {
+		ImmutableTemplate current = immutable;
+		String json = new Gson().toJson(new JsonTemplate(current.size, current.minutiae));
+		byte[] uncompressed = json.getBytes(StandardCharsets.UTF_8);
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		Exceptions.sneak().run(() -> {
+			try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+				gzip.write(uncompressed);
+			}
+		});
+		return buffer.toByteArray();
+	}
+	/**
+	 * Serialize fingerprint template to JSON string.
+	 * This deprecated method is equivalent to {@link #toByteArray()}
+	 * except that the output format is an uncompressed JSON string.
+	 * 
+	 * @return serialized fingerprint template in JSON format
+	 * 
+	 * @see #toByteArray()
+	 */
+	@Deprecated public String serialize() {
 		ImmutableTemplate current = immutable;
 		return new Gson().toJson(new JsonTemplate(current.size, current.minutiae));
 	}
