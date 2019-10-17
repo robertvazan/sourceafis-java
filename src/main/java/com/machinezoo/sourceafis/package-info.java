@@ -1,4 +1,4 @@
-// Part of SourceAFIS: https://sourceafis.machinezoo.com
+// Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 /**
  * This package contains classes implementing SourceAFIS fingerprint recognition algorithm in Java.
  * Fingerprint images are processed into {@link com.machinezoo.sourceafis.FingerprintTemplate} objects.
