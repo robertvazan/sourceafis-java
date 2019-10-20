@@ -6,6 +6,7 @@ import java.io.*;
 import java.nio.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.zip.*;
 import com.google.gson.*;
@@ -400,15 +401,29 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private Supplier<byte[]> json(Supplier<Object> supplier) {
 		return () -> new GsonBuilder().setPrettyPrinting().create().toJson(supplier.get()).getBytes(StandardCharsets.UTF_8);
 	}
+	private AtomicInteger loggedVersion = new AtomicInteger();
+	private void logVersion() {
+		if (logging() && loggedVersion.getAndSet(1) == 0) {
+			Map<String, Supplier<byte[]>> map = new HashMap<>();
+			map.put(".json", json(() -> {
+				JsonVersion json = new JsonVersion();
+				json.version = FingerprintCompatibility.version();
+				return json;
+			}));
+			capture("version", map);
+		}
+	}
 	private void log(String name, String suffix, Supplier<byte[]> supplier) {
 		Map<String, Supplier<byte[]>> map = new HashMap<>();
 		map.put(suffix, supplier);
+		logVersion();
 		capture(name, map);
 	}
 	private void log(String name, String suffix1, Supplier<byte[]> supplier1, String suffix2, Supplier<byte[]> supplier2) {
 		Map<String, Supplier<byte[]>> map = new HashMap<>();
 		map.put(suffix1, supplier1);
 		map.put(suffix2, supplier2);
+		logVersion();
 		capture(name, map);
 	}
 }

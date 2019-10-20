@@ -18,6 +18,12 @@ public class FingerprintTransparencyTest {
 			}
 		}
 	}
+	@Test public void versioned() {
+		try (TransparencyChecker transparency = new TransparencyChecker()) {
+			new FingerprintTemplate(FingerprintImageTest.probe());
+			assertThat(transparency.keywords, hasItem("version"));
+		}
+	}
 	@Test public void extractor() {
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(FingerprintImageTest.probe());
