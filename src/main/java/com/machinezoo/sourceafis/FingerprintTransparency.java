@@ -369,6 +369,39 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			supportingEdges.clear();
 		}
 	}
+	@SuppressWarnings("unused") private static class JsonPairing {
+		JsonPair root;
+		List<JsonEdge> tree;
+		List<JsonEdge> support;
+		JsonPairing(int count, MinutiaPair[] pairs, List<JsonEdge> supporting) {
+			root = new JsonPair(pairs[0].probe, pairs[0].candidate);
+			tree = Arrays.stream(pairs).limit(count).skip(1).map(JsonEdge::new).collect(toList());
+			support = supporting;
+		}
+	}
+	@SuppressWarnings("unused") private static class JsonPair {
+		int probe;
+		int candidate;
+		JsonPair(int probe, int candidate) {
+			this.probe = probe;
+			this.candidate = candidate;
+		}
+		static List<JsonPair> roots(int count, MinutiaPair[] roots) {
+			return Arrays.stream(roots).limit(count).map(p -> new JsonPair(p.probe, p.candidate)).collect(toList());
+		}
+	}
+	@SuppressWarnings("unused") private static class JsonEdge {
+		int probeFrom;
+		int probeTo;
+		int candidateFrom;
+		int candidateTo;
+		JsonEdge(MinutiaPair pair) {
+			probeFrom = pair.probeRef;
+			probeTo = pair.probe;
+			candidateFrom = pair.candidateRef;
+			candidateTo = pair.candidate;
+		}
+	}
 	// https://sourceafis.machinezoo.com/transparency/score
 	void logScore(Score score) {
 		if (logging())
@@ -379,8 +412,44 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		if (logging())
 			log("best-match", ".json", json(() -> new JsonBestMatch(nth)));
 	}
+	@SuppressWarnings("unused") private static class JsonBestMatch {
+		int offset;
+		JsonBestMatch(int offset) {
+			this.offset = offset;
+		}
+	}
 	private void logSkeleton(String name, Skeleton skeleton) {
 		log(skeleton.type.prefix + name, ".json", json(() -> new JsonSkeleton(skeleton)), ".dat", skeleton::serialize);
+	}
+	@SuppressWarnings("unused") private static class JsonSkeleton {
+		int width;
+		int height;
+		List<IntPoint> minutiae;
+		List<JsonSkeletonRidge> ridges;
+		JsonSkeleton(Skeleton skeleton) {
+			width = skeleton.size.x;
+			height = skeleton.size.y;
+			Map<SkeletonMinutia, Integer> offsets = new HashMap<>();
+			for (int i = 0; i < skeleton.minutiae.size(); ++i)
+				offsets.put(skeleton.minutiae.get(i), i);
+			this.minutiae = skeleton.minutiae.stream().map(m -> m.position).collect(toList());
+			ridges = skeleton.minutiae.stream()
+				.flatMap(m -> m.ridges.stream()
+					.filter(r -> r.points instanceof CircularList)
+					.map(r -> {
+						JsonSkeletonRidge jr = new JsonSkeletonRidge();
+						jr.start = offsets.get(r.start());
+						jr.end = offsets.get(r.end());
+						jr.length = r.points.size();
+						return jr;
+					}))
+				.collect(toList());
+		}
+	}
+	@SuppressWarnings("unused") private static class JsonSkeletonRidge {
+		int start;
+		int end;
+		int length;
 	}
 	private void logMinutiae(String name, TemplateBuilder template) {
 		if (logging())
@@ -405,12 +474,14 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private void logVersion() {
 		if (logging() && loggedVersion.getAndSet(1) == 0) {
 			Map<String, Supplier<byte[]>> map = new HashMap<>();
-			map.put(".json", json(() -> {
-				JsonVersion json = new JsonVersion();
-				json.version = FingerprintCompatibility.version();
-				return json;
-			}));
+			map.put(".json", json(() -> new JsonVersion(FingerprintCompatibility.version())));
 			capture("version", map);
+		}
+	}
+	@SuppressWarnings("unused") private static class JsonVersion {
+		String version;
+		JsonVersion(String version) {
+			this.version = version;
 		}
 	}
 	private void log(String name, String suffix, Supplier<byte[]> supplier) {
