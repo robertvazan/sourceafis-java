@@ -2,8 +2,12 @@
 package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
+import java.io.*;
+import java.nio.charset.*;
 import java.util.*;
+import org.apache.commons.io.*;
 import org.slf4j.*;
+import com.machinezoo.noexception.*;
 
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.
@@ -27,6 +31,24 @@ import org.slf4j.*;
  */
 public class FingerprintCompatibility {
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
+	private static String version;
+	static {
+		Exceptions.sneak().run(() -> {
+			try (InputStream stream = FingerprintCompatibility.class.getResourceAsStream("version.txt")) {
+				version = IOUtils.toString(stream, StandardCharsets.UTF_8).trim();
+			}
+		});
+	}
+	/**
+	 * Get version of the currently running SourceAFIS.
+	 * This is useful during upgrades when the application has to deal
+	 * with possible template incompatibility between versions.
+	 * 
+	 * @return SourceAFIS version in a three-part 1.2.3 format
+	 */
+	public static String version() {
+		return version;
+	}
 	private FingerprintCompatibility() {
 	}
 	/**
@@ -104,7 +126,8 @@ public class FingerprintCompatibility {
 				/*
 				 * It is an error to pass native template here, so at least log a warning.
 				 */
-				logger.warn("Native SourceAFIS template was passed to convert() or convertAll() in FingerprintCompatibility. It was accepted, but FingerprintTemplate constructor should be used instead.");
+				logger.warn(
+					"Native SourceAFIS template was passed to convert() or convertAll() in FingerprintCompatibility. It was accepted, but FingerprintTemplate constructor should be used instead.");
 				return deserialized;
 			} catch (Throwable ex2) {
 				/*

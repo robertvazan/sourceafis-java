@@ -7,6 +7,9 @@ import java.util.function.*;
 import org.junit.*;
 
 public class FingerprintCompatibilityTest {
+	@Test public void version() {
+		assertThat(FingerprintCompatibility.version(), matchesPattern("^\\d+\\.\\d+\\.\\d+$"));
+	}
 	public static FingerprintTemplate probeIso() {
 		return FingerprintCompatibility.convert(TestResources.probeIso());
 	}

@@ -5,11 +5,14 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 
 class JsonTemplate {
-	String version = "3.7";
+	String version;
 	int width;
 	int height;
 	List<JsonMinutia> minutiae;
+	JsonTemplate() {
+	}
 	JsonTemplate(IntPoint size, ImmutableMinutia[] minutiae) {
+		version = FingerprintCompatibility.version();
 		width = size.x;
 		height = size.y;
 		this.minutiae = Arrays.stream(minutiae).map(JsonMinutia::new).collect(toList());
