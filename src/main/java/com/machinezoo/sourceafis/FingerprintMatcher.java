@@ -126,11 +126,12 @@ public class FingerprintMatcher {
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
 	 * Application should compare the score to a threshold with expression {@code (score >= threshold)} to arrive at boolean match/non-match decision.
-	 * Threshold 10 corresponds to FMR (false match rate) of 10%, threshold 20 to FMR 1%, threshold 30 to FMR 0.1%, and so on.
+	 * Threshold 10 corresponds to FMR (False Match Rate, see <a href="https://en.wikipedia.org/wiki/Biometrics#Performance">Biometric Performance</a>
+	 * and <a href="https://en.wikipedia.org/wiki/Confusion_matrix">Confusion matrix</a>) of 10%, threshold 20 to FMR 1%, threshold 30 to FMR 0.1%, and so on.
 	 * <p>
 	 * Recommended threshold is 40, which corresponds to FMR 0.01%.
 	 * Correspondence between threshold and FMR is approximate and varies with quality of fingerprints being matched.
-	 * Increasing threshold rapidly reduces FMR, but it also slowly increases FNMR (false non-match rate).
+	 * Increasing threshold rapidly reduces FMR, but it also slowly increases FNMR (False Non-Match Rate).
 	 * Threshold must be tailored to the needs of the application.
 	 * <p>
 	 * This method is thread-safe. Multiple threads can match candidates against single {@code FingerprintMatcher}.
