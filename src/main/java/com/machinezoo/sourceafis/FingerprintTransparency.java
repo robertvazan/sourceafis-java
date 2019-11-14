@@ -128,9 +128,19 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @see #FingerprintTransparency()
 	 */
 	@Override public void close() {
-		current.set(outer);
-		outer = null;
+		/*
+		 * Tolerate double call to close().
+		 */
+		if (!closed) {
+			closed = true;
+			current.set(outer);
+			/*
+			 * Drop reference to outer transparency object in case this instance is kept alive for too long.
+			 */
+			outer = null;
+		}
 	}
+	private boolean closed;
 	/**
 	 * Write all transparency data to a ZIP file.
 	 * This is a convenience method to enable easy exploration of the available data.
