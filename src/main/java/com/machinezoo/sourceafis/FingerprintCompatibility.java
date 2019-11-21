@@ -23,11 +23,11 @@ import com.machinezoo.noexception.*;
  * This may result in some loss of accuracy when matching against templates from other sources.
  * <p>
  * Note that the use of these so-called "standard" templates for fingerprint exchange is
- * <a href="https://templates.machinezoo.com/standard-fingerprint-templates-bad-idea">strongly discouraged</a>
+ * <a href="https://templates.machinezoo.com/discouraged">strongly discouraged</a>
  * in favor of plain fingerprint images.
  * 
  * @see <a href="https://templates.machinezoo.com/">Fingerprint template formats</a>
- * @see <a href="https://templates.machinezoo.com/standard-fingerprint-templates-bad-idea">Why "standard" templates are a bad idea</a>
+ * @see <a href="https://templates.machinezoo.com/discouraged">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
