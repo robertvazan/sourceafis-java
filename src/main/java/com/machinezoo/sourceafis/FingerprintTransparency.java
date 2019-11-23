@@ -191,7 +191,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		}
 		@Override public void close() {
 			super.close();
-			Exceptions.sneak().run(zip::close);
+			Exceptions.wrap().run(zip::close);
 		}
 	}
 	/*
