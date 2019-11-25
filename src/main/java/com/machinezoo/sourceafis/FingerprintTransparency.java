@@ -31,6 +31,17 @@ import gnu.trove.map.hash.*;
  */
 public abstract class FingerprintTransparency implements AutoCloseable {
 	/*
+	 * API roadmap:
+	 * + boolean accepts(String)
+	 * + void take(String, byte[])
+	 * - log()
+	 * - capture()
+	 * 
+	 * Switch from JSON to CBOR and incorporate binary data in CBOR.
+	 * That will allow us to use single byte array instead of current JSON/DAT split.
+	 * When accepts() always returns false, the performance should be the same as with NOOP transparency logger.
+	 */
+	/*
 	 * Having transparency objects tied to current thread spares us of contaminating all classes with transparency APIs.
 	 * Transparency object is activated on the thread the moment it is created.
 	 * Having no explicit activation makes for a bit simpler API.
