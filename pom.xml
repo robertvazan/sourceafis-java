@@ -9,7 +9,7 @@
 
 	<name>SourceAFIS</name>
 	<url>https://sourceafis.machinezoo.com/</url>
-	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their match score. Supports efficient 1:N search.</description>
+	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score. Supports efficient 1:N search.</description>
 
 	<licenses>
 		<license>
@@ -45,9 +45,9 @@
 			<version>2.8.5</version>
 		</dependency>
 		<dependency>
-			<groupId>net.sf.trove4j</groupId>
-			<artifactId>trove4j</artifactId>
-			<version>3.0.3</version>
+			<groupId>it.unimi.dsi</groupId>
+			<artifactId>fastutil</artifactId>
+			<version>8.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.machinezoo.noexception</groupId>

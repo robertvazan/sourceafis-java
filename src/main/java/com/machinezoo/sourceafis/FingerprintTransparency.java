@@ -11,7 +11,7 @@ import java.util.function.*;
 import java.util.zip.*;
 import com.google.gson.*;
 import com.machinezoo.noexception.*;
-import gnu.trove.map.hash.*;
+import it.unimi.dsi.fastutil.ints.*;
 
 /**
  * Algorithm transparency API that can capture all intermediate data structures produced by SourceAFIS algorithm.
@@ -369,7 +369,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("edge-table", ".json", json(() -> table));
 	}
 	// https://sourceafis.machinezoo.com/transparency/edge-hash
-	void logEdgeHash(TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
+	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> edgeHash) {
 		log("edge-hash", ".dat", () -> IndexedEdge.serialize(edgeHash));
 	}
 	// https://sourceafis.machinezoo.com/transparency/root-pairs

@@ -2,17 +2,17 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import gnu.trove.map.hash.*;
+import it.unimi.dsi.fastutil.ints.*;
 
 class ImmutableMatcher {
 	static final ImmutableMatcher empty = new ImmutableMatcher();
 	final ImmutableTemplate template;
-	final TIntObjectHashMap<List<IndexedEdge>> edgeHash;
+	final Int2ObjectMap<List<IndexedEdge>> edgeHash;
 	private ImmutableMatcher() {
 		template = ImmutableTemplate.empty;
-		edgeHash = new TIntObjectHashMap<>();
+		edgeHash = new Int2ObjectOpenHashMap<>();
 	}
-	ImmutableMatcher(ImmutableTemplate template, TIntObjectHashMap<List<IndexedEdge>> edgeHash) {
+	ImmutableMatcher(ImmutableTemplate template, Int2ObjectMap<List<IndexedEdge>> edgeHash) {
 		this.template = template;
 		this.edgeHash = edgeHash;
 	}

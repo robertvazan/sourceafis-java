@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis;
 import java.io.*;
 import java.util.*;
 import com.machinezoo.noexception.*;
-import gnu.trove.map.hash.*;
+import it.unimi.dsi.fastutil.ints.*;
 
 class IndexedEdge extends EdgeShape {
 	final int reference;
@@ -23,10 +23,10 @@ class IndexedEdge extends EdgeShape {
 			stream.writeDouble(neighborAngle);
 		});
 	}
-	static byte[] serialize(TIntObjectHashMap<List<IndexedEdge>> hash) {
+	static byte[] serialize(Int2ObjectMap<List<IndexedEdge>> hash) {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		DataOutputStream formatter = new DataOutputStream(buffer);
-		int[] keys = hash.keys();
+		int[] keys = hash.keySet().toIntArray();
 		Arrays.sort(keys);
 		Exceptions.sneak().run(() -> {
 			formatter.writeInt(keys.length);

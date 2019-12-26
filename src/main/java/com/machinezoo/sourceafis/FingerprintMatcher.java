@@ -2,7 +2,7 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import gnu.trove.map.hash.*;
+import it.unimi.dsi.fastutil.ints.*;
 
 /**
  * Fingerprint template representation optimized for fast 1:N matching.
@@ -86,8 +86,8 @@ public class FingerprintMatcher {
 		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
 		return this;
 	}
-	private TIntObjectHashMap<List<IndexedEdge>> buildEdgeHash(ImmutableTemplate template) {
-		TIntObjectHashMap<List<IndexedEdge>> map = new TIntObjectHashMap<>();
+	private Int2ObjectMap<List<IndexedEdge>> buildEdgeHash(ImmutableTemplate template) {
+		Int2ObjectMap<List<IndexedEdge>> map = new Int2ObjectOpenHashMap<>();
 		for (int reference = 0; reference < template.minutiae.length; ++reference)
 			for (int neighbor = 0; neighbor < template.minutiae.length; ++neighbor)
 				if (reference != neighbor) {

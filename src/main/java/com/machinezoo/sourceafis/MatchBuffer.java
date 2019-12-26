@@ -2,8 +2,7 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import gnu.trove.map.hash.*;
-import gnu.trove.set.hash.*;
+import it.unimi.dsi.fastutil.ints.*;
 
 class MatchBuffer {
 	private static final ThreadLocal<MatchBuffer> local = new ThreadLocal<MatchBuffer>() {
@@ -17,7 +16,7 @@ class MatchBuffer {
 	};
 	private FingerprintTransparency transparency;
 	ImmutableTemplate probe;
-	private TIntObjectHashMap<List<IndexedEdge>> edgeHash;
+	private Int2ObjectMap<List<IndexedEdge>> edgeHash;
 	ImmutableTemplate candidate;
 	private MinutiaPair[] pool = new MinutiaPair[1];
 	private int pooled;
@@ -27,7 +26,7 @@ class MatchBuffer {
 	private MinutiaPair[] byProbe;
 	private MinutiaPair[] byCandidate;
 	private MinutiaPair[] roots;
-	private final TIntHashSet duplicates = new TIntHashSet();
+	private final IntSet duplicates = new IntOpenHashSet();
 	private Score score = new Score();
 	static MatchBuffer current() {
 		return local.get();
@@ -94,8 +93,7 @@ class MatchBuffer {
 								for (IndexedEdge match : matches) {
 									if (matchingShapes(match, candidateEdge)) {
 										int duplicateKey = (match.reference << 16) | candidateReference;
-										if (!duplicates.contains(duplicateKey)) {
-											duplicates.add(duplicateKey);
+										if (duplicates.add(duplicateKey)) {
 											MinutiaPair pair = allocate();
 											pair.probe = match.reference;
 											pair.candidate = candidateReference;
