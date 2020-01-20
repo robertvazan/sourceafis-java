@@ -38,9 +38,9 @@ class Score {
 		minutiaeWithSeveralEdgesScore = Parameters.supportedCountScore * minutiaeWithSeveralEdges;
 		correctMinutiaTypeScore = Parameters.correctTypeScore * correctMinutiaTypeCount;
 		int innerDistanceRadius = (int)Math.round(Parameters.distanceErrorFlatness * Parameters.maxDistanceError);
-		int innerAngleRadius = (int)Math.round(Parameters.angleErrorFlatness * Parameters.maxAngleError);
+		double innerAngleRadius = Parameters.angleErrorFlatness * Parameters.maxAngleError;
 		int distanceErrorSum = 0;
-		int angleErrorSum = 0;
+		double angleErrorSum = 0;
 		for (int i = 1; i < match.count; ++i) {
 			MinutiaPair pair = match.tree[i];
 			EdgeShape probeEdge = new EdgeShape(match.probe.minutiae[pair.probeRef], match.probe.minutiae[pair.probe]);
