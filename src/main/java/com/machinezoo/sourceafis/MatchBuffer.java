@@ -54,7 +54,7 @@ class MatchBuffer {
 			int totalRoots = enumerateRoots();
 			// https://sourceafis.machinezoo.com/transparency/root-pairs
 			transparency.logRootPairs(totalRoots, roots);
-			double high = 0;
+			double high = -1;
 			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
 				double partial = tryRoot(roots[i]);
