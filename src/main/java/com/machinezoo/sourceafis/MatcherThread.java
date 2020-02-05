@@ -22,10 +22,10 @@ class MatcherThread {
 	private int pooled;
 	private PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
 	int count;
-	MinutiaPair[] tree;
-	private MinutiaPair[] byProbe;
-	private MinutiaPair[] byCandidate;
-	private MinutiaPair[] roots;
+	MinutiaPair[] tree = new MinutiaPair[1];
+	private MinutiaPair[] byProbe = new MinutiaPair[1];
+	private MinutiaPair[] byCandidate = new MinutiaPair[1];
+	private MinutiaPair[] roots = new MinutiaPair[1];
 	private final IntSet duplicates = new IntOpenHashSet();
 	private Score score = new Score();
 	static MatcherThread current() {
@@ -33,7 +33,7 @@ class MatcherThread {
 	}
 	void selectMatcher(ImmutableMatcher matcher) {
 		probe = matcher.template;
-		if (tree == null || probe.minutiae.length > tree.length) {
+		if (probe.minutiae.length > tree.length) {
 			tree = new MinutiaPair[probe.minutiae.length];
 			byProbe = new MinutiaPair[probe.minutiae.length];
 		}
@@ -41,7 +41,7 @@ class MatcherThread {
 	}
 	void selectCandidate(ImmutableTemplate template) {
 		candidate = template;
-		if (byCandidate == null || byCandidate.length < candidate.minutiae.length)
+		if (byCandidate.length < candidate.minutiae.length)
 			byCandidate = new MinutiaPair[candidate.minutiae.length];
 	}
 	double match() {
@@ -75,7 +75,7 @@ class MatcherThread {
 		}
 	}
 	private int enumerateRoots() {
-		if (roots == null || roots.length < Parameters.maxTriedRoots)
+		if (roots.length < Parameters.maxTriedRoots)
 			roots = new MinutiaPair[Parameters.maxTriedRoots];
 		int totalLookups = 0;
 		int totalRoots = 0;
