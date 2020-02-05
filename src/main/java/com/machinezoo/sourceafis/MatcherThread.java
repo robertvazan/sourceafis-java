@@ -4,14 +4,14 @@ package com.machinezoo.sourceafis;
 import java.util.*;
 import it.unimi.dsi.fastutil.ints.*;
 
-class MatchBuffer {
-	private static final ThreadLocal<MatchBuffer> local = new ThreadLocal<MatchBuffer>() {
+class MatcherThread {
+	private static final ThreadLocal<MatcherThread> threads = new ThreadLocal<MatcherThread>() {
 		/*
 		 * ThreadLocal has method withInitial() that is more convenient,
 		 * but that method alone would force whole SourceAFIS to require Android API level 26 instead of 24.
 		 */
-		@Override protected MatchBuffer initialValue() {
-			return new MatchBuffer();
+		@Override protected MatcherThread initialValue() {
+			return new MatcherThread();
 		}
 	};
 	private FingerprintTransparency transparency;
@@ -28,8 +28,8 @@ class MatchBuffer {
 	private MinutiaPair[] roots;
 	private final IntSet duplicates = new IntOpenHashSet();
 	private Score score = new Score();
-	static MatchBuffer current() {
-		return local.get();
+	static MatcherThread current() {
+		return threads.get();
 	}
 	void selectMatcher(ImmutableMatcher matcher) {
 		probe = matcher.template;
@@ -68,7 +68,7 @@ class MatchBuffer {
 			transparency.logBestMatch(best);
 			return high;
 		} catch (Throwable e) {
-			local.remove();
+			threads.remove();
 			throw e;
 		} finally {
 			transparency = null;

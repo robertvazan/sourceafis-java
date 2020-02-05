@@ -17,21 +17,21 @@ class Score {
 	double accurateMinutiaAngleScore;
 	double totalScore;
 	double shapedScore;
-	void compute(MatchBuffer match) {
-		matchedMinutiae = match.count;
+	void compute(MatcherThread thread) {
+		matchedMinutiae = thread.count;
 		matchedMinutiaeScore = Parameters.pairCountScore * matchedMinutiae;
-		matchedFractionOfProbeMinutiae = match.count / (double)match.probe.minutiae.length;
-		matchedFractionOfCandidateMinutiae = match.count / (double)match.candidate.minutiae.length;
+		matchedFractionOfProbeMinutiae = thread.count / (double)thread.probe.minutiae.length;
+		matchedFractionOfCandidateMinutiae = thread.count / (double)thread.candidate.minutiae.length;
 		matchedFractionOfAllMinutiaeScore = Parameters.pairFractionScore * (matchedFractionOfProbeMinutiae + matchedFractionOfCandidateMinutiae) / 2;
-		matchedEdges = match.count;
+		matchedEdges = thread.count;
 		minutiaeWithSeveralEdges = 0;
 		correctMinutiaTypeCount = 0;
-		for (int i = 0; i < match.count; ++i) {
-			MinutiaPair pair = match.tree[i];
+		for (int i = 0; i < thread.count; ++i) {
+			MinutiaPair pair = thread.tree[i];
 			matchedEdges += pair.supportingEdges;
 			if (pair.supportingEdges >= Parameters.minSupportingEdges)
 				++minutiaeWithSeveralEdges;
-			if (match.probe.minutiae[pair.probe].type == match.candidate.minutiae[pair.candidate].type)
+			if (thread.probe.minutiae[pair.probe].type == thread.candidate.minutiae[pair.candidate].type)
 				++correctMinutiaTypeCount;
 		}
 		matchedEdgesScore = Parameters.edgeCountScore * matchedEdges;
@@ -41,20 +41,20 @@ class Score {
 		double innerAngleRadius = Parameters.angleErrorFlatness * Parameters.maxAngleError;
 		int distanceErrorSum = 0;
 		double angleErrorSum = 0;
-		for (int i = 1; i < match.count; ++i) {
-			MinutiaPair pair = match.tree[i];
-			EdgeShape probeEdge = new EdgeShape(match.probe.minutiae[pair.probeRef], match.probe.minutiae[pair.probe]);
-			EdgeShape candidateEdge = new EdgeShape(match.candidate.minutiae[pair.candidateRef], match.candidate.minutiae[pair.candidate]);
+		for (int i = 1; i < thread.count; ++i) {
+			MinutiaPair pair = thread.tree[i];
+			EdgeShape probeEdge = new EdgeShape(thread.probe.minutiae[pair.probeRef], thread.probe.minutiae[pair.probe]);
+			EdgeShape candidateEdge = new EdgeShape(thread.candidate.minutiae[pair.candidateRef], thread.candidate.minutiae[pair.candidate]);
 			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
 			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		accurateEdgeLengthScore = 0;
 		accurateMinutiaAngleScore = 0;
-		if (match.count >= 2) {
-			double pairedDistanceError = Parameters.maxDistanceError * (match.count - 1);
+		if (thread.count >= 2) {
+			double pairedDistanceError = Parameters.maxDistanceError * (thread.count - 1);
 			accurateEdgeLengthScore = Parameters.distanceAccuracyScore * (pairedDistanceError - distanceErrorSum) / pairedDistanceError;
-			double pairedAngleError = Parameters.maxAngleError * (match.count - 1) * 2;
+			double pairedAngleError = Parameters.maxAngleError * (thread.count - 1) * 2;
 			accurateMinutiaAngleScore = Parameters.angleAccuracyScore * (pairedAngleError - angleErrorSum) / pairedAngleError;
 		}
 		totalScore = matchedMinutiaeScore

@@ -146,9 +146,9 @@ public class FingerprintMatcher {
 	 */
 	public double match(FingerprintTemplate candidate) {
 		Objects.requireNonNull(candidate);
-		MatchBuffer buffer = MatchBuffer.current();
-		buffer.selectMatcher(immutable);
-		buffer.selectCandidate(candidate.immutable);
-		return buffer.match();
+		MatcherThread thread = MatcherThread.current();
+		thread.selectMatcher(immutable);
+		thread.selectCandidate(candidate.immutable);
+		return thread.match();
 	}
 }
