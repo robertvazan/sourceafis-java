@@ -56,9 +56,7 @@ public class CircularListTest {
 	@Test public void get() {
 		assertEquals(2, (int)l.get(1));
 		assertEquals(4, (int)l.get(3));
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void get_bounds() {
-		l.get(5);
+		assertThrows(IndexOutOfBoundsException.class, () -> l.get(5));
 	}
 	@Test public void hashCodeConsistent() {
 		CircularList<Integer> o = new CircularList<>();
@@ -94,9 +92,7 @@ public class CircularListTest {
 	@Test public void removeAt() {
 		assertEquals(3, (int)l.remove(2));
 		assertEquals(Arrays.asList(1, 2, 4, 5), l);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void removeAt_bounds() {
-		l.remove(5);
+		assertThrows(IndexOutOfBoundsException.class, () -> l.remove(5));
 	}
 	@Test public void removeItem() {
 		assertTrue(l.remove(new Integer(2)));
@@ -114,9 +110,7 @@ public class CircularListTest {
 	@Test public void set() {
 		assertEquals(3, (int)l.set(2, 10));
 		assertEquals(Arrays.asList(1, 2, 10, 4, 5), l);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void set_bounds() {
-		l.set(5, 10);
+		assertThrows(IndexOutOfBoundsException.class, () -> l.set(5, 10));
 	}
 	@Test public void size() {
 		assertEquals(5, l.size());

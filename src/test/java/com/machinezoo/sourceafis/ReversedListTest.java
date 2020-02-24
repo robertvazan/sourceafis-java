@@ -60,12 +60,8 @@ public class ReversedListTest {
 	@Test public void get() {
 		assertEquals(4, (int)r.get(1));
 		assertEquals(2, (int)r.get(3));
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void get_boundsLeft() {
-		r.get(-1);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void get_boundsRight() {
-		r.get(5);
+		assertThrows(IndexOutOfBoundsException.class, () -> r.get(-1));
+		assertThrows(IndexOutOfBoundsException.class, () -> r.get(5));
 	}
 	@Test public void hashCodePass() {
 		assertEquals(o.hashCode(), r.hashCode());
@@ -128,12 +124,8 @@ public class ReversedListTest {
 	@Test public void set() {
 		r.set(1, 10);
 		assertEquals(Arrays.asList(5, 10, 3, 2, 1), r);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void set_boundsLeft() {
-		r.set(-1, 10);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void set_boundsRight() {
-		r.set(5, 10);
+		assertThrows(IndexOutOfBoundsException.class, () -> r.set(-1, 10));
+		assertThrows(IndexOutOfBoundsException.class, () -> r.set(5, 10));
 	}
 	@Test public void size() {
 		assertEquals(5, r.size());

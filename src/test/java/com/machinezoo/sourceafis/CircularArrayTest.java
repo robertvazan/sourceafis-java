@@ -23,23 +23,15 @@ public class CircularArrayTest {
 		a.validateItemIndex(0);
 		a.validateItemIndex(5);
 		a.validateItemIndex(9);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void validateItemIndex_underflow() {
-		a.validateItemIndex(-1);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void validateItemIndex_overflow() {
-		a.validateItemIndex(10);
+		assertThrows(IndexOutOfBoundsException.class, () -> a.validateItemIndex(-1));
+		assertThrows(IndexOutOfBoundsException.class, () -> a.validateItemIndex(10));
 	}
 	@Test public void validateCursorIndex() {
 		a.validateCursorIndex(0);
 		a.validateCursorIndex(4);
 		a.validateCursorIndex(10);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void validateCursorIndex_underflow() {
-		a.validateCursorIndex(-1);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void validateCursorIndex_overflow() {
-		a.validateCursorIndex(11);
+		assertThrows(IndexOutOfBoundsException.class, () -> a.validateCursorIndex(-1));
+		assertThrows(IndexOutOfBoundsException.class, () -> a.validateCursorIndex(11));
 	}
 	@Test public void location() {
 		assertEquals(10, a.location(0));
@@ -60,9 +52,7 @@ public class CircularArrayTest {
 		assertEquals(1, a.get(0));
 		assertEquals(6, a.get(5));
 		assertEquals(10, a.get(9));
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void get_bounds() {
-		a.get(a.size);
+		assertThrows(IndexOutOfBoundsException.class, () -> a.get(a.size));
 	}
 	@Test public void set() {
 		a.set(4, 100);
@@ -71,9 +61,7 @@ public class CircularArrayTest {
 		assertEquals(200, a.get(8));
 		assertEquals(100, a.array[14]);
 		assertEquals(200, a.array[2]);
-	}
-	@Test(expected = IndexOutOfBoundsException.class) public void set_bounds() {
-		a.set(a.size, 100);
+		assertThrows(IndexOutOfBoundsException.class, () -> a.set(a.size, 100));
 	}
 	@Test public void move_left() {
 		a.move(4, 2, 5);
