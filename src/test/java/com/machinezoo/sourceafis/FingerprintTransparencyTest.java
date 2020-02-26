@@ -5,7 +5,7 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import java.util.*;
 import java.util.function.*;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 public class FingerprintTransparencyTest {
 	private static class TransparencyChecker extends FingerprintTransparency {

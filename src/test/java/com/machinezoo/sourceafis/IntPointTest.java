@@ -1,9 +1,9 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 public class IntPointTest {
 	@Test public void constructor() {

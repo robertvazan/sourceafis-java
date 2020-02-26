@@ -1,8 +1,8 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import static org.junit.Assert.*;
-import org.junit.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
 
 public class CircularArrayTest {
 	private final CircularArray a = new CircularArray(16);
@@ -95,11 +95,11 @@ public class CircularArrayTest {
 		assertEquals(13, a.size);
 		assertArrayEquals(new Object[] { 7, 8, 9, 10, null, null, null, null, null, null, 1, 2, 3, 4, 5, 6 }, a.array);
 	}
-	@Test(expected = IndexOutOfBoundsException.class) public void insert_bounds() {
-		a.insert(-1, 1);
+	@Test public void insert_bounds() {
+		assertThrows(IndexOutOfBoundsException.class, () -> a.insert(-1, 1));
 	}
-	@Test(expected = IllegalArgumentException.class) public void insert_negative() {
-		a.insert(5, -1);
+	@Test public void insert_negative() {
+		assertThrows(IllegalArgumentException.class, () -> a.insert(5, -1));
 	}
 	@Test public void insert_enlarge() {
 		a.insert(a.size, 200);
@@ -131,13 +131,13 @@ public class CircularArrayTest {
 		assertEquals(7, a.size);
 		assertArrayEquals(new Object[] { 7, 8, 9, 10, null, null, null, null, null, null, null, null, null, 4, 5, 6 }, a.array);
 	}
-	@Test(expected = IndexOutOfBoundsException.class) public void remove_boundsLeft() {
-		a.remove(-1, 3);
+	@Test public void remove_boundsLeft() {
+		assertThrows(IndexOutOfBoundsException.class, () -> a.remove(-1, 3));
 	}
-	@Test(expected = IndexOutOfBoundsException.class) public void remove_boundsRight() {
-		a.remove(8, 3);
+	@Test public void remove_boundsRight() {
+		assertThrows(IndexOutOfBoundsException.class, () -> a.remove(8, 3));
 	}
-	@Test(expected = IllegalArgumentException.class) public void remove_negative() {
-		a.remove(5, -1);
+	@Test public void remove_negative() {
+		assertThrows(IllegalArgumentException.class, () -> a.remove(5, -1));
 	}
 }

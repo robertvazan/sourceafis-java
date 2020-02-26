@@ -1,9 +1,9 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 public class CircularListTest {
 	private final CircularList<Integer> l = new CircularList<>();
@@ -22,8 +22,8 @@ public class CircularListTest {
 		l.add(0, 300);
 		assertEquals(Arrays.asList(300, 1, 2, 3, 100, 4, 5, 200), l);
 	}
-	@Test(expected = IndexOutOfBoundsException.class) public void addAt_bounds() {
-		l.add(6, 10);
+	@Test public void addAt_bounds() {
+		assertThrows(IndexOutOfBoundsException.class, () -> l.add(6, 10));
 	}
 	@Test public void addAll() {
 		assertFalse(l.addAll(Collections.emptyList()));
@@ -115,14 +115,12 @@ public class CircularListTest {
 	@Test public void size() {
 		assertEquals(5, l.size());
 	}
-	@Test(expected = UnsupportedOperationException.class) public void subList() {
-		l.subList(0, 1);
+	@Test public void subList() {
+		assertThrows(UnsupportedOperationException.class, () -> l.subList(0, 1));
 	}
 	@Test public void toArray() {
 		assertArrayEquals(new Integer[] { 1, 2, 3, 4, 5 }, l.toArray());
-	}
-	@Test(expected = UnsupportedOperationException.class) public void toArray_preallocated() {
-		l.toArray(new Integer[10]);
+		assertThrows(UnsupportedOperationException.class, () -> l.toArray(new Integer[10]));
 	}
 	@Test public void toString_readable() {
 		assertEquals("[1, 2, 3, 4, 5]", l.toString());
@@ -132,12 +130,10 @@ public class CircularListTest {
 	}
 	@Test public void listIteratorAt() {
 		assertEquals(3, l.listIterator(3).nextIndex());
+		assertThrows(IndexOutOfBoundsException.class, () -> l.listIterator(6));
 	}
-	@Test(expected = IndexOutOfBoundsException.class) public void listIteratorAt_bounds() {
-		l.listIterator(6);
-	}
-	@Test(expected = UnsupportedOperationException.class) public void listIterator_add() {
-		it.add(10);
+	@Test public void listIterator_add() {
+		assertThrows(UnsupportedOperationException.class, () -> it.add(10));
 	}
 	@Test public void listIterator_hasNext() {
 		for (int i = 0; i < 5; ++i) {
@@ -149,10 +145,7 @@ public class CircularListTest {
 	@Test public void listIterator_next() {
 		for (int i = 0; i < 5; ++i)
 			assertEquals(i + 1, (int)it.next());
-	}
-	@Test(expected = NoSuchElementException.class) public void listIterator_next_bounds() {
-		for (int i = 0; i < 6; ++i)
-			it.next();
+		assertThrows(NoSuchElementException.class, () -> it.next());
 	}
 	@Test public void listIterator_nextIndex() {
 		for (int i = 0; i < 5; ++i) {
@@ -173,9 +166,7 @@ public class CircularListTest {
 			it.next();
 		for (int i = 5; i > 0; --i)
 			assertEquals(i, (int)it.previous());
-	}
-	@Test(expected = NoSuchElementException.class) public void listIterator_previous_bounds() {
-		it.previous();
+		assertThrows(NoSuchElementException.class, () -> it.previous());
 	}
 	@Test public void listIterator_previousIndex() {
 		assertEquals(-1, it.previousIndex());
@@ -184,10 +175,10 @@ public class CircularListTest {
 			assertEquals(i, it.previousIndex());
 		}
 	}
-	@Test(expected = UnsupportedOperationException.class) public void listIterator_remove() {
-		it.remove();
+	@Test public void listIterator_remove() {
+		assertThrows(UnsupportedOperationException.class, () -> it.remove());
 	}
-	@Test(expected = UnsupportedOperationException.class) public void listIterator_set() {
-		it.set(10);
+	@Test public void listIterator_set() {
+		assertThrows(UnsupportedOperationException.class, () -> it.set(10));
 	}
 }

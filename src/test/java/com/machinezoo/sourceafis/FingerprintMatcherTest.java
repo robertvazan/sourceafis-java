@@ -3,7 +3,7 @@ package com.machinezoo.sourceafis;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 public class FingerprintMatcherTest {
 	private void matching(FingerprintTemplate probe, FingerprintTemplate candidate) {

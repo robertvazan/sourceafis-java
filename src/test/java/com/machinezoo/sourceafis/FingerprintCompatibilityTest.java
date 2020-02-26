@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import java.util.function.*;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 public class FingerprintCompatibilityTest {
 	@Test public void version() {

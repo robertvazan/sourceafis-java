@@ -1,12 +1,12 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
 import javax.imageio.*;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 public class FingerprintTemplateTest {
 	public static FingerprintTemplate probe() {
@@ -65,7 +65,7 @@ public class FingerprintTemplateTest {
 				.dpi(dpi)
 				.decode(reencoded));
 			double score = matcher.match(candidate);
-			assertTrue("Score " + score + " @ DPI " + dpi, score >= 40);
+			assertTrue(score >= 40, "Score " + score + " @ DPI " + dpi);
 		}
 	}
 	private static DoubleMatrix clip(DoubleMatrix input, int top, int right, int bottom, int left) {
