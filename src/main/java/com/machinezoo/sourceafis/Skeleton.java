@@ -24,9 +24,9 @@ class Skeleton {
 		filter();
 	}
 	private enum NeighborhoodType {
-		Skeleton,
-		Ending,
-		Removable
+		SKELETON,
+		ENDING,
+		REMOVABLE
 	}
 	private BooleanMatrix thin(BooleanMatrix input) {
 		NeighborhoodType[] neighborhoodTypes = neighborhoodTypes();
@@ -51,8 +51,8 @@ class Skeleton {
 									| (partial.get(x + 1, y - 1) ? 4 : 0)
 									| (partial.get(x, y - 1) ? 2 : 0)
 									| (partial.get(x - 1, y - 1) ? 1 : 0);
-								if (neighborhoodTypes[neighbors] == NeighborhoodType.Removable
-									|| neighborhoodTypes[neighbors] == NeighborhoodType.Ending
+								if (neighborhoodTypes[neighbors] == NeighborhoodType.REMOVABLE
+									|| neighborhoodTypes[neighbors] == NeighborhoodType.ENDING
 										&& isFalseEnding(partial, new IntPoint(x, y))) {
 									removedAnything = true;
 									partial.set(x, y, false);
@@ -81,20 +81,20 @@ class Skeleton {
 			boolean vertical = !CL && !CR && (TL || TC || TR) && (BL || BC || BR);
 			boolean end = (count == 1);
 			if (end)
-				types[mask] = NeighborhoodType.Ending;
+				types[mask] = NeighborhoodType.ENDING;
 			else if (!diagonal && !horizontal && !vertical)
-				types[mask] = NeighborhoodType.Removable;
+				types[mask] = NeighborhoodType.REMOVABLE;
 			else
-				types[mask] = NeighborhoodType.Skeleton;
+				types[mask] = NeighborhoodType.SKELETON;
 		}
 		return types;
 	}
 	private static boolean isFalseEnding(BooleanMatrix binary, IntPoint ending) {
-		for (IntPoint relativeNeighbor : IntPoint.cornerNeighbors) {
+		for (IntPoint relativeNeighbor : IntPoint.CORNER_NEIGHBORS) {
 			IntPoint neighbor = ending.plus(relativeNeighbor);
 			if (binary.get(neighbor)) {
 				int count = 0;
-				for (IntPoint relative2 : IntPoint.cornerNeighbors)
+				for (IntPoint relative2 : IntPoint.CORNER_NEIGHBORS)
 					if (binary.get(neighbor.plus(relative2), false))
 						++count;
 				return count > 2;
@@ -107,7 +107,7 @@ class Skeleton {
 		for (IntPoint at : size)
 			if (thinned.get(at)) {
 				int count = 0;
-				for (IntPoint relative : IntPoint.cornerNeighbors)
+				for (IntPoint relative : IntPoint.CORNER_NEIGHBORS)
 					if (thinned.get(at.plus(relative), false))
 						++count;
 				if (count == 1 || count > 2)
@@ -119,7 +119,7 @@ class Skeleton {
 		Map<IntPoint, List<IntPoint>> linking = new HashMap<>();
 		for (IntPoint minutiaPos : minutiae) {
 			List<IntPoint> ownLinks = null;
-			for (IntPoint neighborRelative : IntPoint.cornerNeighbors) {
+			for (IntPoint neighborRelative : IntPoint.CORNER_NEIGHBORS) {
 				IntPoint neighborPos = minutiaPos.plus(neighborRelative);
 				if (linking.containsKey(neighborPos)) {
 					List<IntPoint> neighborLinks = linking.get(neighborPos);
@@ -146,7 +146,7 @@ class Skeleton {
 			List<IntPoint> linkedMinutiae = linking.get(currentPos);
 			IntPoint primaryPos = linkedMinutiae.get(0);
 			if (!centers.containsKey(primaryPos)) {
-				IntPoint sum = IntPoint.zero;
+				IntPoint sum = IntPoint.ZERO;
 				for (IntPoint linkedPos : linkedMinutiae)
 					sum = sum.plus(linkedPos);
 				IntPoint center = new IntPoint(sum.x / linkedMinutiae.size(), sum.y / linkedMinutiae.size());
@@ -161,7 +161,7 @@ class Skeleton {
 	private void traceRidges(BooleanMatrix thinned, Map<IntPoint, SkeletonMinutia> minutiaePoints) {
 		Map<IntPoint, SkeletonRidge> leads = new HashMap<>();
 		for (IntPoint minutiaPoint : minutiaePoints.keySet()) {
-			for (IntPoint startRelative : IntPoint.cornerNeighbors) {
+			for (IntPoint startRelative : IntPoint.CORNER_NEIGHBORS) {
 				IntPoint start = minutiaPoint.plus(startRelative);
 				if (thinned.get(start, false) && !minutiaePoints.containsKey(start) && !leads.containsKey(start)) {
 					SkeletonRidge ridge = new SkeletonRidge();
@@ -170,8 +170,8 @@ class Skeleton {
 					IntPoint previous = minutiaPoint;
 					IntPoint current = start;
 					do {
-						IntPoint next = IntPoint.zero;
-						for (IntPoint nextRelative : IntPoint.cornerNeighbors) {
+						IntPoint next = IntPoint.ZERO;
+						for (IntPoint nextRelative : IntPoint.CORNER_NEIGHBORS) {
 							next = current.plus(nextRelative);
 							if (thinned.get(next, false) && !next.equals(previous))
 								break;

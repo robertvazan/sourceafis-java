@@ -2,7 +2,7 @@
 package com.machinezoo.sourceafis;
 
 class DoublePoint {
-	static final DoublePoint zero = new DoublePoint(0, 0);
+	static final DoublePoint ZERO = new DoublePoint(0, 0);
 	final double x;
 	final double y;
 	DoublePoint(double x, double y) {

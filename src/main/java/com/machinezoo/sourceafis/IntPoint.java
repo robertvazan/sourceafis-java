@@ -5,14 +5,14 @@ import java.nio.*;
 import java.util.*;
 
 class IntPoint implements Iterable<IntPoint> {
-	static final IntPoint zero = new IntPoint(0, 0);
-	static final IntPoint[] edgeNeighbors = new IntPoint[] {
+	static final IntPoint ZERO = new IntPoint(0, 0);
+	static final IntPoint[] EDGE_NEIGHBORS = new IntPoint[] {
 		new IntPoint(0, -1),
 		new IntPoint(-1, 0),
 		new IntPoint(1, 0),
 		new IntPoint(0, 1)
 	};
-	static final IntPoint[] cornerNeighbors = new IntPoint[] {
+	static final IntPoint[] CORNER_NEIGHBORS = new IntPoint[] {
 		new IntPoint(-1, -1),
 		new IntPoint(0, -1),
 		new IntPoint(1, -1),

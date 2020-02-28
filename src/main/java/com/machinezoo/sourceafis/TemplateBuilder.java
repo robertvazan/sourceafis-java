@@ -354,7 +354,7 @@ class TemplateBuilder {
 					double angle = random.next() * Math.PI;
 					double distance = Doubles.interpolateExponential(Parameters.minOrientationRadius, Parameters.maxOrientationRadius, random.next());
 					sample.offset = DoubleAngle.toVector(angle).multiply(distance).round();
-				} while (sample.offset.equals(IntPoint.zero) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
+				} while (sample.offset.equals(IntPoint.ZERO) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
 				sample.orientation = DoubleAngle.toVector(DoubleAngle.add(DoubleAngle.toOrientation(DoubleAngle.atan(sample.offset.toPoint())), Math.PI));
 			}
 		}
@@ -403,7 +403,7 @@ class TemplateBuilder {
 		if (first >= 0)
 			return new IntRange(first, last + 1);
 		else
-			return IntRange.zero;
+			return IntRange.ZERO;
 	}
 	private DoublePointMatrix blockOrientations(DoublePointMatrix orientation, BlockMap blocks, BooleanMatrix mask) {
 		DoublePointMatrix sums = new DoublePointMatrix(blocks.primary.blocks);
@@ -446,7 +446,7 @@ class TemplateBuilder {
 		IntPoint[][] result = new IntPoint[resolution][];
 		for (int orientationIndex = 0; orientationIndex < resolution; ++orientationIndex) {
 			List<IntPoint> line = new ArrayList<>();
-			line.add(IntPoint.zero);
+			line.add(IntPoint.ZERO);
 			DoublePoint direction = DoubleAngle.toVector(DoubleAngle.fromOrientation(DoubleAngle.bucketCenter(orientationIndex, resolution)));
 			for (double r = radius; r >= 0.5; r /= step) {
 				IntPoint sample = direction.multiply(r).round();

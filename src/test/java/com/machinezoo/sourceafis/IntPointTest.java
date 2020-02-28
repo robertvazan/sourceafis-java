@@ -60,7 +60,7 @@ public class IntPointTest {
 	}
 	@Test public void edgeNeighbors() {
 		Set<IntPoint> s = new HashSet<>();
-		for (IntPoint n : IntPoint.edgeNeighbors) {
+		for (IntPoint n : IntPoint.EDGE_NEIGHBORS) {
 			s.add(n);
 			assertEquals(1, n.lengthSq());
 		}
@@ -68,7 +68,7 @@ public class IntPointTest {
 	}
 	@Test public void cornerNeighbors() {
 		Set<IntPoint> s = new HashSet<>();
-		for (IntPoint n : IntPoint.cornerNeighbors) {
+		for (IntPoint n : IntPoint.CORNER_NEIGHBORS) {
 			s.add(n);
 			assertTrue(n.lengthSq() == 1 || n.lengthSq() == 2);
 		}

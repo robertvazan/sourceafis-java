@@ -38,7 +38,7 @@ class EdgeShape {
 			int tmp = -x;
 			x = y;
 			y = tmp;
-			quadrant += DoubleAngle.halfPI;
+			quadrant += DoubleAngle.HALF_PI;
 		}
 		int shift = 32 - Integer.numberOfLeadingZeros((x | y) >>> polarCacheBits);
 		int offset = (y >> shift) * polarCacheRadius + (x >> shift);

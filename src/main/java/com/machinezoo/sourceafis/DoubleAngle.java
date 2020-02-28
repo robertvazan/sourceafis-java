@@ -3,8 +3,8 @@ package com.machinezoo.sourceafis;
 
 class DoubleAngle {
 	static final double PI2 = 2 * Math.PI;
-	static final double invPI2 = 1.0 / PI2;
-	static final double halfPI = 0.5 * Math.PI;
+	static final double INV_PI2 = 1.0 / PI2;
+	static final double HALF_PI = 0.5 * Math.PI;
 	static DoublePoint toVector(double angle) {
 		return new DoublePoint(Math.cos(angle), Math.sin(angle));
 	}
@@ -32,7 +32,7 @@ class DoubleAngle {
 		return PI2 * (2 * bucket + 1) / (2 * resolution);
 	}
 	static int quantize(double angle, int resolution) {
-		int result = (int)(angle * invPI2 * resolution);
+		int result = (int)(angle * INV_PI2 * resolution);
 		if (result < 0)
 			return 0;
 		else if (result >= resolution)
