@@ -63,11 +63,11 @@ class Parameters {
 	static final int minSupportingEdges = 1;
 	static final double distanceErrorFlatness = 0.69;
 	static final double angleErrorFlatness = 0.27;
-	static final double pairCountScore = 0.032;
-	static final double pairFractionScore = 8.98;
-	static final double correctTypeScore = 0.629;
-	static final double supportedCountScore = 0.193;
-	static final double edgeCountScore = 0.265;
+	static final double minutiaCountScore = 0.032;
+	static final double minutiaFractionScore = 8.98;
+	static final double minutiaTypeScore = 0.629;
+	static final double supportedMinutiaScore = 0.193;
+	static final double edgeScore = 0.265;
 	static final double distanceAccuracyScore = 9.9;
 	static final double angleAccuracyScore = 2.79;
 	static final double thresholdMaxFMR = 8.48;
