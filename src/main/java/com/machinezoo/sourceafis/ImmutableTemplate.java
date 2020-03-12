@@ -2,7 +2,7 @@
 package com.machinezoo.sourceafis;
 
 class ImmutableTemplate {
-	static final ImmutableTemplate empty = new ImmutableTemplate();
+	static final ImmutableTemplate EMPTY = new ImmutableTemplate();
 	final IntPoint size;
 	final ImmutableMinutia[] minutiae;
 	final NeighborEdge[][] edges;

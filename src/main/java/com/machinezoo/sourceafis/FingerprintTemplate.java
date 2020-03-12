@@ -76,7 +76,7 @@ public class FingerprintTemplate {
 	 * We should drop this indirection once deprecated methods are dropped
 	 * and FingerprintTemplate itself becomes immutable.
 	 */
-	volatile ImmutableTemplate immutable = ImmutableTemplate.empty;
+	volatile ImmutableTemplate immutable = ImmutableTemplate.EMPTY;
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	/**
 	 * Create fingerprint template from fingerprint image.
@@ -167,9 +167,9 @@ public class FingerprintTemplate {
 	 * @return empty template
 	 */
 	public static FingerprintTemplate empty() {
-		return empty;
+		return EMPTY;
 	}
-	private static final FingerprintTemplate empty = new FingerprintTemplate(ImmutableTemplate.empty);
+	private static final FingerprintTemplate EMPTY = new FingerprintTemplate(ImmutableTemplate.EMPTY);
 	FingerprintTemplate(ImmutableTemplate immutable) {
 		this.immutable = immutable;
 	}

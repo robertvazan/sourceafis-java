@@ -25,28 +25,28 @@ class Score {
 	double shapedScore;
 	void compute(MatcherThread thread) {
 		minutiaCount = thread.count;
-		minutiaScore = Parameters.minutiaCountScore * minutiaCount;
+		minutiaScore = Parameters.MINUTIA_SCORE * minutiaCount;
 		minutiaFractionInProbe = thread.count / (double)thread.probe.minutiae.length;
 		minutiaFractionInCandidate = thread.count / (double)thread.candidate.minutiae.length;
 		minutiaFraction = 0.5 * (minutiaFractionInProbe + minutiaFractionInCandidate);
-		minutiaFractionScore = Parameters.minutiaFractionScore * minutiaFraction;
+		minutiaFractionScore = Parameters.MINUTIA_FRACTION_SCORE * minutiaFraction;
 		supportingEdgeSum = 0;
 		supportedMinutiaCount = 0;
 		minutiaTypeHits = 0;
 		for (int i = 0; i < thread.count; ++i) {
 			MinutiaPair pair = thread.tree[i];
 			supportingEdgeSum += pair.supportingEdges;
-			if (pair.supportingEdges >= Parameters.minSupportingEdges)
+			if (pair.supportingEdges >= Parameters.MIN_SUPPORTING_EDGES)
 				++supportedMinutiaCount;
 			if (thread.probe.minutiae[pair.probe].type == thread.candidate.minutiae[pair.candidate].type)
 				++minutiaTypeHits;
 		}
 		edgeCount = thread.count + supportingEdgeSum;
-		edgeScore = Parameters.edgeScore * edgeCount;
-		supportedMinutiaScore = Parameters.supportedMinutiaScore * supportedMinutiaCount;
-		minutiaTypeScore = Parameters.minutiaTypeScore * minutiaTypeHits;
-		int innerDistanceRadius = (int)Math.round(Parameters.distanceErrorFlatness * Parameters.maxDistanceError);
-		double innerAngleRadius = Parameters.angleErrorFlatness * Parameters.maxAngleError;
+		edgeScore = Parameters.EDGE_SCORE * edgeCount;
+		supportedMinutiaScore = Parameters.SUPPORTED_MINUTIA_SCORE * supportedMinutiaCount;
+		minutiaTypeScore = Parameters.MINUTIA_TYPE_SCORE * minutiaTypeHits;
+		int innerDistanceRadius = (int)Math.round(Parameters.DISTANCE_ERROR_FLATNESS * Parameters.MAX_DISTANCE_ERROR);
+		double innerAngleRadius = Parameters.ANGLE_ERROR_FLATNESS * Parameters.MAX_ANGLE_ERROR;
 		distanceErrorSum = 0;
 		angleErrorSum = 0;
 		for (int i = 1; i < thread.count; ++i) {
@@ -59,12 +59,12 @@ class Score {
 		}
 		distanceAccuracyScore = 0;
 		angleAccuracyScore = 0;
-		int distanceErrorPotential = Parameters.maxDistanceError * Math.max(0, thread.count - 1);
+		int distanceErrorPotential = Parameters.MAX_DISTANCE_ERROR * Math.max(0, thread.count - 1);
 		distanceAccuracySum = distanceErrorPotential - distanceErrorSum;
-		distanceAccuracyScore = Parameters.distanceAccuracyScore * (distanceErrorPotential > 0 ? distanceAccuracySum / (double)distanceErrorPotential : 0);
-		double angleErrorPotential = Parameters.maxAngleError * Math.max(0, thread.count - 1) * 2;
+		distanceAccuracyScore = Parameters.DISTANCE_ACCURACY_SCORE * (distanceErrorPotential > 0 ? distanceAccuracySum / (double)distanceErrorPotential : 0);
+		double angleErrorPotential = Parameters.MAX_ANGLE_ERROR * Math.max(0, thread.count - 1) * 2;
 		angleAccuracySum = angleErrorPotential - angleErrorSum;
-		angleAccuracyScore = Parameters.angleAccuracyScore * (angleErrorPotential > 0 ? angleAccuracySum / angleErrorPotential : 0);
+		angleAccuracyScore = Parameters.ANGLE_ACCURACY_SCORE * (angleErrorPotential > 0 ? angleAccuracySum / angleErrorPotential : 0);
 		totalScore = minutiaScore
 			+ minutiaFractionScore
 			+ supportedMinutiaScore
@@ -75,21 +75,21 @@ class Score {
 		shapedScore = shape(totalScore);
 	}
 	private static double shape(double raw) {
-		if (raw < Parameters.thresholdMaxFMR)
+		if (raw < Parameters.THRESHOLD_FMR_MAX)
 			return 0;
-		if (raw < Parameters.thresholdFMR2)
-			return interpolate(raw, Parameters.thresholdMaxFMR, Parameters.thresholdFMR2, 0, 3);
-		if (raw < Parameters.thresholdFMR10)
-			return interpolate(raw, Parameters.thresholdFMR2, Parameters.thresholdFMR10, 3, 7);
-		if (raw < Parameters.thresholdFMR100)
-			return interpolate(raw, Parameters.thresholdFMR10, Parameters.thresholdFMR100, 10, 10);
-		if (raw < Parameters.thresholdFMR1000)
-			return interpolate(raw, Parameters.thresholdFMR100, Parameters.thresholdFMR1000, 20, 10);
-		if (raw < Parameters.thresholdFMR10_000)
-			return interpolate(raw, Parameters.thresholdFMR1000, Parameters.thresholdFMR10_000, 30, 10);
-		if (raw < Parameters.thresholdFMR100_000)
-			return interpolate(raw, Parameters.thresholdFMR10_000, Parameters.thresholdFMR100_000, 40, 10);
-		return (raw - Parameters.thresholdFMR100_000) / (Parameters.thresholdFMR100_000 - Parameters.thresholdFMR100) * 30 + 50;
+		if (raw < Parameters.THRESHOLD_FMR_2)
+			return interpolate(raw, Parameters.THRESHOLD_FMR_MAX, Parameters.THRESHOLD_FMR_2, 0, 3);
+		if (raw < Parameters.THRESHOLD_FMR_10)
+			return interpolate(raw, Parameters.THRESHOLD_FMR_2, Parameters.THRESHOLD_FMR_10, 3, 7);
+		if (raw < Parameters.THRESHOLD_FMR_100)
+			return interpolate(raw, Parameters.THRESHOLD_FMR_10, Parameters.THRESHOLD_FMR_100, 10, 10);
+		if (raw < Parameters.THRESHOLD_FMR_1000)
+			return interpolate(raw, Parameters.THRESHOLD_FMR_100, Parameters.THRESHOLD_FMR_1000, 20, 10);
+		if (raw < Parameters.THRESHOLD_FMR_10_000)
+			return interpolate(raw, Parameters.THRESHOLD_FMR_1000, Parameters.THRESHOLD_FMR_10_000, 30, 10);
+		if (raw < Parameters.THRESHOLD_FMR_100_000)
+			return interpolate(raw, Parameters.THRESHOLD_FMR_10_000, Parameters.THRESHOLD_FMR_100_000, 40, 10);
+		return (raw - Parameters.THRESHOLD_FMR_100_000) / (Parameters.THRESHOLD_FMR_100_000 - Parameters.THRESHOLD_FMR_100) * 30 + 50;
 	}
 	private static double interpolate(double raw, double min, double max, double start, double length) {
 		return (raw - min) / (max - min) * length + start;

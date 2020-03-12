@@ -13,12 +13,12 @@ class TemplateBuilder {
 	void extract(DoubleMatrix raw, double dpi) {
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		FingerprintTransparency.current().logDecodedImage(raw);
-		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
+		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
 			raw = scaleImage(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
 		FingerprintTransparency.current().logScaledImage(raw);
 		size = raw.size();
-		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.blockSize);
+		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.BLOCK_SIZE);
 		// https://sourceafis.machinezoo.com/transparency/block-map
 		FingerprintTransparency.current().logBlockMap(blocks);
 		HistogramCube histogram = histogram(blocks, raw);
@@ -26,11 +26,11 @@ class TemplateBuilder {
 		BooleanMatrix mask = mask(blocks, histogram);
 		DoubleMatrix equalized = equalize(blocks, raw, smoothHistogram, mask);
 		DoubleMatrix orientation = orientationMap(equalized, mask, blocks);
-		IntPoint[][] smoothedLines = orientedLines(Parameters.parallelSmoothinigResolution, Parameters.parallelSmoothinigRadius, Parameters.parallelSmoothinigStep);
+		IntPoint[][] smoothedLines = orientedLines(Parameters.PARALLEL_SMOOTHING_RESOLUTION, Parameters.PARALLEL_SMOOTHING_RADIUS, Parameters.PARALLEL_SMOOTHING_STEP);
 		DoubleMatrix smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, smoothedLines);
 		// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
 		FingerprintTransparency.current().logParallelSmoothing(smoothed);
-		IntPoint[][] orthogonalLines = orientedLines(Parameters.orthogonalSmoothinigResolution, Parameters.orthogonalSmoothinigRadius, Parameters.orthogonalSmoothinigStep);
+		IntPoint[][] orthogonalLines = orientedLines(Parameters.ORTHOGONAL_SMOOTHING_RESOLUTION, Parameters.ORTHOGONAL_SMOOTHING_RADIUS, Parameters.ORTHOGONAL_SMOOTHING_STEP);
 		DoubleMatrix orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
 		// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
 		FingerprintTransparency.current().logOrthogonalSmoothing(orthogonal);
@@ -75,7 +75,7 @@ class TemplateBuilder {
 		buildEdgeTable();
 	}
 	private static int normalizeDpi(int value, double dpi) {
-		if (Math.abs(dpi - 500) > Parameters.dpiTolerance)
+		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
 			return (int)Math.round(value / dpi * 500);
 		else
 			return value;
@@ -113,7 +113,7 @@ class TemplateBuilder {
 		return output;
 	}
 	private HistogramCube histogram(BlockMap blocks, DoubleMatrix image) {
-		HistogramCube histogram = new HistogramCube(blocks.primary.blocks, Parameters.histogramDepth);
+		HistogramCube histogram = new HistogramCube(blocks.primary.blocks, Parameters.HISTOGRAM_DEPTH);
 		for (IntPoint block : blocks.primary.blocks) {
 			IntRect area = blocks.primary.block(block);
 			for (int y = area.top(); y < area.bottom(); ++y)
@@ -148,12 +148,12 @@ class TemplateBuilder {
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		// https://sourceafis.machinezoo.com/transparency/combined-mask
 		FingerprintTransparency.current().logCombinedMask(mask);
-		mask.merge(vote(mask, null, Parameters.contrastVoteRadius, Parameters.contrastVoteMajority, Parameters.contrastVoteBorderDistance));
+		mask.merge(vote(mask, null, Parameters.CONTRAST_VOTE_RADIUS, Parameters.CONTRAST_VOTE_MAJORITY, Parameters.CONTRAST_VOTE_BORDER_DISTANCE));
 		mask.merge(filterBlockErrors(mask));
 		mask.invert();
 		mask.merge(filterBlockErrors(mask));
 		mask.merge(filterBlockErrors(mask));
-		mask.merge(vote(mask, null, Parameters.maskVoteRadius, Parameters.maskVoteMajority, Parameters.maskVoteBorderDistance));
+		mask.merge(vote(mask, null, Parameters.MASK_VOTE_RADIUS, Parameters.MASK_VOTE_MAJORITY, Parameters.MASK_VOTE_BORDER_DISTANCE));
 		// https://sourceafis.machinezoo.com/transparency/filtered-mask
 		FingerprintTransparency.current().logFilteredMask(mask);
 		return mask;
@@ -162,7 +162,7 @@ class TemplateBuilder {
 		DoubleMatrix result = new DoubleMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks) {
 			int volume = histogram.sum(block);
-			int clipLimit = (int)Math.round(volume * Parameters.clippedContrast);
+			int clipLimit = (int)Math.round(volume * Parameters.CLIPPED_CONTRAST);
 			int accumulator = 0;
 			int lowerBound = histogram.depth - 1;
 			for (int i = 0; i < histogram.depth; ++i) {
@@ -190,7 +190,7 @@ class TemplateBuilder {
 	private BooleanMatrix filterAbsoluteContrast(DoubleMatrix contrast) {
 		BooleanMatrix result = new BooleanMatrix(contrast.size());
 		for (IntPoint block : contrast.size())
-			if (contrast.get(block) < Parameters.minAbsoluteContrast)
+			if (contrast.get(block) < Parameters.MIN_ABSOLUTE_CONTRAST)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
 		FingerprintTransparency.current().logAbsoluteContrastMask(result);
@@ -202,10 +202,10 @@ class TemplateBuilder {
 			sortedContrast.add(contrast.get(block));
 		sortedContrast.sort(Comparator.<Double>naturalOrder().reversed());
 		int pixelsPerBlock = blocks.pixels.area() / blocks.primary.blocks.area();
-		int sampleCount = Math.min(sortedContrast.size(), Parameters.relativeContrastSample / pixelsPerBlock);
-		int consideredBlocks = Math.max((int)Math.round(sampleCount * Parameters.relativeContrastPercentile), 1);
+		int sampleCount = Math.min(sortedContrast.size(), Parameters.RELATIVE_CONTRAST_SAMPLE / pixelsPerBlock);
+		int consideredBlocks = Math.max((int)Math.round(sampleCount * Parameters.RELATIVE_CONTRAST_PERCENTILE), 1);
 		double averageContrast = sortedContrast.stream().mapToDouble(n -> n).limit(consideredBlocks).average().getAsDouble();
-		double limit = averageContrast * Parameters.minRelativeContrast;
+		double limit = averageContrast * Parameters.MIN_RELATIVE_CONTRAST;
 		BooleanMatrix result = new BooleanMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks)
 			if (contrast.get(block) < limit)
@@ -261,14 +261,14 @@ class TemplateBuilder {
 		return output;
 	}
 	private BooleanMatrix filterBlockErrors(BooleanMatrix input) {
-		return vote(input, null, Parameters.blockErrorsVoteRadius, Parameters.blockErrorsVoteMajority, Parameters.blockErrorsVoteBorderDistance);
+		return vote(input, null, Parameters.BLOCK_ERRORS_VOTE_RADIUS, Parameters.BLOCK_ERRORS_VOTE_MAJORITY, Parameters.BLOCK_ERRORS_VOTE_BORDER_DISTANCE);
 	}
 	private DoubleMatrix equalize(BlockMap blocks, DoubleMatrix image, HistogramCube histogram, BooleanMatrix blockMask) {
 		final double rangeMin = -1;
 		final double rangeMax = 1;
 		final double rangeSize = rangeMax - rangeMin;
-		final double widthMax = rangeSize / 256 * Parameters.maxEqualizationScaling;
-		final double widthMin = rangeSize / 256 * Parameters.minEqualizationScaling;
+		final double widthMax = rangeSize / 256 * Parameters.MAX_EQUALIZATION_SCALING;
+		final double widthMin = rangeSize / 256 * Parameters.MIN_EQUALIZATION_SCALING;
 		double[] limitedMin = new double[histogram.depth];
 		double[] limitedMax = new double[histogram.depth];
 		double[] dequantized = new double[histogram.depth];
@@ -333,26 +333,26 @@ class TemplateBuilder {
 		DoublePoint orientation;
 	}
 	private static class OrientationRandom {
-		static final int prime = 1610612741;
-		static final int bits = 30;
-		static final int mask = (1 << bits) - 1;
-		static final double scaling = 1.0 / (1 << bits);
-		long state = prime * prime * prime;
+		static final int PRIME = 1610612741;
+		static final int BITS = 30;
+		static final int MASK = (1 << BITS) - 1;
+		static final double SCALING = 1.0 / (1 << BITS);
+		long state = PRIME * PRIME * PRIME;
 		double next() {
-			state *= prime;
-			return ((state & mask) + 0.5) * scaling;
+			state *= PRIME;
+			return ((state & MASK) + 0.5) * SCALING;
 		}
 	}
 	private ConsideredOrientation[][] planOrientations() {
 		OrientationRandom random = new OrientationRandom();
-		ConsideredOrientation[][] splits = new ConsideredOrientation[Parameters.orientationSplit][];
-		for (int i = 0; i < Parameters.orientationSplit; ++i) {
-			ConsideredOrientation[] orientations = splits[i] = new ConsideredOrientation[Parameters.orientationsChecked];
-			for (int j = 0; j < Parameters.orientationsChecked; ++j) {
+		ConsideredOrientation[][] splits = new ConsideredOrientation[Parameters.ORIENTATION_SPLIT][];
+		for (int i = 0; i < Parameters.ORIENTATION_SPLIT; ++i) {
+			ConsideredOrientation[] orientations = splits[i] = new ConsideredOrientation[Parameters.ORIENTATIONS_CHECKED];
+			for (int j = 0; j < Parameters.ORIENTATIONS_CHECKED; ++j) {
 				ConsideredOrientation sample = orientations[j] = new ConsideredOrientation();
 				do {
 					double angle = random.next() * Math.PI;
-					double distance = Doubles.interpolateExponential(Parameters.minOrientationRadius, Parameters.maxOrientationRadius, random.next());
+					double distance = Doubles.interpolateExponential(Parameters.MIN_ORIENTATION_RADIUS, Parameters.MAX_ORIENTATION_RADIUS, random.next());
 					sample.offset = DoubleAngle.toVector(angle).multiply(distance).round();
 				} while (sample.offset.equals(IntPoint.ZERO) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
 				sample.orientation = DoubleAngle.toVector(DoubleAngle.add(DoubleAngle.toOrientation(DoubleAngle.atan(sample.offset.toPoint())), Math.PI));
@@ -424,7 +424,7 @@ class TemplateBuilder {
 		DoublePointMatrix smoothed = new DoublePointMatrix(size);
 		for (IntPoint block : size)
 			if (mask.get(block)) {
-				IntRect neighbors = IntRect.around(block, Parameters.orientationSmoothingRadius).intersect(new IntRect(size));
+				IntRect neighbors = IntRect.around(block, Parameters.ORIENTATION_SMOOTHING_RADIUS).intersect(new IntRect(size));
 				for (int ny = neighbors.top(); ny < neighbors.bottom(); ++ny)
 					for (int nx = neighbors.left(); nx < neighbors.right(); ++nx)
 						if (mask.get(nx, ny))
@@ -499,8 +499,8 @@ class TemplateBuilder {
 		IntPoint size = binary.size();
 		BooleanMatrix inverted = new BooleanMatrix(binary);
 		inverted.invert();
-		BooleanMatrix islands = vote(inverted, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
-		BooleanMatrix holes = vote(binary, mask, Parameters.binarizedVoteRadius, Parameters.binarizedVoteMajority, Parameters.binarizedVoteBorderDistance);
+		BooleanMatrix islands = vote(inverted, mask, Parameters.BINARIZED_VOTE_RADIUS, Parameters.BINARIZED_VOTE_MAJORITY, Parameters.BINARIZED_VOTE_BORDER_DISTANCE);
+		BooleanMatrix holes = vote(binary, mask, Parameters.BINARIZED_VOTE_RADIUS, Parameters.BINARIZED_VOTE_MAJORITY, Parameters.BINARIZED_VOTE_BORDER_DISTANCE);
 		for (int y = 0; y < size.y; ++y)
 			for (int x = 0; x < size.x; ++x)
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
@@ -547,15 +547,15 @@ class TemplateBuilder {
 		for (int y = 1; y < size.y - 1; ++y)
 			for (int x = 1; x < size.x - 1; ++x)
 				inner.set(x, y, outer.get(x, y));
-		if (Parameters.innerMaskBorderDistance >= 1)
+		if (Parameters.INNER_MASK_BORDER_DISTANCE >= 1)
 			inner = shrinkMask(inner, 1);
 		int total = 1;
-		for (int step = 1; total + step <= Parameters.innerMaskBorderDistance; step *= 2) {
+		for (int step = 1; total + step <= Parameters.INNER_MASK_BORDER_DISTANCE; step *= 2) {
 			inner = shrinkMask(inner, step);
 			total += step;
 		}
-		if (total < Parameters.innerMaskBorderDistance)
-			inner = shrinkMask(inner, Parameters.innerMaskBorderDistance - total);
+		if (total < Parameters.INNER_MASK_BORDER_DISTANCE)
+			inner = shrinkMask(inner, Parameters.INNER_MASK_BORDER_DISTANCE - total);
 		// https://sourceafis.machinezoo.com/transparency/inner-mask
 		FingerprintTransparency.current().logInnerMask(inner);
 		return inner;
@@ -579,7 +579,7 @@ class TemplateBuilder {
 	private void maskMinutiae(BooleanMatrix mask) {
 		minutiae = Arrays.stream(minutiae)
 			.filter(minutia -> {
-				IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.maskDisplacement).round();
+				IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.MASK_DISPLACEMENT).round();
 				return mask.get(minutia.position.plus(arrow), false);
 			})
 			.toArray(ImmutableMinutia[]::new);
@@ -587,9 +587,9 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logInnerMinutiae(this);
 	}
 	private void removeMinutiaClouds() {
-		int radiusSq = Integers.sq(Parameters.minutiaCloudRadius);
+		int radiusSq = Integers.sq(Parameters.MINUTIA_CLOUD_RADIUS);
 		Set<ImmutableMinutia> removed = Arrays.stream(minutiae)
-			.filter(minutia -> Parameters.maxCloudSize < Arrays.stream(minutiae)
+			.filter(minutia -> Parameters.MAX_CLOUD_SIZE < Arrays.stream(minutiae)
 				.filter(neighbor -> neighbor.position.minus(minutia.position).lengthSq() <= radiusSq)
 				.count() - 1)
 			.collect(toSet());
@@ -600,16 +600,16 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logRemovedMinutiaClouds(this);
 	}
 	private void limitTemplateSize() {
-		if (minutiae.length > Parameters.maxMinutiae) {
+		if (minutiae.length > Parameters.MAX_MINUTIAE) {
 			minutiae = Arrays.stream(minutiae)
 				.sorted(Comparator.<ImmutableMinutia>comparingInt(
 					minutia -> Arrays.stream(minutiae)
 						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
 						.sorted()
-						.skip(Parameters.sortByNeighbor)
+						.skip(Parameters.SORT_BY_NEIGHBOR)
 						.findFirst().orElse(Integer.MAX_VALUE))
 					.reversed())
-				.limit(Parameters.maxMinutiae)
+				.limit(Parameters.MAX_MINUTIAE)
 				.toArray(ImmutableMinutia[]::new);
 		}
 		// https://sourceafis.machinezoo.com/transparency/top-minutiae
@@ -632,19 +632,19 @@ class TemplateBuilder {
 		int[] allSqDistances = new int[minutiae.length];
 		for (int reference = 0; reference < edges.length; ++reference) {
 			IntPoint referencePosition = minutiae[reference].position;
-			int sqMaxDistance = Integers.sq(Parameters.edgeTableRange);
-			if (minutiae.length - 1 > Parameters.edgeTableNeighbors) {
+			int sqMaxDistance = Integers.sq(Parameters.EDGE_TABLE_RANGE);
+			if (minutiae.length - 1 > Parameters.EDGE_TABLE_NEIGHBORS) {
 				for (int neighbor = 0; neighbor < minutiae.length; ++neighbor)
 					allSqDistances[neighbor] = referencePosition.minus(minutiae[neighbor].position).lengthSq();
 				Arrays.sort(allSqDistances);
-				sqMaxDistance = allSqDistances[Parameters.edgeTableNeighbors];
+				sqMaxDistance = allSqDistances[Parameters.EDGE_TABLE_NEIGHBORS];
 			}
 			for (int neighbor = 0; neighbor < minutiae.length; ++neighbor) {
 				if (neighbor != reference && referencePosition.minus(minutiae[neighbor].position).lengthSq() <= sqMaxDistance)
 					star.add(new NeighborEdge(minutiae, reference, neighbor));
 			}
 			star.sort(Comparator.<NeighborEdge>comparingInt(e -> e.length).thenComparingInt(e -> e.neighbor));
-			while (star.size() > Parameters.edgeTableNeighbors)
+			while (star.size() > Parameters.EDGE_TABLE_NEIGHBORS)
 				star.remove(star.size() - 1);
 			edges[reference] = star.toArray(new NeighborEdge[star.size()]);
 			star.clear();

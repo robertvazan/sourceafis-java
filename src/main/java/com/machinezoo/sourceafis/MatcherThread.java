@@ -75,8 +75,8 @@ class MatcherThread {
 		}
 	}
 	private int enumerateRoots() {
-		if (roots.length < Parameters.maxTriedRoots)
-			roots = new MinutiaPair[Parameters.maxTriedRoots];
+		if (roots.length < Parameters.MAX_TRIED_ROOTS)
+			roots = new MinutiaPair[Parameters.MAX_TRIED_ROOTS];
 		int totalLookups = 0;
 		int totalRoots = 0;
 		int triedRoots = 0;
@@ -87,7 +87,7 @@ class MatcherThread {
 					for (int candidateReference = phase; candidateReference < candidate.minutiae.length; candidateReference += period + 1) {
 						int candidateNeighbor = (candidateReference + period) % candidate.minutiae.length;
 						EdgeShape candidateEdge = new EdgeShape(candidate.minutiae[candidateReference], candidate.minutiae[candidateNeighbor]);
-						if ((candidateEdge.length >= Parameters.minRootEdgeLength) ^ shortEdges) {
+						if ((candidateEdge.length >= Parameters.MIN_ROOT_EDGE_LENGTH) ^ shortEdges) {
 							List<IndexedEdge> matches = edgeHash.get(hashShape(candidateEdge));
 							if (matches != null) {
 								for (IndexedEdge match : matches) {
@@ -101,13 +101,13 @@ class MatcherThread {
 											++totalRoots;
 										}
 										++triedRoots;
-										if (triedRoots >= Parameters.maxTriedRoots)
+										if (triedRoots >= Parameters.MAX_TRIED_ROOTS)
 											return totalRoots;
 									}
 								}
 							}
 							++totalLookups;
-							if (totalLookups >= Parameters.maxRootEdgeLookups)
+							if (totalLookups >= Parameters.MAX_ROOT_EDGE_LOOKUPS)
 								return totalRoots;
 						}
 					}
@@ -117,19 +117,19 @@ class MatcherThread {
 		return totalRoots;
 	}
 	private int hashShape(EdgeShape edge) {
-		int lengthBin = edge.length / Parameters.maxDistanceError;
-		int referenceAngleBin = (int)(edge.referenceAngle / Parameters.maxAngleError);
-		int neighborAngleBin = (int)(edge.neighborAngle / Parameters.maxAngleError);
+		int lengthBin = edge.length / Parameters.MAX_DISTANCE_ERROR;
+		int referenceAngleBin = (int)(edge.referenceAngle / Parameters.MAX_ANGLE_ERROR);
+		int neighborAngleBin = (int)(edge.neighborAngle / Parameters.MAX_ANGLE_ERROR);
 		return (referenceAngleBin << 24) + (neighborAngleBin << 16) + lengthBin;
 	}
 	private boolean matchingShapes(EdgeShape probe, EdgeShape candidate) {
 		int lengthDelta = probe.length - candidate.length;
-		if (lengthDelta >= -Parameters.maxDistanceError && lengthDelta <= Parameters.maxDistanceError) {
-			double complementaryAngleError = DoubleAngle.complementary(Parameters.maxAngleError);
+		if (lengthDelta >= -Parameters.MAX_DISTANCE_ERROR && lengthDelta <= Parameters.MAX_DISTANCE_ERROR) {
+			double complementaryAngleError = DoubleAngle.complementary(Parameters.MAX_ANGLE_ERROR);
 			double referenceDelta = DoubleAngle.difference(probe.referenceAngle, candidate.referenceAngle);
-			if (referenceDelta <= Parameters.maxAngleError || referenceDelta >= complementaryAngleError) {
+			if (referenceDelta <= Parameters.MAX_ANGLE_ERROR || referenceDelta >= complementaryAngleError) {
 				double neighborDelta = DoubleAngle.difference(probe.neighborAngle, candidate.neighborAngle);
-				if (neighborDelta <= Parameters.maxAngleError || neighborDelta >= complementaryAngleError)
+				if (neighborDelta <= Parameters.MAX_ANGLE_ERROR || neighborDelta >= complementaryAngleError)
 					return true;
 			}
 		}
@@ -175,24 +175,24 @@ class MatcherThread {
 		}
 	}
 	private List<MinutiaPair> matchPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
-		double complementaryAngleError = DoubleAngle.complementary(Parameters.maxAngleError);
+		double complementaryAngleError = DoubleAngle.complementary(Parameters.MAX_ANGLE_ERROR);
 		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
 		int end = 0;
 		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
 			NeighborEdge candidateEdge = candidateStar[candidateIndex];
-			while (start < probeStar.length && probeStar[start].length < candidateEdge.length - Parameters.maxDistanceError)
+			while (start < probeStar.length && probeStar[start].length < candidateEdge.length - Parameters.MAX_DISTANCE_ERROR)
 				++start;
 			if (end < start)
 				end = start;
-			while (end < probeStar.length && probeStar[end].length <= candidateEdge.length + Parameters.maxDistanceError)
+			while (end < probeStar.length && probeStar[end].length <= candidateEdge.length + Parameters.MAX_DISTANCE_ERROR)
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
 				NeighborEdge probeEdge = probeStar[probeIndex];
 				double referenceDiff = DoubleAngle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
-				if (referenceDiff <= Parameters.maxAngleError || referenceDiff >= complementaryAngleError) {
+				if (referenceDiff <= Parameters.MAX_ANGLE_ERROR || referenceDiff >= complementaryAngleError) {
 					double neighborDiff = DoubleAngle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
-					if (neighborDiff <= Parameters.maxAngleError || neighborDiff >= complementaryAngleError) {
+					if (neighborDiff <= Parameters.MAX_ANGLE_ERROR || neighborDiff >= complementaryAngleError) {
 						MinutiaPair pair = allocate();
 						pair.probe = probeEdge.neighbor;
 						pair.candidate = candidateEdge.neighbor;

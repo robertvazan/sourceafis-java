@@ -36,7 +36,7 @@ class Skeleton {
 				partial.set(x, y, input.get(x, y));
 		BooleanMatrix thinned = new BooleanMatrix(size);
 		boolean removedAnything = true;
-		for (int i = 0; i < Parameters.thinningIterations && removedAnything; ++i) {
+		for (int i = 0; i < Parameters.THINNING_ITERATIONS && removedAnything; ++i) {
 			removedAnything = false;
 			for (int evenY = 0; evenY < 2; ++evenY)
 				for (int evenX = 0; evenX < 2; ++evenX)
@@ -226,7 +226,7 @@ class Skeleton {
 					SkeletonRidge arm2 = minutia.ridges.get((exit + 2) % 3);
 					if (arm1.end() == arm2.end() && exitRidge.end() != arm1.end() && arm1.end() != minutia && exitRidge.end() != minutia) {
 						SkeletonMinutia end = arm1.end();
-						if (end.ridges.size() == 3 && arm1.points.size() <= Parameters.maxPoreArm && arm2.points.size() <= Parameters.maxPoreArm) {
+						if (end.ridges.size() == 3 && arm1.points.size() <= Parameters.MAX_PORE_ARM && arm2.points.size() <= Parameters.MAX_PORE_ARM) {
 							arm1.detach();
 							arm2.detach();
 							SkeletonRidge merged = new SkeletonRidge();
@@ -255,10 +255,10 @@ class Skeleton {
 	private void removeGaps() {
 		PriorityQueue<Gap> queue = new PriorityQueue<>();
 		for (SkeletonMinutia end1 : minutiae)
-			if (end1.ridges.size() == 1 && end1.ridges.get(0).points.size() >= Parameters.shortestJoinedEnding)
+			if (end1.ridges.size() == 1 && end1.ridges.get(0).points.size() >= Parameters.SHORTEST_JOINED_ENDING)
 				for (SkeletonMinutia end2 : minutiae)
 					if (end2 != end1 && end2.ridges.size() == 1 && end1.ridges.get(0).end() != end2
-						&& end2.ridges.get(0).points.size() >= Parameters.shortestJoinedEnding && isWithinGapLimits(end1, end2)) {
+						&& end2.ridges.get(0).points.size() >= Parameters.SHORTEST_JOINED_ENDING && isWithinGapLimits(end1, end2)) {
 						Gap gap = new Gap();
 						gap.distance = end1.position.minus(end2.position).lengthSq();
 						gap.end1 = end1;
@@ -280,28 +280,28 @@ class Skeleton {
 	}
 	private boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
 		int distanceSq = end1.position.minus(end2.position).lengthSq();
-		if (distanceSq <= Integers.sq(Parameters.maxRuptureSize))
+		if (distanceSq <= Integers.sq(Parameters.MAX_RUPTURE_SIZE))
 			return true;
-		if (distanceSq > Integers.sq(Parameters.maxGapSize))
+		if (distanceSq > Integers.sq(Parameters.MAX_GAP_SIZE))
 			return false;
 		double gapDirection = DoubleAngle.atan(end1.position, end2.position);
 		double direction1 = DoubleAngle.atan(end1.position, angleSampleForGapRemoval(end1));
-		if (DoubleAngle.distance(direction1, DoubleAngle.opposite(gapDirection)) > Parameters.maxGapAngle)
+		if (DoubleAngle.distance(direction1, DoubleAngle.opposite(gapDirection)) > Parameters.MAX_GAP_ANGLE)
 			return false;
 		double direction2 = DoubleAngle.atan(end2.position, angleSampleForGapRemoval(end2));
-		if (DoubleAngle.distance(direction2, gapDirection) > Parameters.maxGapAngle)
+		if (DoubleAngle.distance(direction2, gapDirection) > Parameters.MAX_GAP_ANGLE)
 			return false;
 		return true;
 	}
 	private IntPoint angleSampleForGapRemoval(SkeletonMinutia minutia) {
 		SkeletonRidge ridge = minutia.ridges.get(0);
-		if (Parameters.gapAngleOffset < ridge.points.size())
-			return ridge.points.get(Parameters.gapAngleOffset);
+		if (Parameters.GAP_ANGLE_OFFSET < ridge.points.size())
+			return ridge.points.get(Parameters.GAP_ANGLE_OFFSET);
 		else
 			return ridge.end().position;
 	}
 	private boolean isRidgeOverlapping(IntPoint[] line, BooleanMatrix shadow) {
-		for (int i = Parameters.toleratedGapOverlap; i < line.length - Parameters.toleratedGapOverlap; ++i)
+		for (int i = Parameters.TOLERATED_GAP_OVERLAP; i < line.length - Parameters.TOLERATED_GAP_OVERLAP; ++i)
 			if (shadow.get(line[i]))
 				return true;
 		return false;
@@ -318,7 +318,7 @@ class Skeleton {
 	private void removeTails() {
 		for (SkeletonMinutia minutia : minutiae) {
 			if (minutia.ridges.size() == 1 && minutia.ridges.get(0).end().ridges.size() >= 3)
-				if (minutia.ridges.get(0).points.size() < Parameters.minTailLength)
+				if (minutia.ridges.get(0).points.size() < Parameters.MIN_TAIL_LENGTH)
 					minutia.ridges.get(0).detach();
 		}
 		removeDots();
@@ -330,7 +330,7 @@ class Skeleton {
 		for (SkeletonMinutia minutia : minutiae)
 			if (minutia.ridges.size() == 1) {
 				SkeletonRidge ridge = minutia.ridges.get(0);
-				if (ridge.end().ridges.size() == 1 && ridge.points.size() < Parameters.minFragmentLength)
+				if (ridge.end().ridges.size() == 1 && ridge.points.size() < Parameters.MIN_FRAGMENT_LENGTH)
 					ridge.detach();
 			}
 		removeDots();

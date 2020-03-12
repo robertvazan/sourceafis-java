@@ -208,20 +208,20 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	/*
 	 * To avoid null checks everywhere, we have one noop class as a fallback.
 	 */
-	private static final FingerprintTransparency none;
+	private static final FingerprintTransparency NOOP;
 	private static class NoFingerprintTransparency extends FingerprintTransparency {
 		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
 		}
 	}
 	static {
-		none = new NoFingerprintTransparency();
+		NOOP = new NoFingerprintTransparency();
 		/*
 		 * Deactivate logging to the noop logger as soon as it is created.
 		 */
-		none.close();
+		NOOP.close();
 	}
 	static FingerprintTransparency current() {
-		return Optional.ofNullable(current.get()).orElse(none);
+		return Optional.ofNullable(current.get()).orElse(NOOP);
 	}
 	/*
 	 * Just preparing the data for logging may be expensive.
@@ -230,7 +230,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * Right now all such checks are done inside this class.
 	 */
 	boolean logging() {
-		return this != none;
+		return this != NOOP;
 	}
 	// https://sourceafis.machinezoo.com/transparency/decoded-image
 	void logDecodedImage(DoubleMatrix image) {

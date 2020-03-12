@@ -39,7 +39,7 @@ public class FingerprintMatcher {
 	 * + sum()
 	 * + thresholdAtFMR(double) - might have variant, still unclear
 	 */
-	private volatile ImmutableMatcher immutable = ImmutableMatcher.empty;
+	private volatile ImmutableMatcher immutable = ImmutableMatcher.NULL;
 	/**
 	 * Instantiate an empty fingerprint matcher.
 	 * Empty matcher does not match any {@link FingerprintTemplate} passed to {@link #match(FingerprintTemplate)}.
@@ -104,14 +104,14 @@ public class FingerprintMatcher {
 		return map;
 	}
 	private List<Integer> shapeCoverage(EdgeShape edge) {
-		int minLengthBin = (edge.length - Parameters.maxDistanceError) / Parameters.maxDistanceError;
-		int maxLengthBin = (edge.length + Parameters.maxDistanceError) / Parameters.maxDistanceError;
-		int angleBins = (int)Math.ceil(2 * Math.PI / Parameters.maxAngleError);
-		int minReferenceBin = (int)(DoubleAngle.difference(edge.referenceAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
-		int maxReferenceBin = (int)(DoubleAngle.add(edge.referenceAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
+		int minLengthBin = (edge.length - Parameters.MAX_DISTANCE_ERROR) / Parameters.MAX_DISTANCE_ERROR;
+		int maxLengthBin = (edge.length + Parameters.MAX_DISTANCE_ERROR) / Parameters.MAX_DISTANCE_ERROR;
+		int angleBins = (int)Math.ceil(2 * Math.PI / Parameters.MAX_ANGLE_ERROR);
+		int minReferenceBin = (int)(DoubleAngle.difference(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
+		int maxReferenceBin = (int)(DoubleAngle.add(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
 		int endReferenceBin = (maxReferenceBin + 1) % angleBins;
-		int minNeighborBin = (int)(DoubleAngle.difference(edge.neighborAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
-		int maxNeighborBin = (int)(DoubleAngle.add(edge.neighborAngle, Parameters.maxAngleError) / Parameters.maxAngleError);
+		int minNeighborBin = (int)(DoubleAngle.difference(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
+		int maxNeighborBin = (int)(DoubleAngle.add(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
 		int endNeighborBin = (maxNeighborBin + 1) % angleBins;
 		List<Integer> coverage = new ArrayList<>();
 		for (int lengthBin = minLengthBin; lengthBin <= maxLengthBin; ++lengthBin)

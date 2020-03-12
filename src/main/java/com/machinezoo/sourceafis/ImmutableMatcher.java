@@ -5,11 +5,11 @@ import java.util.*;
 import it.unimi.dsi.fastutil.ints.*;
 
 class ImmutableMatcher {
-	static final ImmutableMatcher empty = new ImmutableMatcher();
+	static final ImmutableMatcher NULL = new ImmutableMatcher();
 	final ImmutableTemplate template;
 	final Int2ObjectMap<List<IndexedEdge>> edgeHash;
 	private ImmutableMatcher() {
-		template = ImmutableTemplate.empty;
+		template = ImmutableTemplate.EMPTY;
 		edgeHash = new Int2ObjectOpenHashMap<>();
 	}
 	ImmutableMatcher(ImmutableTemplate template, Int2ObjectMap<List<IndexedEdge>> edgeHash) {

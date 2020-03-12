@@ -47,8 +47,8 @@ class SkeletonRidge {
 		end(null);
 	}
 	double direction() {
-		int first = Parameters.ridgeDirectionSkip;
-		int last = Parameters.ridgeDirectionSkip + Parameters.ridgeDirectionSample - 1;
+		int first = Parameters.RIDGE_DIRECTION_SKIP;
+		int last = Parameters.RIDGE_DIRECTION_SKIP + Parameters.RIDGE_DIRECTION_SAMPLE - 1;
 		if (last >= points.size()) {
 			int shift = last - points.size() + 1;
 			last -= shift;
