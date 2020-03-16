@@ -2,12 +2,9 @@
 package com.machinezoo.sourceafis;
 
 import static java.util.stream.Collectors.*;
-import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
-import org.apache.commons.io.*;
 import org.slf4j.*;
-import com.machinezoo.noexception.*;
 
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.
@@ -31,14 +28,7 @@ import com.machinezoo.noexception.*;
  */
 public class FingerprintCompatibility {
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
-	private static String version;
-	static {
-		Exceptions.sneak().run(() -> {
-			try (InputStream stream = FingerprintCompatibility.class.getResourceAsStream("version.txt")) {
-				version = IOUtils.toString(stream, StandardCharsets.UTF_8).trim();
-			}
-		});
-	}
+	private static String version = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
 	/**
 	 * Get version of the currently running SourceAFIS.
 	 * This is useful during upgrades when the application has to deal

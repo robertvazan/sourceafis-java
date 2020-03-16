@@ -88,14 +88,6 @@ abstract class ImageDecoder {
 			.map(ex -> ex.toString())
 			.collect(joining(" -> "));
 	}
-	static boolean hasClass(String name) {
-		try {
-			Class.forName(name);
-			return true;
-		} catch (Throwable ex) {
-			return false;
-		}
-	}
 	/*
 	 * Image decoder using built-in ImageIO from JRE.
 	 * While ImageIO has its own extension mechanism, theoretically supporting any format,
@@ -103,7 +95,7 @@ abstract class ImageDecoder {
 	 */
 	private static class ImageIODecoder extends ImageDecoder {
 		@Override boolean available() {
-			return hasClass("javax.imageio.ImageIO");
+			return PlatformCheck.hasClass("javax.imageio.ImageIO");
 		}
 		@Override String name() {
 			return "ImageIO";
@@ -135,7 +127,7 @@ abstract class ImageDecoder {
 			 * We aren't testing for presence of Sanselan class, because that one is always present
 			 * (provided by maven). We instead check for AWT, which Sanselan depends on.
 			 */
-			return hasClass("java.awt.image.BufferedImage");
+			return PlatformCheck.hasClass("java.awt.image.BufferedImage");
 		}
 		@Override String name() {
 			return "Sanselan";
@@ -192,7 +184,7 @@ abstract class ImageDecoder {
 	 */
 	private static class AndroidDecoder extends ImageDecoder {
 		@Override boolean available() {
-			return hasClass("android.graphics.BitmapFactory");
+			return PlatformCheck.hasClass("android.graphics.BitmapFactory");
 		}
 		@Override String name() {
 			return "Android";
