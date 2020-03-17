@@ -54,11 +54,11 @@ class MatcherThread {
 			int totalRoots = enumerateRoots();
 			// https://sourceafis.machinezoo.com/transparency/root-pairs
 			transparency.logRootPairs(totalRoots, roots);
-			double high = -1;
+			double high = 0;
 			int best = -1;
 			for (int i = 0; i < totalRoots; ++i) {
 				double partial = tryRoot(roots[i]);
-				if (partial > high) {
+				if (best < 0 || partial > high) {
 					high = partial;
 					best = i;
 				}
