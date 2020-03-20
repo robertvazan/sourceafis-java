@@ -38,12 +38,14 @@ public class FingerprintTransparencyTest {
 			new FingerprintMatcher()
 				.index(probe)
 				.match(matching);
+			assertThat(transparency.keywords, is(not(empty())));
 		}
 	}
 	@Test public void deserialization() {
 		byte[] serialized = FingerprintTemplateTest.probe().toByteArray();
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(serialized);
+			assertThat(transparency.keywords, is(not(empty())));
 		}
 	}
 }
