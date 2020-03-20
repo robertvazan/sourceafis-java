@@ -19,8 +19,8 @@ import com.machinezoo.noexception.*;
  * {@link FingerprintImage} can be converted to template by calling {@link #FingerprintTemplate(FingerprintImage)} constructor.
  * <p>
  * Since image processing is expensive, applications should cache serialized templates.
- * Serialization into JSON format is performed by {@link #serialize()} method.
- * JSON template can be deserialized by calling {@link #deserialize(String)}.
+ * Serialization into JSON format is performed by {@link #toByteArray()} method.
+ * JSON template can be deserialized by calling {@link #FingerprintTemplate(byte[])}.
  * on an empty fingerprint template instantiated with {@link #FingerprintTemplate()} constructor.
  * <p>
  * Matching is performed by constructing {@link FingerprintMatcher},
@@ -132,6 +132,8 @@ public class FingerprintTemplate {
 			builder.deserialize(json);
 			immutable = new ImmutableTemplate(builder);
 		} catch (Throwable ex) {
+			if (!foreignToo)
+				throw ex;
 			try {
 				FingerprintTemplate converted = FingerprintCompatibility.convert(serialized);
 				immutable = converted.immutable;
@@ -251,7 +253,6 @@ public class FingerprintTemplate {
 	 * @throws RuntimeException
 	 *             if {@code json} is is not in the correct format or it is corrupted
 	 * 
-	 * @see #serialize()
 	 * @see #FingerprintTemplate(byte[])
 	 */
 	@Deprecated public FingerprintTemplate deserialize(String json) {
@@ -317,9 +318,7 @@ public class FingerprintTemplate {
 	 *            foreign template to import
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see #create(byte[])
-	 * @see #deserialize(String)
-	 * @see #serialize()
+	 * @see #FingerprintTemplate(byte[])
 	 */
 	@Deprecated public FingerprintTemplate convert(byte[] template) {
 		immutable = FingerprintCompatibility.convert(template).immutable;
