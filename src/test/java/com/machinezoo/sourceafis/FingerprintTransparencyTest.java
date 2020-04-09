@@ -13,7 +13,7 @@ public class FingerprintTransparencyTest {
 		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
 			keywords.add(keyword);
 			for (Map.Entry<String, Supplier<byte[]>> entry : data.entrySet()) {
-				assertThat(keyword, entry.getKey(), is(oneOf(".json", ".dat")));
+				assertThat(keyword, entry.getKey(), is(oneOf(".cbor", ".dat")));
 				assertThat(keyword, entry.getValue().get().length, greaterThan(0));
 			}
 		}

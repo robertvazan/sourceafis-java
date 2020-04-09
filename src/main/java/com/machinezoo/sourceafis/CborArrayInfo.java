@@ -1,7 +1,7 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-class JsonArrayInfo {
+class CborArrayInfo {
 	String[] axes;
 	int[] dimensions;
 	String scalar;

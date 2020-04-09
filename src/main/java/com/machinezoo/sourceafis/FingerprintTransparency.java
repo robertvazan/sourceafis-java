@@ -4,12 +4,14 @@ package com.machinezoo.sourceafis;
 import static java.util.stream.Collectors.*;
 import java.io.*;
 import java.nio.*;
-import java.nio.charset.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.zip.*;
-import com.google.gson.*;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.*;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.dataformat.cbor.*;
 import com.machinezoo.noexception.*;
 import it.unimi.dsi.fastutil.ints.*;
 
@@ -37,8 +39,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * - log()
 	 * - capture()
 	 * 
-	 * Switch from JSON to CBOR and incorporate binary data in CBOR.
-	 * That will allow us to use single byte array instead of current JSON/DAT split.
+	 * Use single CBOR-encoded byte array instead of current CBOR/DAT split.
 	 * When accepts() always returns false, the performance should be the same as with NOOP transparency logger.
 	 */
 	static {
@@ -81,7 +82,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * For convenience, several related pieces of transparency data are reported together.
 	 * All pieces are available via map in parameter {@code data},
 	 * keyed by file suffix identifying the kind of data,
-	 * usually {@code .json} or {@code .dat} for JSON and binary data respectively.
+	 * usually {@code .cbor} or {@code .dat} for CBOR and binary data respectively.
 	 * See <a href="https://sourceafis.machinezoo.com/transparency/">algorithm transparency</a>
 	 * on SourceAFIS website for documentation of the structure of the transparency data.
 	 * <p>
@@ -94,7 +95,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @param keyword
 	 *            specifies the kind of transparency data being reported
 	 * @param data
-	 *            a map of suffixes (like {@code .json} or {@code .dat}) to {@link Supplier} of the available transparency data
+	 *            a map of suffixes (like {@code .cbor} or {@code .dat}) to {@link Supplier} of the available transparency data
 	 * 
 	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
 	 * @see #zip(OutputStream)
@@ -117,7 +118,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @param keyword
 	 *            specifies the kind of transparency data being reported
 	 * @param data
-	 *            a map of suffixes (like {@code .json} or {@code .dat}) to {@link Supplier} of the available transparency data
+	 *            a map of suffixes (like {@code .cbor} or {@code .dat}) to {@link Supplier} of the available transparency data
 	 * 
 	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
 	 * @see #capture(String, Map)
@@ -188,7 +189,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			Exceptions.wrap().run(() -> {
 				List<String> suffixes = data.keySet().stream()
 					.sorted(Comparator.comparing(ext -> {
-						if (ext.equals(".json"))
+						if (ext.equals(".cbor"))
 							return 1;
 						if (ext.equals(".dat"))
 							return 2;
@@ -245,7 +246,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	// https://sourceafis.machinezoo.com/transparency/block-map
 	void logBlockMap(BlockMap blocks) {
-		log("block-map", ".json", json(() -> blocks));
+		log("block-map", ".cbor", cbor(() -> blocks));
 	}
 	// https://sourceafis.machinezoo.com/transparency/histogram
 	void logHistogram(HistogramCube histogram) {
@@ -369,7 +370,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	// https://sourceafis.machinezoo.com/transparency/edge-table
 	void logEdgeTable(NeighborEdge[][] table) {
-		log("edge-table", ".json", json(() -> table));
+		log("edge-table", ".cbor", cbor(() -> table));
 	}
 	// https://sourceafis.machinezoo.com/transparency/edge-hash
 	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> edgeHash) {
@@ -378,48 +379,48 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	// https://sourceafis.machinezoo.com/transparency/root-pairs
 	void logRootPairs(int count, MinutiaPair[] roots) {
 		if (logging())
-			log("root-pairs", ".json", json(() -> JsonPair.roots(count, roots)));
+			log("root-pairs", ".cbor", cbor(() -> CborPair.roots(count, roots)));
 	}
-	private List<JsonEdge> supportingEdges = new ArrayList<>();
+	private List<CborEdge> supportingEdges = new ArrayList<>();
 	// Accumulated and then added to https://sourceafis.machinezoo.com/transparency/pairing
 	void logSupportingEdge(MinutiaPair pair) {
 		if (logging())
-			supportingEdges.add(new JsonEdge(pair));
+			supportingEdges.add(new CborEdge(pair));
 	}
 	// https://sourceafis.machinezoo.com/transparency/pairing
 	void logPairing(int count, MinutiaPair[] pairs) {
 		if (logging()) {
-			log("pairing", ".json", json(() -> new JsonPairing(count, pairs, supportingEdges)));
+			log("pairing", ".cbor", cbor(() -> new CborPairing(count, pairs, supportingEdges)));
 			supportingEdges.clear();
 		}
 	}
-	@SuppressWarnings("unused") private static class JsonPairing {
-		JsonPair root;
-		List<JsonEdge> tree;
-		List<JsonEdge> support;
-		JsonPairing(int count, MinutiaPair[] pairs, List<JsonEdge> supporting) {
-			root = new JsonPair(pairs[0].probe, pairs[0].candidate);
-			tree = Arrays.stream(pairs).limit(count).skip(1).map(JsonEdge::new).collect(toList());
+	@SuppressWarnings("unused") private static class CborPairing {
+		CborPair root;
+		List<CborEdge> tree;
+		List<CborEdge> support;
+		CborPairing(int count, MinutiaPair[] pairs, List<CborEdge> supporting) {
+			root = new CborPair(pairs[0].probe, pairs[0].candidate);
+			tree = Arrays.stream(pairs).limit(count).skip(1).map(CborEdge::new).collect(toList());
 			support = supporting;
 		}
 	}
-	@SuppressWarnings("unused") private static class JsonPair {
+	@SuppressWarnings("unused") private static class CborPair {
 		int probe;
 		int candidate;
-		JsonPair(int probe, int candidate) {
+		CborPair(int probe, int candidate) {
 			this.probe = probe;
 			this.candidate = candidate;
 		}
-		static List<JsonPair> roots(int count, MinutiaPair[] roots) {
-			return Arrays.stream(roots).limit(count).map(p -> new JsonPair(p.probe, p.candidate)).collect(toList());
+		static List<CborPair> roots(int count, MinutiaPair[] roots) {
+			return Arrays.stream(roots).limit(count).map(p -> new CborPair(p.probe, p.candidate)).collect(toList());
 		}
 	}
-	@SuppressWarnings("unused") private static class JsonEdge {
+	@SuppressWarnings("unused") private static class CborEdge {
 		int probeFrom;
 		int probeTo;
 		int candidateFrom;
 		int candidateTo;
-		JsonEdge(MinutiaPair pair) {
+		CborEdge(MinutiaPair pair) {
 			probeFrom = pair.probeRef;
 			probeTo = pair.probe;
 			candidateFrom = pair.candidateRef;
@@ -429,28 +430,28 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	// https://sourceafis.machinezoo.com/transparency/score
 	void logScore(Score score) {
 		if (logging())
-			log("score", ".json", json(() -> score));
+			log("score", ".cbor", cbor(() -> score));
 	}
 	// https://sourceafis.machinezoo.com/transparency/best-match
 	void logBestMatch(int nth) {
 		if (logging())
-			log("best-match", ".json", json(() -> new JsonBestMatch(nth)));
+			log("best-match", ".cbor", cbor(() -> new CborBestMatch(nth)));
 	}
-	@SuppressWarnings("unused") private static class JsonBestMatch {
+	@SuppressWarnings("unused") private static class CborBestMatch {
 		int offset;
-		JsonBestMatch(int offset) {
+		CborBestMatch(int offset) {
 			this.offset = offset;
 		}
 	}
 	private void logSkeleton(String name, Skeleton skeleton) {
-		log(skeleton.type.prefix + name, ".json", json(() -> new JsonSkeleton(skeleton)), ".dat", skeleton::serialize);
+		log(skeleton.type.prefix + name, ".cbor", cbor(() -> new CborSkeleton(skeleton)), ".dat", skeleton::serialize);
 	}
-	@SuppressWarnings("unused") private static class JsonSkeleton {
+	@SuppressWarnings("unused") private static class CborSkeleton {
 		int width;
 		int height;
 		List<IntPoint> minutiae;
-		List<JsonSkeletonRidge> ridges;
-		JsonSkeleton(Skeleton skeleton) {
+		List<CborSkeletonRidge> ridges;
+		CborSkeleton(Skeleton skeleton) {
 			width = skeleton.size.x;
 			height = skeleton.size.y;
 			Map<SkeletonMinutia, Integer> offsets = new HashMap<>();
@@ -461,7 +462,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				.flatMap(m -> m.ridges.stream()
 					.filter(r -> r.points instanceof CircularList)
 					.map(r -> {
-						JsonSkeletonRidge jr = new JsonSkeletonRidge();
+						CborSkeletonRidge jr = new CborSkeletonRidge();
 						jr.start = offsets.get(r.start());
 						jr.end = offsets.get(r.end());
 						jr.length = r.points.size();
@@ -470,41 +471,43 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				.collect(toList());
 		}
 	}
-	@SuppressWarnings("unused") private static class JsonSkeletonRidge {
+	@SuppressWarnings("unused") private static class CborSkeletonRidge {
 		int start;
 		int end;
 		int length;
 	}
 	private void logMinutiae(String name, TemplateBuilder template) {
 		if (logging())
-			log(name, ".json", json(() -> new JsonTemplate(template.size, template.minutiae)));
+			log(name, ".cbor", cbor(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
 	private void logHistogram(String name, HistogramCube histogram) {
-		log(name, ".dat", histogram::serialize, ".json", json(histogram::json));
+		log(name, ".dat", histogram::serialize, ".cbor", cbor(histogram::cbor));
 	}
 	private void logPointMap(String name, DoublePointMatrix matrix) {
-		log(name, ".dat", matrix::serialize, ".json", json(matrix::json));
+		log(name, ".dat", matrix::serialize, ".cbor", cbor(matrix::cbor));
 	}
 	private void logDoubleMap(String name, DoubleMatrix matrix) {
-		log(name, ".dat", matrix::serialize, ".json", json(matrix::json));
+		log(name, ".dat", matrix::serialize, ".cbor", cbor(matrix::cbor));
 	}
 	private void logBooleanMap(String name, BooleanMatrix matrix) {
-		log(name, ".dat", matrix::serialize, ".json", json(matrix::json));
+		log(name, ".dat", matrix::serialize, ".cbor", cbor(matrix::cbor));
 	}
-	private Supplier<byte[]> json(Supplier<Object> supplier) {
-		return () -> new GsonBuilder().setPrettyPrinting().create().toJson(supplier.get()).getBytes(StandardCharsets.UTF_8);
+	private static final ObjectMapper mapper = new ObjectMapper(new CBORFactory())
+		.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
+	private Supplier<byte[]> cbor(Supplier<Object> supplier) {
+		return () -> Exceptions.wrap(IllegalArgumentException::new).get(() -> mapper.writeValueAsBytes(supplier.get()));
 	}
 	private AtomicInteger loggedVersion = new AtomicInteger();
 	private void logVersion() {
 		if (logging() && loggedVersion.getAndSet(1) == 0) {
 			Map<String, Supplier<byte[]>> map = new HashMap<>();
-			map.put(".json", json(() -> new JsonVersion(FingerprintCompatibility.version())));
+			map.put(".cbor", cbor(() -> new CborVersion(FingerprintCompatibility.version())));
 			capture("version", map);
 		}
 	}
-	@SuppressWarnings("unused") private static class JsonVersion {
+	@SuppressWarnings("unused") private static class CborVersion {
 		String version;
-		JsonVersion(String version) {
+		CborVersion(String version) {
 			this.version = version;
 		}
 	}

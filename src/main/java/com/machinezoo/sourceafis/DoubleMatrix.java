@@ -47,8 +47,8 @@ class DoubleMatrix {
 		buffer.asDoubleBuffer().put(array);
 		return buffer.array();
 	}
-	JsonArrayInfo json() {
-		JsonArrayInfo info = new JsonArrayInfo();
+	CborArrayInfo cbor() {
+		CborArrayInfo info = new CborArrayInfo();
 		info.axes = new String[] { "y", "x" };
 		info.dimensions = new int[] { height, width };
 		info.scalar = "double";

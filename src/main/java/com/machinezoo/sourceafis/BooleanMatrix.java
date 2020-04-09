@@ -59,8 +59,8 @@ class BooleanMatrix {
 			buffer.put((byte)(get(at) ? 1 : 0));
 		return buffer.array();
 	}
-	JsonArrayInfo json() {
-		JsonArrayInfo info = new JsonArrayInfo();
+	CborArrayInfo cbor() {
+		CborArrayInfo info = new CborArrayInfo();
 		info.axes = new String[] { "y", "x" };
 		info.dimensions = new int[] { height, width };
 		info.scalar = "boolean";
