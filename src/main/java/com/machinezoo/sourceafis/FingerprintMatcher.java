@@ -41,7 +41,7 @@ public class FingerprintMatcher {
 	 */
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.NULL;
 	/**
-	 * Instantiate an empty fingerprint matcher.
+	 * Instantiates an empty fingerprint matcher.
 	 * Empty matcher does not match any {@link FingerprintTemplate} passed to {@link #match(FingerprintTemplate)}.
 	 * You can call {@link #index(FingerprintTemplate)} to index probe fingerprint
 	 * and {@link #match(FingerprintTemplate)} to match it to some candidate fingerprint.
@@ -51,7 +51,7 @@ public class FingerprintMatcher {
 	public FingerprintMatcher() {
 	}
 	/**
-	 * Enable algorithm transparency.
+	 * Enables algorithm transparency.
 	 * Since {@link FingerprintTransparency} is activated automatically via thread-local variable
 	 * in recent versions of SourceAFIS, this method does nothing in current version of SourceAFIS.
 	 * It will be removed in some later version.
@@ -66,7 +66,7 @@ public class FingerprintMatcher {
 		return this;
 	}
 	/**
-	 * Build search data structures over probe fingerprint template.
+	 * Builds search data structures over probe fingerprint template.
 	 * Once this method is called, it is possible to call {@link #match(FingerprintTemplate)} to compare fingerprints.
 	 * <p>
 	 * This method is heavy in terms of RAM footprint and CPU usage.
@@ -121,7 +121,7 @@ public class FingerprintMatcher {
 		return coverage;
 	}
 	/**
-	 * Match candidate fingerprint to probe fingerprint and calculate similarity score.
+	 * Matches candidate fingerprint to probe fingerprint and calculates similarity score.
 	 * Candidate fingerprint in {@code candidate} parameter is matched to probe fingerprint previously passed to {@link #index(FingerprintTemplate)}.
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.

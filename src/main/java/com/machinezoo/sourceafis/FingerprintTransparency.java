@@ -72,7 +72,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		current.set(this);
 	}
 	/**
-	 * Record transparency data. Subclasses must override this method, because the default implementation does nothing.
+	 * Records transparency data. Subclasses must override this method, because the default implementation does nothing.
 	 * While this {@code FingerprintTransparency} object is active (between call to the constructor and call to {@link #close()}),
 	 * this method is called with transparency data in its parameters.
 	 * <p>
@@ -109,7 +109,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log(keyword, translated);
 	}
 	/**
-	 * Record transparency data in buffers.
+	 * Records transparency data in buffers.
 	 * This is a deprecated variant of {@link #capture(String, Map)}
 	 * that uses {@link ByteBuffer} instead of plain byte arrays.
 	 * This method is only called if {@link #capture(String, Map)} is not overridden.
@@ -125,7 +125,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	@Deprecated protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
 	}
 	/**
-	 * Deactivate transparency logging and release system resources held by this instance if any.
+	 * Deactivates transparency logging and releases system resources held by this instance if any.
 	 * This method is normally called automatically when {@code FingerprintTransparency} is used in try-with-resources construct.
 	 * <p>
 	 * Deactivation stops transparency data logging to this instance of {@code FingerprintTransparency},
@@ -156,7 +156,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	private boolean closed;
 	/**
-	 * Write all transparency data to a ZIP file.
+	 * Writes all transparency data to a ZIP file.
 	 * This is a convenience method to enable easy exploration of the available data.
 	 * Programmatic processing of transparency data should be done by subclassing {@code FingerprintTransparency}
 	 * and overriding {@link #capture(String, Map)} method.

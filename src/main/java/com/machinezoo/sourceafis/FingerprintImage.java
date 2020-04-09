@@ -28,7 +28,7 @@ public class FingerprintImage {
 		PlatformCheck.run();
 	}
 	/**
-	 * Create new container for fingerprint image data.
+	 * Creates new container for fingerprint image data.
 	 * The newly constructed instance cannot be used to create {@link FingerprintTemplate}
 	 * until at least pixel data is provided by calling {@link #decode(byte[])} or {@link #grayscale(int, int, byte[])}.
 	 * 
@@ -39,7 +39,7 @@ public class FingerprintImage {
 	}
 	double dpi = 500;
 	/**
-	 * Set DPI (dots per inch) of the fingerprint image.
+	 * Sets DPI (dots per inch) of the fingerprint image.
 	 * This is the DPI of the image passed to {@link #decode(byte[])} or {@link #grayscale(int, int, byte[])}.
 	 * Check your fingerprint reader specification for correct DPI value. Default DPI is 500.
 	 * 
@@ -59,7 +59,7 @@ public class FingerprintImage {
 	}
 	DoubleMatrix matrix;
 	/**
-	 * Decode fingerprint image in standard format.
+	 * Decodes fingerprint image in standard format.
 	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
 	 * <p>
 	 * The image may be in any format commonly used to store fingerprint images, including PNG, JPEG, BMP, TIFF, or WSQ.
@@ -96,7 +96,7 @@ public class FingerprintImage {
 		return this;
 	}
 	/**
-	 * Load raw grayscale fingerprint image from byte array.
+	 * Reads raw grayscale fingerprint image from byte array.
 	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
 	 * <p>
 	 * Pixels are represented as 8-bit unsigned bytes with 0 meaning black and 255 meaning white.

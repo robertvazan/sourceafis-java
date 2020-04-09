@@ -82,7 +82,7 @@ public class FingerprintTemplate {
 	volatile ImmutableTemplate immutable = ImmutableTemplate.EMPTY;
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	/**
-	 * Create fingerprint template from fingerprint image.
+	 * Creates fingerprint template from fingerprint image.
 	 * <p>
 	 * This constructor runs an expensive feature extractor algorithm,
 	 * which analyzes the image and collects identifiable biometric features from it.
@@ -100,7 +100,7 @@ public class FingerprintTemplate {
 		immutable = new ImmutableTemplate(builder);
 	}
 	/**
-	 * Deserialize fingerprint template from compressed JSON.
+	 * Deserializes fingerprint template from compressed JSON.
 	 * This constructor reads gzip-compressed JSON template produced by {@link #toByteArray()}
 	 * and reconstructs an exact copy of the original fingerprint template.
 	 * <p>
@@ -153,7 +153,7 @@ public class FingerprintTemplate {
 		}
 	}
 	/**
-	 * Instantiate an empty fingerprint template. This constructor is deprecated.
+	 * Instantiates an empty fingerprint template. This constructor is deprecated.
 	 * In the past, it was used together with methods {@link #create(byte[])}, {@link #deserialize(String)},
 	 * and {@link #convert(byte[])}, which are all deprecated now.
 	 * Use {@link #FingerprintTemplate(FingerprintImage)} and {@link #FingerprintTemplate(byte[])} instead.
@@ -164,7 +164,7 @@ public class FingerprintTemplate {
 	@Deprecated public FingerprintTemplate() {
 	}
 	/**
-	 * Get the empty template with no biometric data.
+	 * Gets the empty template with no biometric data.
 	 * Empty template is useful as a fallback to simplify code.
 	 * It contains no biometric data and it doesn't match any other template including itself.
 	 * There is only one global instance. This method doesn't instantiate any new objects.
@@ -179,7 +179,7 @@ public class FingerprintTemplate {
 		this.immutable = immutable;
 	}
 	/**
-	 * Enable algorithm transparency.
+	 * Enables algorithm transparency.
 	 * Since {@link FingerprintTransparency} is activated automatically via thread-local variable
 	 * in recent versions of SourceAFIS, this method does nothing in current version of SourceAFIS.
 	 * It will be removed in some later version.
@@ -195,7 +195,7 @@ public class FingerprintTemplate {
 	}
 	private double dpi = 500;
 	/**
-	 * Set DPI (dots per inch) of the fingerprint image.
+	 * Sets DPI (dots per inch) of the fingerprint image.
 	 * This is the DPI of the image later passed to {@link #create(byte[])}.
 	 * Check your fingerprint reader specification for correct DPI value. Default DPI is 500.
 	 * <p>
@@ -213,7 +213,7 @@ public class FingerprintTemplate {
 		return this;
 	}
 	/**
-	 * Create fingerprint template from fingerprint image.
+	 * Creates fingerprint template from fingerprint image.
 	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
 	 * <p>
 	 * The image may be in any format commonly used to store fingerprint images, including PNG, JPEG, BMP, TIFF, or WSQ.
@@ -241,7 +241,7 @@ public class FingerprintTemplate {
 		return this;
 	}
 	/**
-	 * Deserialize fingerprint template from JSON string.
+	 * Deserializes fingerprint template from JSON string.
 	 * This method does the same thing as {@link #FingerprintTemplate(byte[])} constructor
 	 * except it uses plain JSON format produced by {@link #serialize()}.
 	 * Use {@link #toByteArray()}} and {@link #FingerprintTemplate(byte[])} instead.
@@ -266,7 +266,7 @@ public class FingerprintTemplate {
 		return this;
 	}
 	/**
-	 * Serialize fingerprint template as compressed JSON.
+	 * Serializes fingerprint template as compressed JSON.
 	 * Serialized template can be stored in a database or sent over network.
 	 * It can be deserialized by calling {@link #FingerprintTemplate(byte[])} constructor.
 	 * Persisting templates alongside fingerprint images allows applications to start faster,
@@ -298,7 +298,7 @@ public class FingerprintTemplate {
 		return buffer.toByteArray();
 	}
 	/**
-	 * Serialize fingerprint template to JSON string.
+	 * Serializes fingerprint template to JSON string.
 	 * This deprecated method is equivalent to {@link #toByteArray()}
 	 * except that the output format is an uncompressed JSON string.
 	 * 
@@ -311,7 +311,7 @@ public class FingerprintTemplate {
 		return new Gson().toJson(new JsonTemplate(current.size, current.minutiae));
 	}
 	/**
-	 * Import ANSI INCITS 378 or ISO 19794-2 fingerprint template from another fingerprint recognition system.
+	 * Imports ANSI INCITS 378 or ISO 19794-2 fingerprint template from another fingerprint recognition system.
 	 * <p>
 	 * This method replaces any previously added biometric data in this template.
 	 * <p>

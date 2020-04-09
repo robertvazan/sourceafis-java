@@ -33,7 +33,7 @@ public class FingerprintCompatibility {
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	private static String version = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
 	/**
-	 * Get version of the currently running SourceAFIS.
+	 * Gets version of the currently running SourceAFIS.
 	 * This is useful during upgrades when the application has to deal
 	 * with possible template incompatibility between versions.
 	 * 
@@ -45,7 +45,7 @@ public class FingerprintCompatibility {
 	private FingerprintCompatibility() {
 	}
 	/**
-	 * Convert foreign fingerprint template to native SourceAFIS template.
+	 * Converts foreign fingerprint template to native SourceAFIS template.
 	 * This is a convenience wrapper around {@link #convertAll(byte[])}
 	 * that returns the first fingerprint in the template or throws if there are none.
 	 * <p>
@@ -75,7 +75,7 @@ public class FingerprintCompatibility {
 			.orElseThrow(() -> new IllegalArgumentException("No fingerprints found in the template"));
 	}
 	/**
-	 * Convert foreign fingerprint template to a list of native SourceAFIS templates.
+	 * Converts foreign fingerprint template to a list of native SourceAFIS templates.
 	 * This method accepts all template formats documented on the
 	 * <a href="https://templates.machinezoo.com/">template formats website</a>,
 	 * specifically all versions of ANSI 378 and the initial version of ISO 19794-2.
@@ -131,7 +131,7 @@ public class FingerprintCompatibility {
 		}
 	}
 	/**
-	 * Convert native fingerprint template to ANSI 378-2004 template.
+	 * Converts native fingerprint template to ANSI 378-2004 template.
 	 * This method produces fingerprint template conforming to
 	 * <a href="https://templates.machinezoo.com/ansi-incits-378-2004">ANSI INCITS 378-2004</a>.
 	 * The template can then be used by fingerprint matcher other than SourceAFIS.
@@ -154,7 +154,7 @@ public class FingerprintCompatibility {
 		return foreign.write();
 	}
 	/**
-	 * Convert native fingerprint template to ANSI 378-2009 template.
+	 * Converts native fingerprint template to ANSI 378-2009 template.
 	 * This method produces fingerprint template conforming to
 	 * <a href="https://templates.machinezoo.com/ansi-incits-378-2009-r2014">ANSI INCITS 378-2009[R2014]</a>.
 	 * The template can then be used by fingerprint matcher other than SourceAFIS.
@@ -177,7 +177,7 @@ public class FingerprintCompatibility {
 		return foreign.write();
 	}
 	/**
-	 * Convert native fingerprint template to ANSI 378-2009/AM1 template.
+	 * Converts native fingerprint template to ANSI 378-2009/AM1 template.
 	 * This method produces fingerprint template conforming to
 	 * <a href="https://templates.machinezoo.com/ansi-incits-378-2009-am1-2010-r2015">ANSI INCITS 378:2009/AM 1:2010[R2015]</a>.
 	 * The template can then be used by fingerprint matcher other than SourceAFIS.
