@@ -41,6 +41,9 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * That will allow us to use single byte array instead of current JSON/DAT split.
 	 * When accepts() always returns false, the performance should be the same as with NOOP transparency logger.
 	 */
+	static {
+		PlatformCheck.run();
+	}
 	/*
 	 * Having transparency objects tied to current thread spares us of contaminating all classes with transparency APIs.
 	 * Transparency object is activated on the thread the moment it is created.

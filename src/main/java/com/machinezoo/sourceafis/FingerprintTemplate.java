@@ -72,6 +72,9 @@ public class FingerprintTemplate {
 	 * + add(FingerprintTemplate)
 	 * + FingerprintTemplate fuse()
 	 */
+	static {
+		PlatformCheck.run();
+	}
 	/*
 	 * We should drop this indirection once deprecated methods are dropped
 	 * and FingerprintTemplate itself becomes immutable.

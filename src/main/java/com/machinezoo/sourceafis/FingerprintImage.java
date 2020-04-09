@@ -24,6 +24,9 @@ public class FingerprintImage {
 	 * + position(FingerprintPosition)
 	 * + other fingerprint properties
 	 */
+	static {
+		PlatformCheck.run();
+	}
 	/**
 	 * Create new container for fingerprint image data.
 	 * The newly constructed instance cannot be used to create {@link FingerprintTemplate}

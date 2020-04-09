@@ -27,6 +27,9 @@ import org.slf4j.*;
  * @see <a href="https://templates.machinezoo.com/discouraged">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
+	static {
+		PlatformCheck.run();
+	}
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	private static String version = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
 	/**
