@@ -1,7 +1,6 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import java.nio.*;
 import java.util.*;
 
 class Skeleton {
@@ -374,11 +373,5 @@ class Skeleton {
 						shadow.set(point, true);
 		}
 		return shadow;
-	}
-	byte[] serialize() {
-		ByteBuffer buffer = ByteBuffer.allocate(minutiae.stream().mapToInt(m -> m.serializedSize()).sum());
-		for (SkeletonMinutia minutia : minutiae)
-			minutia.write(buffer);
-		return buffer.array();
 	}
 }

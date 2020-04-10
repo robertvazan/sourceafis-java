@@ -1,7 +1,6 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import java.nio.*;
 import java.util.*;
 
 class IntPoint implements Iterable<IntPoint> {
@@ -74,13 +73,6 @@ class IntPoint implements Iterable<IntPoint> {
 				result[0] = this;
 		}
 		return result;
-	}
-	void write(ByteBuffer buffer) {
-		buffer.putInt(x);
-		buffer.putInt(y);
-	}
-	static int serializedSize() {
-		return 8;
 	}
 	private List<Object> fields() {
 		return Arrays.asList(x, y);

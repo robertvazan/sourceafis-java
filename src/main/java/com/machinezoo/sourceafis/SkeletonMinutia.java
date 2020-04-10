@@ -1,7 +1,6 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import java.nio.*;
 import java.util.*;
 
 class SkeletonMinutia {
@@ -22,14 +21,6 @@ class SkeletonMinutia {
 			if (ridge.start() == this)
 				ridge.start(null);
 		}
-	}
-	void write(ByteBuffer buffer) {
-		for (SkeletonRidge ridge : ridges)
-			if (ridge.points instanceof CircularList)
-				ridge.write(buffer);
-	}
-	int serializedSize() {
-		return ridges.stream().filter(r -> r.points instanceof CircularList).mapToInt(r -> r.serializedSize()).sum();
 	}
 	@Override public String toString() {
 		return String.format("%s*%d", position.toString(), ridges.size());

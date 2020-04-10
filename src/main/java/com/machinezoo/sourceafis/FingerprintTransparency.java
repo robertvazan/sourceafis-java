@@ -39,7 +39,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * - log()
 	 * - capture()
 	 * 
-	 * Use single CBOR-encoded byte array instead of current CBOR/DAT split.
 	 * When accepts() always returns false, the performance should be the same as with NOOP transparency logger.
 	 */
 	static {
@@ -373,8 +372,22 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		log("edge-table", ".cbor", cbor(() -> table));
 	}
 	// https://sourceafis.machinezoo.com/transparency/edge-hash
-	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> edgeHash) {
-		log("edge-hash", ".dat", () -> IndexedEdge.serialize(edgeHash));
+	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> hash) {
+		log("edge-hash", ".cbor", cbor(() -> {
+			return Arrays.stream(hash.keySet().toIntArray())
+				.sorted()
+				.mapToObj(key -> {
+					CborHashEntry entry = new CborHashEntry();
+					entry.key = key;
+					entry.edges = hash.get(key);
+					return entry;
+				})
+				.collect(toList());
+		}));
+	}
+	@SuppressWarnings("unused") private static class CborHashEntry {
+		int key;
+		List<IndexedEdge> edges;
 	}
 	// https://sourceafis.machinezoo.com/transparency/root-pairs
 	void logRootPairs(int count, MinutiaPair[] roots) {
@@ -444,7 +457,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		}
 	}
 	private void logSkeleton(String name, Skeleton skeleton) {
-		log(skeleton.type.prefix + name, ".cbor", cbor(() -> new CborSkeleton(skeleton)), ".dat", skeleton::serialize);
+		log(skeleton.type.prefix + name, ".cbor", cbor(() -> new CborSkeleton(skeleton)));
 	}
 	@SuppressWarnings("unused") private static class CborSkeleton {
 		int width;
@@ -465,7 +478,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 						CborSkeletonRidge jr = new CborSkeletonRidge();
 						jr.start = offsets.get(r.start());
 						jr.end = offsets.get(r.end());
-						jr.length = r.points.size();
+						jr.points = r.points;
 						return jr;
 					}))
 				.collect(toList());
@@ -474,23 +487,23 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	@SuppressWarnings("unused") private static class CborSkeletonRidge {
 		int start;
 		int end;
-		int length;
+		List<IntPoint> points;
 	}
 	private void logMinutiae(String name, TemplateBuilder template) {
 		if (logging())
 			log(name, ".cbor", cbor(() -> new JsonTemplate(template.size, template.minutiae)));
 	}
 	private void logHistogram(String name, HistogramCube histogram) {
-		log(name, ".dat", histogram::serialize, ".cbor", cbor(histogram::cbor));
+		log(name, ".cbor", cbor(() -> histogram));
 	}
 	private void logPointMap(String name, DoublePointMatrix matrix) {
-		log(name, ".dat", matrix::serialize, ".cbor", cbor(matrix::cbor));
+		log(name, ".cbor", cbor(() -> matrix));
 	}
 	private void logDoubleMap(String name, DoubleMatrix matrix) {
-		log(name, ".dat", matrix::serialize, ".cbor", cbor(matrix::cbor));
+		log(name, ".cbor", cbor(() -> matrix));
 	}
 	private void logBooleanMap(String name, BooleanMatrix matrix) {
-		log(name, ".dat", matrix::serialize, ".cbor", cbor(matrix::cbor));
+		log(name, ".cbor", cbor(() -> matrix));
 	}
 	private static final ObjectMapper mapper = new ObjectMapper(new CBORFactory())
 		.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
@@ -514,13 +527,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private void log(String name, String suffix, Supplier<byte[]> supplier) {
 		Map<String, Supplier<byte[]>> map = new HashMap<>();
 		map.put(suffix, supplier);
-		logVersion();
-		capture(name, map);
-	}
-	private void log(String name, String suffix1, Supplier<byte[]> supplier1, String suffix2, Supplier<byte[]> supplier2) {
-		Map<String, Supplier<byte[]>> map = new HashMap<>();
-		map.put(suffix1, supplier1);
-		map.put(suffix2, supplier2);
 		logVersion();
 		capture(name, map);
 	}

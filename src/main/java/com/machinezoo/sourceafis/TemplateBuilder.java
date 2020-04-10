@@ -118,7 +118,7 @@ class TemplateBuilder {
 			IntRect area = blocks.primary.block(block);
 			for (int y = area.top(); y < area.bottom(); ++y)
 				for (int x = area.left(); x < area.right(); ++x) {
-					int depth = (int)(image.get(x, y) * histogram.depth);
+					int depth = (int)(image.get(x, y) * histogram.bins);
 					histogram.increment(block, histogram.constrain(depth));
 				}
 		}
@@ -128,12 +128,12 @@ class TemplateBuilder {
 	}
 	private HistogramCube smoothHistogram(BlockMap blocks, HistogramCube input) {
 		IntPoint[] blocksAround = new IntPoint[] { new IntPoint(0, 0), new IntPoint(-1, 0), new IntPoint(0, -1), new IntPoint(-1, -1) };
-		HistogramCube output = new HistogramCube(blocks.secondary.blocks, input.depth);
+		HistogramCube output = new HistogramCube(blocks.secondary.blocks, input.bins);
 		for (IntPoint corner : blocks.secondary.blocks) {
 			for (IntPoint relative : blocksAround) {
 				IntPoint block = corner.plus(relative);
 				if (blocks.primary.blocks.contains(block)) {
-					for (int i = 0; i < input.depth; ++i)
+					for (int i = 0; i < input.bins; ++i)
 						output.add(corner, i, input.get(block, i));
 				}
 			}
@@ -164,8 +164,8 @@ class TemplateBuilder {
 			int volume = histogram.sum(block);
 			int clipLimit = (int)Math.round(volume * Parameters.CLIPPED_CONTRAST);
 			int accumulator = 0;
-			int lowerBound = histogram.depth - 1;
-			for (int i = 0; i < histogram.depth; ++i) {
+			int lowerBound = histogram.bins - 1;
+			for (int i = 0; i < histogram.bins; ++i) {
 				accumulator += histogram.get(block, i);
 				if (accumulator > clipLimit) {
 					lowerBound = i;
@@ -174,14 +174,14 @@ class TemplateBuilder {
 			}
 			accumulator = 0;
 			int upperBound = 0;
-			for (int i = histogram.depth - 1; i >= 0; --i) {
+			for (int i = histogram.bins - 1; i >= 0; --i) {
 				accumulator += histogram.get(block, i);
 				if (accumulator > clipLimit) {
 					upperBound = i;
 					break;
 				}
 			}
-			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.depth - 1)));
+			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.bins - 1)));
 		}
 		// https://sourceafis.machinezoo.com/transparency/clipped-contrast
 		FingerprintTransparency.current().logClippedContrast(result);
@@ -269,23 +269,23 @@ class TemplateBuilder {
 		final double rangeSize = rangeMax - rangeMin;
 		final double widthMax = rangeSize / 256 * Parameters.MAX_EQUALIZATION_SCALING;
 		final double widthMin = rangeSize / 256 * Parameters.MIN_EQUALIZATION_SCALING;
-		double[] limitedMin = new double[histogram.depth];
-		double[] limitedMax = new double[histogram.depth];
-		double[] dequantized = new double[histogram.depth];
-		for (int i = 0; i < histogram.depth; ++i) {
-			limitedMin[i] = Math.max(i * widthMin + rangeMin, rangeMax - (histogram.depth - 1 - i) * widthMax);
-			limitedMax[i] = Math.min(i * widthMax + rangeMin, rangeMax - (histogram.depth - 1 - i) * widthMin);
-			dequantized[i] = i / (double)(histogram.depth - 1);
+		double[] limitedMin = new double[histogram.bins];
+		double[] limitedMax = new double[histogram.bins];
+		double[] dequantized = new double[histogram.bins];
+		for (int i = 0; i < histogram.bins; ++i) {
+			limitedMin[i] = Math.max(i * widthMin + rangeMin, rangeMax - (histogram.bins - 1 - i) * widthMax);
+			limitedMax[i] = Math.min(i * widthMax + rangeMin, rangeMax - (histogram.bins - 1 - i) * widthMin);
+			dequantized[i] = i / (double)(histogram.bins - 1);
 		}
 		Map<IntPoint, double[]> mappings = new HashMap<>();
 		for (IntPoint corner : blocks.secondary.blocks) {
-			double[] mapping = new double[histogram.depth];
+			double[] mapping = new double[histogram.bins];
 			mappings.put(corner, mapping);
 			if (blockMask.get(corner, false) || blockMask.get(corner.x - 1, corner.y, false)
 				|| blockMask.get(corner.x, corner.y - 1, false) || blockMask.get(corner.x - 1, corner.y - 1, false)) {
 				double step = rangeSize / histogram.sum(corner);
 				double top = rangeMin;
-				for (int i = 0; i < histogram.depth; ++i) {
+				for (int i = 0; i < histogram.bins; ++i) {
 					double band = histogram.get(corner, i) * step;
 					double equalized = top + dequantized[i] * band;
 					top += band;
@@ -307,7 +307,7 @@ class TemplateBuilder {
 				double[] bottomright = mappings.get(new IntPoint(block.x + 1, block.y + 1));
 				for (int y = area.top(); y < area.bottom(); ++y)
 					for (int x = area.left(); x < area.right(); ++x) {
-						int depth = histogram.constrain((int)(image.get(x, y) * histogram.depth));
+						int depth = histogram.constrain((int)(image.get(x, y) * histogram.bins));
 						double rx = (x - area.x + 0.5) / area.width;
 						double ry = (y - area.y + 0.5) / area.height;
 						result.set(x, y, Doubles.interpolate(bottomleft[depth], bottomright[depth], topleft[depth], topright[depth], rx, ry));

@@ -9,13 +9,13 @@ public class HistogramCubeTest {
 	public HistogramCubeTest() {
 		for (int x = 0; x < h.width; ++x)
 			for (int y = 0; y < h.height; ++y)
-				for (int z = 0; z < h.depth; ++z)
+				for (int z = 0; z < h.bins; ++z)
 					h.set(x, y, z, 100 * x + 10 * y + z);
 	}
 	@Test public void constructor() {
 		assertEquals(4, h.width);
 		assertEquals(5, h.height);
-		assertEquals(6, h.depth);
+		assertEquals(6, h.bins);
 	}
 	@Test public void constrain() {
 		assertEquals(3, h.constrain(3));

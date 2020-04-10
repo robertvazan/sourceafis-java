@@ -1,16 +1,14 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import java.nio.*;
-
 class DoublePointMatrix {
 	final int width;
 	final int height;
-	private final double[] array;
+	private final double[] vectors;
 	DoublePointMatrix(int width, int height) {
 		this.width = width;
 		this.height = height;
-		array = new double[2 * width * height];
+		vectors = new double[2 * width * height];
 	}
 	DoublePointMatrix(IntPoint size) {
 		this(size.x, size.y);
@@ -20,15 +18,15 @@ class DoublePointMatrix {
 	}
 	DoublePoint get(int x, int y) {
 		int i = offset(x, y);
-		return new DoublePoint(array[i], array[i + 1]);
+		return new DoublePoint(vectors[i], vectors[i + 1]);
 	}
 	DoublePoint get(IntPoint at) {
 		return get(at.x, at.y);
 	}
 	void set(int x, int y, double px, double py) {
 		int i = offset(x, y);
-		array[i] = px;
-		array[i + 1] = py;
+		vectors[i] = px;
+		vectors[i + 1] = py;
 	}
 	void set(int x, int y, DoublePoint point) {
 		set(x, y, point.x, point.y);
@@ -38,29 +36,14 @@ class DoublePointMatrix {
 	}
 	void add(int x, int y, double px, double py) {
 		int i = offset(x, y);
-		array[i] += px;
-		array[i + 1] += py;
+		vectors[i] += px;
+		vectors[i + 1] += py;
 	}
 	void add(int x, int y, DoublePoint point) {
 		add(x, y, point.x, point.y);
 	}
 	void add(IntPoint at, DoublePoint point) {
 		add(at.x, at.y, point);
-	}
-	byte[] serialize() {
-		ByteBuffer buffer = ByteBuffer.allocate(Double.BYTES * array.length);
-		buffer.asDoubleBuffer().put(array);
-		return buffer.array();
-	}
-	CborArrayInfo cbor() {
-		CborArrayInfo info = new CborArrayInfo();
-		info.axes = new String[] { "y", "x", "axis" };
-		info.dimensions = new int[] { height, width, 2 };
-		info.scalar = "double";
-		info.bitness = 64;
-		info.endianness = "big";
-		info.format = "IEEE754";
-		return info;
 	}
 	private int offset(int x, int y) {
 		return 2 * (y * width + x);
