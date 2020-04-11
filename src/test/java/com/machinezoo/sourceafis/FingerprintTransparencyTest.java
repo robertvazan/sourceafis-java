@@ -4,30 +4,27 @@ package com.machinezoo.sourceafis;
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import java.util.*;
-import java.util.function.*;
 import org.junit.jupiter.api.*;
 
 public class FingerprintTransparencyTest {
 	private static class TransparencyChecker extends FingerprintTransparency {
-		final List<String> keywords = new ArrayList<>();
-		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
-			keywords.add(keyword);
-			for (Map.Entry<String, Supplier<byte[]>> entry : data.entrySet()) {
-				assertThat(keyword, entry.getKey(), is(oneOf(".cbor", ".dat")));
-				assertThat(keyword, entry.getValue().get().length, greaterThan(0));
-			}
+		final List<String> keys = new ArrayList<>();
+		@Override public void take(String key, String mime, byte[] data) {
+			keys.add(key);
+			assertThat(key, mime, is(oneOf("application/cbor")));
+			assertThat(key, data.length, greaterThan(0));
 		}
 	}
 	@Test public void versioned() {
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(FingerprintImageTest.probe());
-			assertThat(transparency.keywords, hasItem("version"));
+			assertThat(transparency.keys, hasItem("version"));
 		}
 	}
 	@Test public void extractor() {
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(FingerprintImageTest.probe());
-			assertThat(transparency.keywords, is(not(empty())));
+			assertThat(transparency.keys, is(not(empty())));
 		}
 	}
 	@Test public void matcher() {
@@ -38,14 +35,31 @@ public class FingerprintTransparencyTest {
 			new FingerprintMatcher()
 				.index(probe)
 				.match(matching);
-			assertThat(transparency.keywords, is(not(empty())));
+			assertThat(transparency.keys, is(not(empty())));
 		}
 	}
 	@Test public void deserialization() {
 		byte[] serialized = FingerprintTemplateTest.probe().toByteArray();
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(serialized);
-			assertThat(transparency.keywords, is(not(empty())));
+			assertThat(transparency.keys, is(not(empty())));
+		}
+	}
+	private static class TransparencyFilter extends FingerprintTransparency {
+		final List<String> keys = new ArrayList<>();
+		@Override public boolean accepts(String key) {
+			return false;
+		}
+		@Override public void take(String key, String mime, byte[] data) {
+			keys.add(key);
+		}
+	}
+	@Test public void filtered() {
+		try (TransparencyFilter transparency = new TransparencyFilter()) {
+			new FingerprintMatcher()
+				.index(new FingerprintTemplate(FingerprintImageTest.probe()))
+				.match(FingerprintTemplateTest.matching());
+			assertThat(transparency.keys, is(empty()));
 		}
 	}
 }

@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.*;
 import java.io.*;
 import java.nio.*;
 import java.util.*;
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 import java.util.zip.*;
 import com.fasterxml.jackson.annotation.*;
@@ -21,25 +20,22 @@ import it.unimi.dsi.fastutil.ints.*;
  * on SourceAFIS website for more information and a tutorial on how to use this class.
  * <p>
  * Applications can subclass {@code FingerprintTransparency} and override
- * {@link #capture(String, Map)} method to define new transparency data logger.
+ * {@link #take(String, String, byte[])} method to define new transparency data logger.
  * One default implementation of {@code FingerprintTransparency} is returned by {@link #zip(OutputStream)} method.
+ * Applications can control what transparency data gets produced by overriding {@link #accepts(String)}.
  * <p>
- * {@code FingerprintTransparency} instance should be created in try-with-resource construct.
+ * {@code FingerprintTransparency} instance should be created in a try-with-resources construct.
  * It will be capturing transparency data from all operations on current thread
  * between invocation of the constructor and invocation of {@link #close()} method,
- * which happens automatically in try-with-resource construct.
+ * which is called automatically in the try-with-resources construct.
  *
  * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
  */
 public abstract class FingerprintTransparency implements AutoCloseable {
 	/*
 	 * API roadmap:
-	 * + boolean accepts(String)
-	 * + void take(String, byte[])
 	 * - log()
 	 * - capture()
-	 * 
-	 * When accepts() always returns false, the performance should be the same as with NOOP transparency logger.
 	 */
 	static {
 		PlatformCheck.run();
@@ -72,71 +68,173 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		current.set(this);
 	}
 	/**
+	 * Filters transparency data keys that can be passed to {@link #take(String, String, byte[])}.
+	 * Default implementation always returns {@code true}, i.e. all transparency data is passed to {@link #take(String, String, byte[])}.
+	 * Implementation can override this method to filter some keys out, which improves performance.
+	 * <p>
+	 * This method should always return the same result for the same key.
+	 * Result may be cached and this method might not be called every time something is about to be logged.
+	 * 
+	 * @param key
+	 *            transparency data key as used in {@link #take(String, String, byte[])}
+	 * @return whether transparency data under given key should be logged
+	 * 
+	 * @see #take(String, String, byte[])
+	 */
+	public boolean accepts(String key) {
+		/*
+		 * Accepting everything by default makes the API easier to use since this method can be ignored.
+		 */
+		return true;
+	}
+	/*
+	 * Specifying MIME type of the data allows construction of generic transparency data consumers.
+	 * For example, ZIP output for transparency data uses MIME type to assign file extension.
+	 * It is also possible to create generic transparency data browser that changes visualization based on MIME type.
+	 * 
+	 * We will define short table mapping MIME types to file extensions, which is used by the ZIP implementation,
+	 * but it is currently also used to support the old API that used file extensions.
+	 * There are some MIME libraries out there, but no one was just right.
+	 * There are also public MIME type lists, but they have to be bundled and then kept up to date.
+	 * We will instead define only a short MIME type list covering data types we are likely to see here.
+	 */
+	private static String suffix(String mime) {
+		switch (mime) {
+		/*
+		 * Our primary serialization format.
+		 */
+		case "application/cbor":
+			return ".cbor";
+		/*
+		 * Plain text for simple records.
+		 */
+		case "text/plain":
+			return ".txt";
+		/*
+		 * Common serialization formats.
+		 */
+		case "application/json":
+			return ".json";
+		case "application/xml":
+			return ".xml";
+		/*
+		 * Image formats commonly used to encode fingerprints.
+		 */
+		case "image/jpeg":
+			return ".jpeg";
+		case "image/png":
+			return ".png";
+		case "image/bmp":
+			return ".bmp";
+		case "image/tiff":
+			return ".tiff";
+		case "image/jp2":
+			return ".jp2";
+		/*
+		 * WSQ doesn't have a MIME type. We will invent one.
+		 */
+		case "image/x-wsq":
+			return ".wsq";
+		/*
+		 * Fallback is needed, because there can be always some unexpected MIME type.
+		 */
+		default:
+			return ".dat";
+		}
+	}
+	/**
 	 * Records transparency data. Subclasses must override this method, because the default implementation does nothing.
 	 * While this {@code FingerprintTransparency} object is active (between call to the constructor and call to {@link #close()}),
 	 * this method is called with transparency data in its parameters.
 	 * <p>
-	 * Parameter {@code keyword} specifies the kind of transparency data being logged,
+	 * Parameter {@code key} specifies the kind of transparency data being logged,
 	 * usually corresponding to some stage in the algorithm.
-	 * For convenience, several related pieces of transparency data are reported together.
-	 * All pieces are available via map in parameter {@code data},
-	 * keyed by file suffix identifying the kind of data,
-	 * usually {@code .cbor} or {@code .dat} for CBOR and binary data respectively.
+	 * Parameter {@code data} then contains the actual transparency data.
+	 * This method may be called multiple times with the same {@code key}
+	 * if the algorithm produces that kind of transparency data repeatedly.
 	 * See <a href="https://sourceafis.machinezoo.com/transparency/">algorithm transparency</a>
 	 * on SourceAFIS website for documentation of the structure of the transparency data.
 	 * <p>
-	 * Transparency data is offered indirectly via {@link Supplier}.
-	 * If this {@code Supplier} is not evaluated, the data is never serialized.
+	 * Transparency data is offered only if {@link #accepts(String)} returns {@code true} for the same {@code key}.
 	 * This allows applications to efficiently collect only transparency data that is actually needed.
+	 * <p>
+	 * MIME type of the transparency data is provided, which may be useful for generic implementations,
+	 * for example transparency data browser app that changes type of visualization based on the MIME type.
+	 * Most transparency data is serialized in <a href="https://cbor.io/">CBOR</a> format (MIME application/cbor).
+	 * <p>
+	 * Implementations of this method should be synchronized. Although the current SourceAFIS algorithm is single-threaded,
+	 * future versions of SourceAFIS might run some parts of the algorithm in parallel, which would result in concurrent calls to this method.
 	 * <p>
 	 * If this method throws, exception is propagated through SourceAFIS code.
 	 * 
-	 * @param keyword
+	 * @param key
+	 *            specifies the kind of transparency data being logged
+	 * @param mime
+	 *            MIME type of the transparency data in {@code data} parameter
+	 * @param data
+	 *            transparency data being logged
+	 * 
+	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
+	 * @see #accepts(String)
+	 * @see #zip(OutputStream)
+	 */
+	public void take(String key, String mime, byte[] data) {
+		/*
+		 * If nobody overrides this method, assume it is legacy code and call the old capture() method.
+		 */
+		Map<String, Supplier<byte[]>> map = new HashMap<>();
+		map.put(suffix(mime), () -> data);
+		capture(key, map);
+	}
+	/**
+	 * Records transparency data (deprecated).
+	 * This is a deprecated variant of {@link #take(String, String, byte[])}.
+	 * This method is only called if {@link #take(String, String, byte[])} is not overridden.
+	 * 
+	 * @param key
 	 *            specifies the kind of transparency data being reported
 	 * @param data
 	 *            a map of suffixes (like {@code .cbor} or {@code .dat}) to {@link Supplier} of the available transparency data
 	 * 
-	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
-	 * @see #zip(OutputStream)
+	 * @see #take(String, String, byte[])
 	 */
-	protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
+	@Deprecated protected void capture(String key, Map<String, Supplier<byte[]>> data) {
 		/*
 		 * If nobody overrode this method, assume it is legacy code and call the old log() method.
 		 */
 		Map<String, Supplier<ByteBuffer>> translated = new HashMap<>();
 		for (Map.Entry<String, Supplier<byte[]>> entry : data.entrySet())
 			translated.put(entry.getKey(), () -> ByteBuffer.wrap(entry.getValue().get()));
-		log(keyword, translated);
+		log(key, translated);
 	}
 	/**
-	 * Records transparency data in buffers.
-	 * This is a deprecated variant of {@link #capture(String, Map)}
-	 * that uses {@link ByteBuffer} instead of plain byte arrays.
-	 * This method is only called if {@link #capture(String, Map)} is not overridden.
+	 * Records transparency data (deprecated).
+	 * This is a deprecated variant of {@link #take(String, String, byte[])}.
+	 * This method is only called if {@link #take(String, String, byte[])} and {@link #capture(String, Map)} are not overridden.
 	 * 
-	 * @param keyword
+	 * @param key
 	 *            specifies the kind of transparency data being reported
 	 * @param data
 	 *            a map of suffixes (like {@code .cbor} or {@code .dat}) to {@link Supplier} of the available transparency data
 	 * 
-	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
-	 * @see #capture(String, Map)
+	 * @see #take(String, String, byte[])
 	 */
-	@Deprecated protected void log(String keyword, Map<String, Supplier<ByteBuffer>> data) {
+	@Deprecated protected void log(String key, Map<String, Supplier<ByteBuffer>> data) {
 	}
+	private boolean closed;
 	/**
 	 * Deactivates transparency logging and releases system resources held by this instance if any.
 	 * This method is normally called automatically when {@code FingerprintTransparency} is used in try-with-resources construct.
 	 * <p>
-	 * Deactivation stops transparency data logging to this instance of {@code FingerprintTransparency},
-	 * which was started by the constructor ({@link #FingerprintTransparency()}).
+	 * Deactivation stops transparency data logging to this instance of {@code FingerprintTransparency}.
+	 * Logging thus takes place between invocation of constructor ({@link #FingerprintTransparency()}) and invocation of this method.
 	 * If activations were nested, this method reactivates the outer {@code FingerprintTransparency}.
 	 * <p>
 	 * Subclasses can override this method to perform cleanup.
 	 * Default implementation of this method performs deactivation.
 	 * It must be called by overriding methods for deactivation to work correctly.
 	 * <p>
-	 * This method doesn't declare any checked exceptions in order to spare callers of mandatory exception checking.
+	 * This method doesn't declare any checked exceptions in order to spare callers of mandatory exception handling.
 	 * If your code needs to throw a checked exception, wrap it in an unchecked exception.
 	 * 
 	 * @see #FingerprintTransparency()
@@ -154,12 +252,42 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			outer = null;
 		}
 	}
-	private boolean closed;
+	private static class TransparencyZip extends FingerprintTransparency {
+		private final ZipOutputStream zip;
+		private int offset;
+		TransparencyZip(OutputStream stream) {
+			zip = new ZipOutputStream(stream);
+		}
+		/*
+		 * Synchronize take(), because ZipOutputStream can be accessed only from one thread
+		 * while transparency data may flow from multiple threads.
+		 */
+		@Override public synchronized void take(String key, String mime, byte[] data) {
+			++offset;
+			/*
+			 * We allow providing custom output stream, which can fail at any moment.
+			 * We however also offer an API that is free of checked exceptions.
+			 * We will therefore wrap any checked exceptions from the output stream.
+			 */
+			Exceptions.wrap().run(() -> {
+				zip.putNextEntry(new ZipEntry(String.format("%03d", offset) + "-" + key + suffix(mime)));
+				zip.write(data);
+				zip.closeEntry();
+			});
+		}
+		@Override public void close() {
+			super.close();
+			Exceptions.wrap().run(zip::close);
+		}
+	}
 	/**
 	 * Writes all transparency data to a ZIP file.
 	 * This is a convenience method to enable easy exploration of the available data.
 	 * Programmatic processing of transparency data should be done by subclassing {@code FingerprintTransparency}
-	 * and overriding {@link #capture(String, Map)} method.
+	 * and overriding {@link #take(String, String, byte[])} method.
+	 * <p>
+	 * ZIP file entries have filenames like {@code NNN-key.ext} where {@code NNN} is a sequentially assigned ID,
+	 * {@code key} comes from {@link #take(String, String, byte[])} parameter, and {@code ext} is derived from MIME type.
 	 * <p>
 	 * The returned {@code FingerprintTransparency} object holds system resources
 	 * and callers are responsible for calling {@link #close()} method, perhaps using try-with-resources construct.
@@ -172,48 +300,20 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 *            output stream where ZIP file will be written (will be closed when the returned {@code FingerprintTransparency} is closed)
 	 * @return algorithm transparency logger that writes data to a ZIP file
 	 * 
+	 * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
 	 * @see #close()
-	 * @see #capture(String, Map)
+	 * @see #take(String, String, byte[])
 	 */
 	public static FingerprintTransparency zip(OutputStream stream) {
 		return new TransparencyZip(stream);
-	}
-	private static class TransparencyZip extends FingerprintTransparency {
-		private final ZipOutputStream zip;
-		private int offset;
-		TransparencyZip(OutputStream stream) {
-			zip = new ZipOutputStream(stream);
-		}
-		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
-			Exceptions.wrap().run(() -> {
-				List<String> suffixes = data.keySet().stream()
-					.sorted(Comparator.comparing(ext -> {
-						if (ext.equals(".cbor"))
-							return 1;
-						if (ext.equals(".dat"))
-							return 2;
-						return 3;
-					}))
-					.collect(toList());
-				for (String suffix : suffixes) {
-					++offset;
-					zip.putNextEntry(new ZipEntry(String.format("%03d", offset) + "-" + keyword + suffix));
-					zip.write(data.get(suffix).get());
-					zip.closeEntry();
-				}
-			});
-		}
-		@Override public void close() {
-			super.close();
-			Exceptions.wrap().run(zip::close);
-		}
 	}
 	/*
 	 * To avoid null checks everywhere, we have one noop class as a fallback.
 	 */
 	private static final FingerprintTransparency NOOP;
 	private static class NoFingerprintTransparency extends FingerprintTransparency {
-		@Override protected void capture(String keyword, Map<String, Supplier<byte[]>> data) {
+		@Override public boolean accepts(String key) {
+			return false;
 		}
 	}
 	static {
@@ -226,238 +326,137 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	static FingerprintTransparency current() {
 		return Optional.ofNullable(current.get()).orElse(NOOP);
 	}
+	private static final ObjectMapper mapper = new ObjectMapper(new CBORFactory())
+		.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
+	private byte[] cbor(Object data) {
+		return Exceptions.wrap(IllegalArgumentException::new).get(() -> mapper.writeValueAsBytes(data));
+	}
+	@SuppressWarnings("unused") private static class CborVersion {
+		String version;
+		CborVersion(String version) {
+			this.version = version;
+		}
+	}
 	/*
-	 * Just preparing the data for logging may be expensive.
-	 * Such code should use this method to check for active transparency data logging
-	 * before any expensive logging-related operations are performed.
-	 * Right now all such checks are done inside this class.
+	 * Use fast double-checked locking, because this could be called in tight loops.
 	 */
-	boolean logging() {
-		return this != NOOP;
+	private volatile boolean versionOffered;
+	private void logVersion() {
+		if (!versionOffered) {
+			boolean offer = false;
+			synchronized (this) {
+				if (!versionOffered) {
+					versionOffered = true;
+					offer = true;
+				}
+			}
+			if (offer && accepts("version"))
+				take("version", "application/cbor", cbor(new CborVersion(FingerprintCompatibility.version())));
+		}
+	}
+	private void log(String key, String mime, Supplier<byte[]> supplier) {
+		logVersion();
+		if (accepts(key))
+			take(key, mime, supplier.get());
+	}
+	private void logCbor(String key, Supplier<Object> supplier) {
+		log(key, "application/cbor", () -> cbor(supplier.get()));
+	}
+	private void logCbor(String key, Object data) {
+		log(key, "application/cbor", () -> cbor(data));
 	}
 	// https://sourceafis.machinezoo.com/transparency/decoded-image
 	void logDecodedImage(DoubleMatrix image) {
-		logDoubleMap("decoded-image", image);
+		logCbor("decoded-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/scaled-image
 	void logScaledImage(DoubleMatrix image) {
-		logDoubleMap("scaled-image", image);
+		logCbor("scaled-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/block-map
 	void logBlockMap(BlockMap blocks) {
-		log("block-map", ".cbor", cbor(() -> blocks));
+		logCbor("block-map", blocks);
 	}
 	// https://sourceafis.machinezoo.com/transparency/histogram
 	void logHistogram(HistogramCube histogram) {
-		logHistogram("histogram", histogram);
+		logCbor("histogram", histogram);
 	}
 	// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
 	void logSmoothedHistogram(HistogramCube histogram) {
-		logHistogram("smoothed-histogram", histogram);
+		logCbor("smoothed-histogram", histogram);
 	}
 	// https://sourceafis.machinezoo.com/transparency/clipped-contrast
 	void logClippedContrast(DoubleMatrix contrast) {
-		logDoubleMap("clipped-contrast", contrast);
+		logCbor("clipped-contrast", contrast);
 	}
 	// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
 	void logAbsoluteContrastMask(BooleanMatrix mask) {
-		logBooleanMap("absolute-contrast-mask", mask);
+		logCbor("absolute-contrast-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
 	void logRelativeContrastMask(BooleanMatrix mask) {
-		logBooleanMap("relative-contrast-mask", mask);
+		logCbor("relative-contrast-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/combined-mask
 	void logCombinedMask(BooleanMatrix mask) {
-		logBooleanMap("combined-mask", mask);
+		logCbor("combined-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/filtered-mask
 	void logFilteredMask(BooleanMatrix mask) {
-		logBooleanMap("filtered-mask", mask);
+		logCbor("filtered-mask", mask);
 	}
 	// https://sourceafis.machinezoo.com/transparency/equalized-image
 	void logEqualizedImage(DoubleMatrix image) {
-		logDoubleMap("equalized-image", image);
+		logCbor("equalized-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
 	void logPixelwiseOrientation(DoublePointMatrix orientations) {
-		logPointMap("pixelwise-orientation", orientations);
+		logCbor("pixelwise-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/block-orientation
 	void logBlockOrientation(DoublePointMatrix orientations) {
-		logPointMap("block-orientation", orientations);
+		logCbor("block-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
 	void logSmoothedOrientation(DoublePointMatrix orientations) {
-		logPointMap("smoothed-orientation", orientations);
+		logCbor("smoothed-orientation", orientations);
 	}
 	// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
 	void logParallelSmoothing(DoubleMatrix smoothed) {
-		logDoubleMap("parallel-smoothing", smoothed);
+		logCbor("parallel-smoothing", smoothed);
 	}
 	// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
 	void logOrthogonalSmoothing(DoubleMatrix smoothed) {
-		logDoubleMap("orthogonal-smoothing", smoothed);
+		logCbor("orthogonal-smoothing", smoothed);
 	}
 	// https://sourceafis.machinezoo.com/transparency/binarized-image
 	void logBinarizedImage(BooleanMatrix image) {
-		logBooleanMap("binarized-image", image);
+		logCbor("binarized-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
 	void logFilteredBinarydImage(BooleanMatrix image) {
-		logBooleanMap("filtered-binary-image", image);
+		logCbor("filtered-binary-image", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/pixel-mask
 	void logPixelMask(BooleanMatrix image) {
-		logBooleanMap("pixel-mask", image);
+		logCbor("pixel-mask", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/inner-mask
 	void logInnerMask(BooleanMatrix image) {
-		logBooleanMap("inner-mask", image);
+		logCbor("inner-mask", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
 	void logBinarizedSkeleton(SkeletonType type, BooleanMatrix image) {
-		logBooleanMap(type.prefix + "binarized-skeleton", image);
+		logCbor(type.prefix + "binarized-skeleton", image);
 	}
 	// https://sourceafis.machinezoo.com/transparency/thinned-skeleton
 	void logThinnedSkeleton(SkeletonType type, BooleanMatrix image) {
-		logBooleanMap(type.prefix + "thinned-skeleton", image);
+		logCbor(type.prefix + "thinned-skeleton", image);
 	}
-	// https://sourceafis.machinezoo.com/transparency/traced-skeleton
-	void logTracedSkeleton(Skeleton skeleton) {
-		logSkeleton("traced-skeleton", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-dots
-	void logRemovedDots(Skeleton skeleton) {
-		logSkeleton("removed-dots", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-pores
-	void logRemovedPores(Skeleton skeleton) {
-		logSkeleton("removed-pores", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-gaps
-	void logRemovedGaps(Skeleton skeleton) {
-		logSkeleton("removed-gaps", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-tails
-	void logRemovedTails(Skeleton skeleton) {
-		logSkeleton("removed-tails", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-fragments
-	void logRemovedFragments(Skeleton skeleton) {
-		logSkeleton("removed-fragments", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
-	void logSkeletonMinutiae(TemplateBuilder template) {
-		logMinutiae("skeleton-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/inner-minutiae
-	void logInnerMinutiae(TemplateBuilder template) {
-		logMinutiae("inner-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
-	void logRemovedMinutiaClouds(TemplateBuilder template) {
-		logMinutiae("removed-minutia-clouds", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/top-minutiae
-	void logTopMinutiae(TemplateBuilder template) {
-		logMinutiae("top-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
-	void logShuffledMinutiae(TemplateBuilder template) {
-		logMinutiae("shuffled-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/edge-table
-	void logEdgeTable(NeighborEdge[][] table) {
-		log("edge-table", ".cbor", cbor(() -> table));
-	}
-	// https://sourceafis.machinezoo.com/transparency/edge-hash
-	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> hash) {
-		log("edge-hash", ".cbor", cbor(() -> {
-			return Arrays.stream(hash.keySet().toIntArray())
-				.sorted()
-				.mapToObj(key -> {
-					CborHashEntry entry = new CborHashEntry();
-					entry.key = key;
-					entry.edges = hash.get(key);
-					return entry;
-				})
-				.collect(toList());
-		}));
-	}
-	@SuppressWarnings("unused") private static class CborHashEntry {
-		int key;
-		List<IndexedEdge> edges;
-	}
-	// https://sourceafis.machinezoo.com/transparency/root-pairs
-	void logRootPairs(int count, MinutiaPair[] roots) {
-		if (logging())
-			log("root-pairs", ".cbor", cbor(() -> CborPair.roots(count, roots)));
-	}
-	private List<CborEdge> supportingEdges = new ArrayList<>();
-	// Accumulated and then added to https://sourceafis.machinezoo.com/transparency/pairing
-	void logSupportingEdge(MinutiaPair pair) {
-		if (logging())
-			supportingEdges.add(new CborEdge(pair));
-	}
-	// https://sourceafis.machinezoo.com/transparency/pairing
-	void logPairing(int count, MinutiaPair[] pairs) {
-		if (logging()) {
-			log("pairing", ".cbor", cbor(() -> new CborPairing(count, pairs, supportingEdges)));
-			supportingEdges.clear();
-		}
-	}
-	@SuppressWarnings("unused") private static class CborPairing {
-		CborPair root;
-		List<CborEdge> tree;
-		List<CborEdge> support;
-		CborPairing(int count, MinutiaPair[] pairs, List<CborEdge> supporting) {
-			root = new CborPair(pairs[0].probe, pairs[0].candidate);
-			tree = Arrays.stream(pairs).limit(count).skip(1).map(CborEdge::new).collect(toList());
-			support = supporting;
-		}
-	}
-	@SuppressWarnings("unused") private static class CborPair {
-		int probe;
-		int candidate;
-		CborPair(int probe, int candidate) {
-			this.probe = probe;
-			this.candidate = candidate;
-		}
-		static List<CborPair> roots(int count, MinutiaPair[] roots) {
-			return Arrays.stream(roots).limit(count).map(p -> new CborPair(p.probe, p.candidate)).collect(toList());
-		}
-	}
-	@SuppressWarnings("unused") private static class CborEdge {
-		int probeFrom;
-		int probeTo;
-		int candidateFrom;
-		int candidateTo;
-		CborEdge(MinutiaPair pair) {
-			probeFrom = pair.probeRef;
-			probeTo = pair.probe;
-			candidateFrom = pair.candidateRef;
-			candidateTo = pair.candidate;
-		}
-	}
-	// https://sourceafis.machinezoo.com/transparency/score
-	void logScore(Score score) {
-		if (logging())
-			log("score", ".cbor", cbor(() -> score));
-	}
-	// https://sourceafis.machinezoo.com/transparency/best-match
-	void logBestMatch(int nth) {
-		if (logging())
-			log("best-match", ".cbor", cbor(() -> new CborBestMatch(nth)));
-	}
-	@SuppressWarnings("unused") private static class CborBestMatch {
-		int offset;
-		CborBestMatch(int offset) {
-			this.offset = offset;
-		}
-	}
-	private void logSkeleton(String name, Skeleton skeleton) {
-		log(skeleton.type.prefix + name, ".cbor", cbor(() -> new CborSkeleton(skeleton)));
+	@SuppressWarnings("unused") private static class CborSkeletonRidge {
+		int start;
+		int end;
+		List<IntPoint> points;
 	}
 	@SuppressWarnings("unused") private static class CborSkeleton {
 		int width;
@@ -484,50 +483,162 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				.collect(toList());
 		}
 	}
-	@SuppressWarnings("unused") private static class CborSkeletonRidge {
-		int start;
-		int end;
-		List<IntPoint> points;
+	private void logSkeleton(String keyword, Skeleton skeleton) {
+		logCbor(skeleton.type.prefix + keyword, () -> new CborSkeleton(skeleton));
 	}
-	private void logMinutiae(String name, TemplateBuilder template) {
-		if (logging())
-			log(name, ".cbor", cbor(() -> new JsonTemplate(template.size, template.minutiae)));
+	// https://sourceafis.machinezoo.com/transparency/traced-skeleton
+	void logTracedSkeleton(Skeleton skeleton) {
+		logSkeleton("traced-skeleton", skeleton);
 	}
-	private void logHistogram(String name, HistogramCube histogram) {
-		log(name, ".cbor", cbor(() -> histogram));
+	// https://sourceafis.machinezoo.com/transparency/removed-dots
+	void logRemovedDots(Skeleton skeleton) {
+		logSkeleton("removed-dots", skeleton);
 	}
-	private void logPointMap(String name, DoublePointMatrix matrix) {
-		log(name, ".cbor", cbor(() -> matrix));
+	// https://sourceafis.machinezoo.com/transparency/removed-pores
+	void logRemovedPores(Skeleton skeleton) {
+		logSkeleton("removed-pores", skeleton);
 	}
-	private void logDoubleMap(String name, DoubleMatrix matrix) {
-		log(name, ".cbor", cbor(() -> matrix));
+	// https://sourceafis.machinezoo.com/transparency/removed-gaps
+	void logRemovedGaps(Skeleton skeleton) {
+		logSkeleton("removed-gaps", skeleton);
 	}
-	private void logBooleanMap(String name, BooleanMatrix matrix) {
-		log(name, ".cbor", cbor(() -> matrix));
+	// https://sourceafis.machinezoo.com/transparency/removed-tails
+	void logRemovedTails(Skeleton skeleton) {
+		logSkeleton("removed-tails", skeleton);
 	}
-	private static final ObjectMapper mapper = new ObjectMapper(new CBORFactory())
-		.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
-	private Supplier<byte[]> cbor(Supplier<Object> supplier) {
-		return () -> Exceptions.wrap(IllegalArgumentException::new).get(() -> mapper.writeValueAsBytes(supplier.get()));
+	// https://sourceafis.machinezoo.com/transparency/removed-fragments
+	void logRemovedFragments(Skeleton skeleton) {
+		logSkeleton("removed-fragments", skeleton);
 	}
-	private AtomicInteger loggedVersion = new AtomicInteger();
-	private void logVersion() {
-		if (logging() && loggedVersion.getAndSet(1) == 0) {
-			Map<String, Supplier<byte[]>> map = new HashMap<>();
-			map.put(".cbor", cbor(() -> new CborVersion(FingerprintCompatibility.version())));
-			capture("version", map);
+	private void logMinutiae(String key, TemplateBuilder template) {
+		logCbor(key, () -> new JsonTemplate(template.size, template.minutiae));
+	}
+	// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
+	void logSkeletonMinutiae(TemplateBuilder template) {
+		logMinutiae("skeleton-minutiae", template);
+	}
+	// https://sourceafis.machinezoo.com/transparency/inner-minutiae
+	void logInnerMinutiae(TemplateBuilder template) {
+		logMinutiae("inner-minutiae", template);
+	}
+	// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
+	void logRemovedMinutiaClouds(TemplateBuilder template) {
+		logMinutiae("removed-minutia-clouds", template);
+	}
+	// https://sourceafis.machinezoo.com/transparency/top-minutiae
+	void logTopMinutiae(TemplateBuilder template) {
+		logMinutiae("top-minutiae", template);
+	}
+	// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
+	void logShuffledMinutiae(TemplateBuilder template) {
+		logMinutiae("shuffled-minutiae", template);
+	}
+	// https://sourceafis.machinezoo.com/transparency/edge-table
+	void logEdgeTable(NeighborEdge[][] table) {
+		logCbor("edge-table", table);
+	}
+	@SuppressWarnings("unused") private static class CborHashEntry {
+		int key;
+		List<IndexedEdge> edges;
+	}
+	// https://sourceafis.machinezoo.com/transparency/edge-hash
+	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> hash) {
+		logCbor("edge-hash", () -> {
+			return Arrays.stream(hash.keySet().toIntArray())
+				.sorted()
+				.mapToObj(key -> {
+					CborHashEntry entry = new CborHashEntry();
+					entry.key = key;
+					entry.edges = hash.get(key);
+					return entry;
+				})
+				.collect(toList());
+		});
+	}
+	@SuppressWarnings("unused") private static class CborPair {
+		int probe;
+		int candidate;
+		CborPair(int probe, int candidate) {
+			this.probe = probe;
+			this.candidate = candidate;
+		}
+		static List<CborPair> roots(int count, MinutiaPair[] roots) {
+			return Arrays.stream(roots).limit(count).map(p -> new CborPair(p.probe, p.candidate)).collect(toList());
 		}
 	}
-	@SuppressWarnings("unused") private static class CborVersion {
-		String version;
-		CborVersion(String version) {
-			this.version = version;
+	// https://sourceafis.machinezoo.com/transparency/root-pairs
+	void logRootPairs(int count, MinutiaPair[] roots) {
+		logCbor("root-pairs", () -> CborPair.roots(count, roots));
+	}
+	/*
+	 * Cache accepts() for matcher logs in volatile variables, because calling accepts() directly every time
+	 * could slow down matching perceptibly due to the high number of pairings per match.
+	 */
+	private volatile boolean matcherOffered;
+	private volatile boolean acceptsPairing;
+	private volatile boolean acceptsScore;
+	private volatile boolean acceptsBestMatch;
+	private void offerMatcher() {
+		if (!matcherOffered) {
+			acceptsPairing = accepts("pairing");
+			acceptsScore = accepts("score");
+			acceptsBestMatch = accepts("best-match");
+			matcherOffered = true;
 		}
 	}
-	private void log(String name, String suffix, Supplier<byte[]> supplier) {
-		Map<String, Supplier<byte[]>> map = new HashMap<>();
-		map.put(suffix, supplier);
-		logVersion();
-		capture(name, map);
+	@SuppressWarnings("unused") private static class CborEdge {
+		int probeFrom;
+		int probeTo;
+		int candidateFrom;
+		int candidateTo;
+		CborEdge(MinutiaPair pair) {
+			probeFrom = pair.probeRef;
+			probeTo = pair.probe;
+			candidateFrom = pair.candidateRef;
+			candidateTo = pair.candidate;
+		}
+	}
+	private List<CborEdge> supportingEdges = new ArrayList<>();
+	// Accumulated and then added to https://sourceafis.machinezoo.com/transparency/pairing
+	void logSupportingEdge(MinutiaPair pair) {
+		offerMatcher();
+		if (acceptsPairing)
+			supportingEdges.add(new CborEdge(pair));
+	}
+	@SuppressWarnings("unused") private static class CborPairing {
+		CborPair root;
+		List<CborEdge> tree;
+		List<CborEdge> support;
+		CborPairing(int count, MinutiaPair[] pairs, List<CborEdge> supporting) {
+			root = new CborPair(pairs[0].probe, pairs[0].candidate);
+			tree = Arrays.stream(pairs).limit(count).skip(1).map(CborEdge::new).collect(toList());
+			support = supporting;
+		}
+	}
+	// https://sourceafis.machinezoo.com/transparency/pairing
+	void logPairing(int count, MinutiaPair[] pairs) {
+		offerMatcher();
+		if (acceptsPairing) {
+			logCbor("pairing", new CborPairing(count, pairs, supportingEdges));
+			supportingEdges.clear();
+		}
+	}
+	// https://sourceafis.machinezoo.com/transparency/score
+	void logScore(Score score) {
+		offerMatcher();
+		if (acceptsScore)
+			logCbor("score", score);
+	}
+	@SuppressWarnings("unused") private static class CborBestMatch {
+		int offset;
+		CborBestMatch(int offset) {
+			this.offset = offset;
+		}
+	}
+	// https://sourceafis.machinezoo.com/transparency/best-match
+	void logBestMatch(int nth) {
+		offerMatcher();
+		if (acceptsBestMatch)
+			logCbor("best-match", new CborBestMatch(nth));
 	}
 }
