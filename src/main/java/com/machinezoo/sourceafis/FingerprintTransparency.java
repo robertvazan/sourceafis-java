@@ -586,6 +586,10 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			matcherOffered = true;
 		}
 	}
+	boolean acceptsPairing() {
+		offerMatcher();
+		return acceptsPairing;
+	}
 	@SuppressWarnings("unused") private static class CborEdge {
 		int probeFrom;
 		int probeTo;
@@ -598,30 +602,21 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			candidateTo = pair.candidate;
 		}
 	}
-	private List<CborEdge> supportingEdges = new ArrayList<>();
-	// Accumulated and then added to https://sourceafis.machinezoo.com/transparency/pairing
-	void logSupportingEdge(MinutiaPair pair) {
-		offerMatcher();
-		if (acceptsPairing)
-			supportingEdges.add(new CborEdge(pair));
-	}
 	@SuppressWarnings("unused") private static class CborPairing {
 		CborPair root;
 		List<CborEdge> tree;
 		List<CborEdge> support;
-		CborPairing(int count, MinutiaPair[] pairs, List<CborEdge> supporting) {
+		CborPairing(int count, MinutiaPair[] pairs, List<MinutiaPair> support) {
 			root = new CborPair(pairs[0].probe, pairs[0].candidate);
 			tree = Arrays.stream(pairs).limit(count).skip(1).map(CborEdge::new).collect(toList());
-			support = supporting;
+			this.support = support.stream().map(CborEdge::new).collect(toList());
 		}
 	}
 	// https://sourceafis.machinezoo.com/transparency/pairing
-	void logPairing(int count, MinutiaPair[] pairs) {
+	void logPairing(int count, MinutiaPair[] pairs, List<MinutiaPair> support) {
 		offerMatcher();
-		if (acceptsPairing) {
-			logCbor("pairing", new CborPairing(count, pairs, supportingEdges));
-			supportingEdges.clear();
-		}
+		if (acceptsPairing)
+			logCbor("pairing", new CborPairing(count, pairs, support));
 	}
 	// https://sourceafis.machinezoo.com/transparency/score
 	void logScore(Score score) {

@@ -28,6 +28,8 @@ class MatcherThread {
 	private MinutiaPair[] roots = new MinutiaPair[1];
 	private final IntSet duplicates = new IntOpenHashSet();
 	private Score score = new Score();
+	private final List<MinutiaPair> support = new ArrayList<>();
+	private boolean reportSupport;
 	static MatcherThread current() {
 		return threads.get();
 	}
@@ -51,6 +53,10 @@ class MatcherThread {
 			 * so do not access FingerprintTransparency.current() repeatedly in tight loops.
 			 */
 			transparency = FingerprintTransparency.current();
+			/*
+			 * Collection of support edges is very slow. It must be disabled on matcher level for it to have no performance impact.
+			 */
+			reportSupport = transparency.acceptsPairing();
 			int totalRoots = enumerateRoots();
 			// https://sourceafis.machinezoo.com/transparency/root-pairs
 			transparency.logRootPairs(totalRoots, roots);
@@ -143,7 +149,7 @@ class MatcherThread {
 			skipPaired();
 		} while (!queue.isEmpty());
 		// https://sourceafis.machinezoo.com/transparency/pairing
-		transparency.logPairing(count, tree);
+		transparency.logPairing(count, tree, support);
 		score.compute(this);
 		// https://sourceafis.machinezoo.com/transparency/score
 		transparency.logScore(score);
@@ -157,6 +163,11 @@ class MatcherThread {
 			tree[i] = null;
 		}
 		count = 0;
+		if (reportSupport) {
+			for (MinutiaPair pair : support)
+				release(pair);
+			support.clear();
+		}
 	}
 	private void collectEdges() {
 		MinutiaPair reference = tree[count - 1];
@@ -167,11 +178,8 @@ class MatcherThread {
 			pair.candidateRef = reference.candidate;
 			if (byCandidate[pair.candidate] == null && byProbe[pair.probe] == null)
 				queue.add(pair);
-			else {
-				if (byProbe[pair.probe] != null && byProbe[pair.probe].candidate == pair.candidate)
-					addSupportingEdge(pair);
-				release(pair);
-			}
+			else
+				support(pair);
 		}
 	}
 	private List<MinutiaPair> matchPairs(NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
@@ -205,12 +213,8 @@ class MatcherThread {
 		return results;
 	}
 	private void skipPaired() {
-		while (!queue.isEmpty() && (byProbe[queue.peek().probe] != null || byCandidate[queue.peek().candidate] != null)) {
-			MinutiaPair pair = queue.remove();
-			if (byProbe[pair.probe] != null && byProbe[pair.probe].candidate == pair.candidate)
-				addSupportingEdge(pair);
-			release(pair);
-		}
+		while (!queue.isEmpty() && (byProbe[queue.peek().probe] != null || byCandidate[queue.peek().candidate] != null))
+			support(queue.remove());
 	}
 	private void addPair(MinutiaPair pair) {
 		tree[count] = pair;
@@ -218,11 +222,16 @@ class MatcherThread {
 		byCandidate[pair.candidate] = pair;
 		++count;
 	}
-	private void addSupportingEdge(MinutiaPair pair) {
-		++byProbe[pair.probe].supportingEdges;
-		++byProbe[pair.probeRef].supportingEdges;
-		// https://sourceafis.machinezoo.com/transparency/pairing
-		transparency.logSupportingEdge(pair);
+	private void support(MinutiaPair pair) {
+		if (byProbe[pair.probe] != null && byProbe[pair.probe].candidate == pair.candidate) {
+			++byProbe[pair.probe].supportingEdges;
+			++byProbe[pair.probeRef].supportingEdges;
+			if (reportSupport)
+				support.add(pair);
+			else
+				release(pair);
+		} else
+			release(pair);
 	}
 	private MinutiaPair allocate() {
 		if (pooled > 0) {
