@@ -511,7 +511,12 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		logSkeleton("removed-fragments", skeleton);
 	}
 	private void logMinutiae(String key, TemplateBuilder template) {
-		logCbor(key, () -> new JsonTemplate(template.size, template.minutiae));
+		logCbor(key, () -> {
+			MutableTemplate mutable = new MutableTemplate();
+			mutable.size = template.size;
+			mutable.minutiae = template.minutiae;
+			return new PersistentTemplate(mutable);
+		});
 	}
 	// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
 	void logSkeletonMinutiae(TemplateBuilder template) {

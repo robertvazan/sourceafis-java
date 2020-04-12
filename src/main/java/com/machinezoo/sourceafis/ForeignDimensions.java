@@ -10,9 +10,9 @@ class ForeignDimensions {
 	int height;
 	double dpiX;
 	double dpiY;
-	ForeignDimensions(FingerprintTemplate template) {
-		width = template.immutable.size.x;
-		height = template.immutable.size.y;
+	ForeignDimensions(MutableTemplate mutable) {
+		width = mutable.size.x;
+		height = mutable.size.y;
 		dpiX = 500;
 		dpiY = 500;
 	}

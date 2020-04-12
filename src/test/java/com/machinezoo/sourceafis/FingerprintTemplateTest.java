@@ -31,13 +31,12 @@ public class FingerprintTemplateTest {
 		probe();
 	}
 	@Test public void roundTripSerialization() {
-		TemplateBuilder tb = new TemplateBuilder();
-		tb.size = new IntPoint(800, 600);
-		tb.minutiae = new ImmutableMinutia[] {
-			new ImmutableMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION),
-			new ImmutableMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)
-		};
-		FingerprintTemplate t = new FingerprintTemplate(new ImmutableTemplate(tb));
+		MutableTemplate mt = new MutableTemplate();
+		mt.size = new IntPoint(800, 600);
+		mt.minutiae = new ArrayList<>();
+		mt.minutiae.add(new MutableMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION));
+		mt.minutiae.add(new MutableMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING));
+		FingerprintTemplate t = new FingerprintTemplate(new ImmutableTemplate(mt));
 		t = new FingerprintTemplate(t.toByteArray());
 		assertEquals(2, t.immutable.minutiae.length);
 		ImmutableMinutia a = t.immutable.minutiae[0];
@@ -84,7 +83,7 @@ public class FingerprintTemplateTest {
 			}
 		BufferedImage buffered = new BufferedImage(matrix.width, matrix.height, BufferedImage.TYPE_INT_RGB);
 		buffered.setRGB(0, 0, matrix.width, matrix.height, pixels, 0, matrix.width);
-	    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ImageIO.write(buffered, "BMP", stream);
 		return stream.toByteArray();
 	}

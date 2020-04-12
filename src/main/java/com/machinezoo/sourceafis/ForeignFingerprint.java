@@ -10,9 +10,9 @@ class ForeignFingerprint {
 	private static final Logger logger = LoggerFactory.getLogger(ForeignFingerprint.class);
 	ForeignDimensions dimensions;
 	List<ForeignMinutia> minutiae = new ArrayList<>();
-	ForeignFingerprint(FingerprintTemplate template) {
-		dimensions = new ForeignDimensions(template);
-		minutiae = Arrays.stream(template.immutable.minutiae).map(ForeignMinutia::new).collect(toList());
+	ForeignFingerprint(MutableTemplate mutable) {
+		dimensions = new ForeignDimensions(mutable);
+		minutiae = mutable.minutiae.stream().map(ForeignMinutia::new).collect(toList());
 	}
 	ForeignFingerprint(DataInputStream in, ForeignFormat format, ForeignDimensions sharedDimensions) throws IOException {
 		readPosition(in, format);

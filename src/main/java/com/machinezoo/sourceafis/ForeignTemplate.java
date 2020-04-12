@@ -10,10 +10,29 @@ class ForeignTemplate {
 	ForeignFormat format;
 	ForeignDimensions dimensions;
 	List<ForeignFingerprint> fingerprints = new ArrayList<>();
-	ForeignTemplate(FingerprintTemplate... templates) {
-		for (FingerprintTemplate template : templates)
-			fingerprints.add(new ForeignFingerprint(template));
+	ForeignTemplate(List<MutableTemplate> mutables) {
+		for (MutableTemplate mutable : mutables)
+			fingerprints.add(new ForeignFingerprint(mutable));
 		dimensions = fingerprints.stream().findFirst().map(f -> f.dimensions).orElse(null);
+	}
+	MutableTemplate mutable(ForeignFingerprint fingerprint) {
+		MutableTemplate mutable = new MutableTemplate();
+		int width = normalizeDpi(fingerprint.dimensions.width, fingerprint.dimensions.dpiX);
+		int height = normalizeDpi(fingerprint.dimensions.height, fingerprint.dimensions.dpiY);
+		mutable.size = new IntPoint(width, height);
+		mutable.minutiae = new ArrayList<>();
+		for (ForeignMinutia minutia : fingerprint.minutiae) {
+			int x = normalizeDpi(minutia.x, fingerprint.dimensions.dpiX);
+			int y = normalizeDpi(minutia.y, fingerprint.dimensions.dpiY);
+			mutable.minutiae.add(new MutableMinutia(new IntPoint(x, y), minutia.angle, minutia.type.convert()));
+		}
+		return mutable;
+	}
+	private static int normalizeDpi(int value, double dpi) {
+		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
+			return (int)Math.round(value / dpi * 500);
+		else
+			return value;
 	}
 	ForeignTemplate(DataInputStream in) throws IOException {
 		readFormatMarker(in);

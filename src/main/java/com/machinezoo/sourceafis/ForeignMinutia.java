@@ -10,11 +10,11 @@ class ForeignMinutia {
 	int x;
 	int y;
 	double angle;
-	ForeignMinutia(ImmutableMinutia minutia) {
-		type = ForeignMinutiaType.convert(minutia.type);
-		x = minutia.position.x;
-		y = minutia.position.y;
-		angle = minutia.direction;
+	ForeignMinutia(MutableMinutia mutable) {
+		type = ForeignMinutiaType.convert(mutable.type);
+		x = mutable.position.x;
+		y = mutable.position.y;
+		angle = mutable.direction;
 	}
 	ForeignMinutia(DataInputStream in, ForeignFormat format, ForeignDimensions dimensions) throws IOException {
 		readTypeAndX(in, format, dimensions);

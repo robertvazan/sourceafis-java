@@ -4,20 +4,19 @@ package com.machinezoo.sourceafis;
 import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
-import com.google.gson.*;
 
 class TemplateBuilder {
 	IntPoint size;
-	ImmutableMinutia[] minutiae;
-	NeighborEdge[][] edges;
-	void extract(DoubleMatrix raw, double dpi) {
+	List<MutableMinutia> minutiae = new ArrayList<>();
+	MutableTemplate extract(DoubleMatrix raw, double dpi) {
+		MutableTemplate template = new MutableTemplate();
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		FingerprintTransparency.current().logDecodedImage(raw);
 		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
 			raw = scaleImage(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
 		FingerprintTransparency.current().logScaledImage(raw);
-		size = raw.size();
+		template.size = size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.BLOCK_SIZE);
 		// https://sourceafis.machinezoo.com/transparency/block-map
 		FingerprintTransparency.current().logBlockMap(blocks);
@@ -50,35 +49,8 @@ class TemplateBuilder {
 		maskMinutiae(innerMask);
 		removeMinutiaClouds();
 		limitTemplateSize();
-		shuffleMinutiae();
-		buildEdgeTable();
-	}
-	void deserialize(String json) {
-		JsonTemplate data = new Gson().fromJson(json, JsonTemplate.class);
-		data.validate();
-		size = data.size();
-		minutiae = data.minutiae();
-		buildEdgeTable();
-	}
-	void convert(ForeignTemplate template, ForeignFingerprint fingerprint) {
-		int width = normalizeDpi(fingerprint.dimensions.width, fingerprint.dimensions.dpiX);
-		int height = normalizeDpi(fingerprint.dimensions.height, fingerprint.dimensions.dpiY);
-		size = new IntPoint(width, height);
-		List<ImmutableMinutia> list = new ArrayList<>();
-		for (ForeignMinutia minutia : fingerprint.minutiae) {
-			int x = normalizeDpi(minutia.x, fingerprint.dimensions.dpiX);
-			int y = normalizeDpi(minutia.y, fingerprint.dimensions.dpiY);
-			list.add(new ImmutableMinutia(new IntPoint(x, y), minutia.angle, minutia.type.convert()));
-		}
-		minutiae = list.stream().toArray(ImmutableMinutia[]::new);
-		shuffleMinutiae();
-		buildEdgeTable();
-	}
-	private static int normalizeDpi(int value, double dpi) {
-		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
-			return (int)Math.round(value / dpi * 500);
-		else
-			return value;
+		template.minutiae = minutiae;
+		return template;
 	}
 	static DoubleMatrix scaleImage(DoubleMatrix input, double dpi) {
 		return scaleImage(input, (int)Math.round(500.0 / dpi * input.width), (int)Math.round(500.0 / dpi * input.height));
@@ -569,87 +541,42 @@ class TemplateBuilder {
 		return shrunk;
 	}
 	private void collectMinutiae(Skeleton skeleton, MinutiaType type) {
-		minutiae = Stream.concat(
-			Arrays.stream(Optional.ofNullable(minutiae).orElse(new ImmutableMinutia[0])),
-			skeleton.minutiae.stream()
-				.filter(m -> m.ridges.size() == 1)
-				.map(m -> new ImmutableMinutia(m.position, m.ridges.get(0).direction(), type)))
-			.toArray(ImmutableMinutia[]::new);
+		for (SkeletonMinutia sminutia : skeleton.minutiae)
+			if (sminutia.ridges.size() == 1)
+				minutiae.add(new MutableMinutia(sminutia.position, sminutia.ridges.get(0).direction(), type));
 	}
 	private void maskMinutiae(BooleanMatrix mask) {
-		minutiae = Arrays.stream(minutiae)
-			.filter(minutia -> {
-				IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.MASK_DISPLACEMENT).round();
-				return mask.get(minutia.position.plus(arrow), false);
-			})
-			.toArray(ImmutableMinutia[]::new);
+		minutiae.removeIf(minutia -> {
+			IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.MASK_DISPLACEMENT).round();
+			return !mask.get(minutia.position.plus(arrow), false);
+		});
 		// https://sourceafis.machinezoo.com/transparency/inner-minutiae
 		FingerprintTransparency.current().logInnerMinutiae(this);
 	}
 	private void removeMinutiaClouds() {
 		int radiusSq = Integers.sq(Parameters.MINUTIA_CLOUD_RADIUS);
-		Set<ImmutableMinutia> removed = Arrays.stream(minutiae)
-			.filter(minutia -> Parameters.MAX_CLOUD_SIZE < Arrays.stream(minutiae)
+		minutiae.removeAll(minutiae.stream()
+			.filter(minutia -> Parameters.MAX_CLOUD_SIZE < minutiae.stream()
 				.filter(neighbor -> neighbor.position.minus(minutia.position).lengthSq() <= radiusSq)
 				.count() - 1)
-			.collect(toSet());
-		minutiae = Arrays.stream(minutiae)
-			.filter(minutia -> !removed.contains(minutia))
-			.toArray(ImmutableMinutia[]::new);
+			.collect(toList()));
 		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
 		FingerprintTransparency.current().logRemovedMinutiaClouds(this);
 	}
 	private void limitTemplateSize() {
-		if (minutiae.length > Parameters.MAX_MINUTIAE) {
-			minutiae = Arrays.stream(minutiae)
-				.sorted(Comparator.<ImmutableMinutia>comparingInt(
-					minutia -> Arrays.stream(minutiae)
+		if (minutiae.size() > Parameters.MAX_MINUTIAE) {
+			minutiae = minutiae.stream()
+				.sorted(Comparator.<MutableMinutia>comparingInt(
+					minutia -> minutiae.stream()
 						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
 						.sorted()
 						.skip(Parameters.SORT_BY_NEIGHBOR)
 						.findFirst().orElse(Integer.MAX_VALUE))
 					.reversed())
 				.limit(Parameters.MAX_MINUTIAE)
-				.toArray(ImmutableMinutia[]::new);
+				.collect(toList());
 		}
 		// https://sourceafis.machinezoo.com/transparency/top-minutiae
 		FingerprintTransparency.current().logTopMinutiae(this);
-	}
-	private void shuffleMinutiae() {
-		int prime = 1610612741;
-		Arrays.sort(minutiae, Comparator
-			.comparingInt((ImmutableMinutia m) -> ((m.position.x * prime) + m.position.y) * prime)
-			.thenComparing(m -> m.position.x)
-			.thenComparing(m -> m.position.y)
-			.thenComparing(m -> m.direction)
-			.thenComparing(m -> m.type));
-		// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
-		FingerprintTransparency.current().logShuffledMinutiae(this);
-	}
-	private void buildEdgeTable() {
-		edges = new NeighborEdge[minutiae.length][];
-		List<NeighborEdge> star = new ArrayList<>();
-		int[] allSqDistances = new int[minutiae.length];
-		for (int reference = 0; reference < edges.length; ++reference) {
-			IntPoint referencePosition = minutiae[reference].position;
-			int sqMaxDistance = Integers.sq(Parameters.EDGE_TABLE_RANGE);
-			if (minutiae.length - 1 > Parameters.EDGE_TABLE_NEIGHBORS) {
-				for (int neighbor = 0; neighbor < minutiae.length; ++neighbor)
-					allSqDistances[neighbor] = referencePosition.minus(minutiae[neighbor].position).lengthSq();
-				Arrays.sort(allSqDistances);
-				sqMaxDistance = allSqDistances[Parameters.EDGE_TABLE_NEIGHBORS];
-			}
-			for (int neighbor = 0; neighbor < minutiae.length; ++neighbor) {
-				if (neighbor != reference && referencePosition.minus(minutiae[neighbor].position).lengthSq() <= sqMaxDistance)
-					star.add(new NeighborEdge(minutiae, reference, neighbor));
-			}
-			star.sort(Comparator.<NeighborEdge>comparingInt(e -> e.length).thenComparingInt(e -> e.neighbor));
-			while (star.size() > Parameters.EDGE_TABLE_NEIGHBORS)
-				star.remove(star.size() - 1);
-			edges[reference] = star.toArray(new NeighborEdge[star.size()]);
-			star.clear();
-		}
-		// https://sourceafis.machinezoo.com/transparency/edge-table
-		FingerprintTransparency.current().logEdgeTable(edges);
 	}
 }

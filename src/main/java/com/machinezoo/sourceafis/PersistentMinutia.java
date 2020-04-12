@@ -3,16 +3,23 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 
-class JsonMinutia {
+class PersistentMinutia {
 	int x;
 	int y;
 	double direction;
 	String type;
-	JsonMinutia(ImmutableMinutia minutia) {
-		x = minutia.position.x;
-		y = minutia.position.y;
-		direction = minutia.direction;
-		type = minutia.type.json;
+	PersistentMinutia(MutableMinutia mutable) {
+		x = mutable.position.x;
+		y = mutable.position.y;
+		direction = mutable.direction;
+		type = mutable.type.json;
+	}
+	MutableMinutia mutable() {
+		MutableMinutia mutable = new MutableMinutia();
+		mutable.position = new IntPoint(x, y);
+		mutable.direction = direction;
+		mutable.type = MinutiaType.BIFURCATION.json.equals(type) ? MinutiaType.BIFURCATION : MinutiaType.ENDING;
+		return mutable;
 	}
 	void validate() {
 		if (Math.abs(x) > 10_000 || Math.abs(y) > 10_000)

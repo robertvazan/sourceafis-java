@@ -95,9 +95,7 @@ public class FingerprintTemplate {
 	public FingerprintTemplate(FingerprintImage image) {
 		Objects.requireNonNull(image);
 		Objects.requireNonNull(image.matrix);
-		TemplateBuilder builder = new TemplateBuilder();
-		builder.extract(image.matrix, image.dpi);
-		immutable = new ImmutableTemplate(builder);
+		immutable = new ImmutableTemplate(new TemplateBuilder().extract(image.matrix, image.dpi));
 	}
 	/**
 	 * Deserializes fingerprint template from compressed JSON.
@@ -131,9 +129,9 @@ public class FingerprintTemplate {
 				}
 			});
 			String json = new String(decompressed, StandardCharsets.UTF_8);
-			TemplateBuilder builder = new TemplateBuilder();
-			builder.deserialize(json);
-			immutable = new ImmutableTemplate(builder);
+			PersistentTemplate persistent = new Gson().fromJson(json, PersistentTemplate.class);
+			persistent.validate();
+			immutable = new ImmutableTemplate(persistent.mutable());
 		} catch (Throwable ex) {
 			if (!foreignToo)
 				throw ex;
@@ -235,9 +233,7 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(FingerprintImage)
 	 */
 	@Deprecated public FingerprintTemplate create(byte[] image) {
-		TemplateBuilder builder = new TemplateBuilder();
-		builder.extract(new FingerprintImage().decode(image).matrix, dpi);
-		immutable = new ImmutableTemplate(builder);
+		immutable = new ImmutableTemplate(new TemplateBuilder().extract(new FingerprintImage().decode(image).matrix, dpi));
 		return this;
 	}
 	/**
@@ -260,9 +256,9 @@ public class FingerprintTemplate {
 	 */
 	@Deprecated public FingerprintTemplate deserialize(String json) {
 		Objects.requireNonNull(json);
-		TemplateBuilder builder = new TemplateBuilder();
-		builder.deserialize(json);
-		immutable = new ImmutableTemplate(builder);
+		PersistentTemplate persistent = new Gson().fromJson(json, PersistentTemplate.class);
+		persistent.validate();
+		immutable = new ImmutableTemplate(persistent.mutable());
 		return this;
 	}
 	/**
@@ -286,8 +282,7 @@ public class FingerprintTemplate {
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 */
 	public byte[] toByteArray() {
-		ImmutableTemplate current = immutable;
-		String json = new Gson().toJson(new JsonTemplate(current.size, current.minutiae));
+		String json = new Gson().toJson(new PersistentTemplate(immutable.mutable()));
 		byte[] uncompressed = json.getBytes(StandardCharsets.UTF_8);
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		Exceptions.sneak().run(() -> {
@@ -307,8 +302,7 @@ public class FingerprintTemplate {
 	 * @see #toByteArray()
 	 */
 	@Deprecated public String serialize() {
-		ImmutableTemplate current = immutable;
-		return new Gson().toJson(new JsonTemplate(current.size, current.minutiae));
+		return new Gson().toJson(new PersistentTemplate(immutable.mutable()));
 	}
 	/**
 	 * Imports ANSI INCITS 378 or ISO 19794-2 fingerprint template from another fingerprint recognition system.

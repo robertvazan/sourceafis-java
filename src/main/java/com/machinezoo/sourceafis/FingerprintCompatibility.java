@@ -99,11 +99,7 @@ public class FingerprintCompatibility {
 		try {
 			ForeignTemplate foreign = ForeignTemplate.read(template);
 			return foreign.fingerprints.stream()
-				.map(fingerprint -> {
-					TemplateBuilder builder = new TemplateBuilder();
-					builder.convert(foreign, fingerprint);
-					return new FingerprintTemplate(new ImmutableTemplate(builder));
-				})
+				.map(fingerprint -> new FingerprintTemplate(new ImmutableTemplate(foreign.mutable(fingerprint))))
 				.collect(toList());
 		} catch (Throwable ex) {
 			/*
@@ -130,6 +126,9 @@ public class FingerprintCompatibility {
 			}
 		}
 	}
+	private static ForeignTemplate foreign(FingerprintTemplate... templates) {
+		return new ForeignTemplate(Arrays.stream(templates).map(t -> t.immutable.mutable()).collect(toList()));
+	}
 	/**
 	 * Converts native fingerprint template to ANSI 378-2004 template.
 	 * This method produces fingerprint template conforming to
@@ -149,7 +148,7 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2004">ANSI INCITS 378-2004</a>
 	 */
 	public static byte[] toAnsiIncits378v2004(FingerprintTemplate... templates) {
-		ForeignTemplate foreign = new ForeignTemplate(templates);
+		ForeignTemplate foreign = foreign(templates);
 		foreign.format = ForeignFormat.ANSI_378_2004;
 		return foreign.write();
 	}
@@ -172,7 +171,7 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2009-r2014">ANSI INCITS 378-2009[R2014]</a>
 	 */
 	public static byte[] toAnsiIncits378v2009(FingerprintTemplate... templates) {
-		ForeignTemplate foreign = new ForeignTemplate(templates);
+		ForeignTemplate foreign = foreign(templates);
 		foreign.format = ForeignFormat.ANSI_378_2009;
 		return foreign.write();
 	}
@@ -195,7 +194,7 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2009-am1-2010-r2015">ANSI INCITS 378:2009/AM 1:2010[R2015]</a>
 	 */
 	public static byte[] toAnsiIncits378v2009AM1(FingerprintTemplate... templates) {
-		ForeignTemplate foreign = new ForeignTemplate(templates);
+		ForeignTemplate foreign = foreign(templates);
 		foreign.format = ForeignFormat.ANSI_378_2009_AM1;
 		return foreign.write();
 	}
