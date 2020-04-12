@@ -5,10 +5,8 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
 
-class TemplateBuilder {
-	IntPoint size;
-	List<MutableMinutia> minutiae = new ArrayList<>();
-	MutableTemplate extract(DoubleMatrix raw, double dpi) {
+class FeatureExtractor {
+	static MutableTemplate extract(DoubleMatrix raw, double dpi) {
 		MutableTemplate template = new MutableTemplate();
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		FingerprintTransparency.current().logDecodedImage(raw);
@@ -16,7 +14,7 @@ class TemplateBuilder {
 			raw = scaleImage(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
 		FingerprintTransparency.current().logScaledImage(raw);
-		template.size = size = raw.size();
+		template.size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.BLOCK_SIZE);
 		// https://sourceafis.machinezoo.com/transparency/block-map
 		FingerprintTransparency.current().logBlockMap(blocks);
@@ -42,14 +40,20 @@ class TemplateBuilder {
 		BooleanMatrix innerMask = innerMask(pixelMask);
 		Skeleton ridges = new Skeleton(binary, SkeletonType.RIDGES);
 		Skeleton valleys = new Skeleton(inverted, SkeletonType.VALLEYS);
-		collectMinutiae(ridges, MinutiaType.ENDING);
-		collectMinutiae(valleys, MinutiaType.BIFURCATION);
+		template.minutiae = new ArrayList<>();
+		collectMinutiae(template.minutiae, ridges, MinutiaType.ENDING);
+		collectMinutiae(template.minutiae, valleys, MinutiaType.BIFURCATION);
 		// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
-		FingerprintTransparency.current().logSkeletonMinutiae(this);
-		maskMinutiae(innerMask);
-		removeMinutiaClouds();
-		limitTemplateSize();
-		template.minutiae = minutiae;
+		FingerprintTransparency.current().logSkeletonMinutiae(template);
+		maskMinutiae(template.minutiae, innerMask);
+		// https://sourceafis.machinezoo.com/transparency/inner-minutiae
+		FingerprintTransparency.current().logInnerMinutiae(template);
+		removeMinutiaClouds(template.minutiae);
+		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
+		FingerprintTransparency.current().logRemovedMinutiaClouds(template);
+		template.minutiae = limitTemplateSize(template.minutiae);
+		// https://sourceafis.machinezoo.com/transparency/top-minutiae
+		FingerprintTransparency.current().logTopMinutiae(template);
 		return template;
 	}
 	static DoubleMatrix scaleImage(DoubleMatrix input, double dpi) {
@@ -84,7 +88,7 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private HistogramCube histogram(BlockMap blocks, DoubleMatrix image) {
+	private static HistogramCube histogram(BlockMap blocks, DoubleMatrix image) {
 		HistogramCube histogram = new HistogramCube(blocks.primary.blocks, Parameters.HISTOGRAM_DEPTH);
 		for (IntPoint block : blocks.primary.blocks) {
 			IntRect area = blocks.primary.block(block);
@@ -98,7 +102,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logHistogram(histogram);
 		return histogram;
 	}
-	private HistogramCube smoothHistogram(BlockMap blocks, HistogramCube input) {
+	private static HistogramCube smoothHistogram(BlockMap blocks, HistogramCube input) {
 		IntPoint[] blocksAround = new IntPoint[] { new IntPoint(0, 0), new IntPoint(-1, 0), new IntPoint(0, -1), new IntPoint(-1, -1) };
 		HistogramCube output = new HistogramCube(blocks.secondary.blocks, input.bins);
 		for (IntPoint corner : blocks.secondary.blocks) {
@@ -114,7 +118,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logSmoothedHistogram(output);
 		return output;
 	}
-	private BooleanMatrix mask(BlockMap blocks, HistogramCube histogram) {
+	private static BooleanMatrix mask(BlockMap blocks, HistogramCube histogram) {
 		DoubleMatrix contrast = clipContrast(blocks, histogram);
 		BooleanMatrix mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
@@ -130,7 +134,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logFilteredMask(mask);
 		return mask;
 	}
-	private DoubleMatrix clipContrast(BlockMap blocks, HistogramCube histogram) {
+	private static DoubleMatrix clipContrast(BlockMap blocks, HistogramCube histogram) {
 		DoubleMatrix result = new DoubleMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks) {
 			int volume = histogram.sum(block);
@@ -159,7 +163,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logClippedContrast(result);
 		return result;
 	}
-	private BooleanMatrix filterAbsoluteContrast(DoubleMatrix contrast) {
+	private static BooleanMatrix filterAbsoluteContrast(DoubleMatrix contrast) {
 		BooleanMatrix result = new BooleanMatrix(contrast.size());
 		for (IntPoint block : contrast.size())
 			if (contrast.get(block) < Parameters.MIN_ABSOLUTE_CONTRAST)
@@ -168,7 +172,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logAbsoluteContrastMask(result);
 		return result;
 	}
-	private BooleanMatrix filterRelativeContrast(DoubleMatrix contrast, BlockMap blocks) {
+	private static BooleanMatrix filterRelativeContrast(DoubleMatrix contrast, BlockMap blocks) {
 		List<Double> sortedContrast = new ArrayList<>();
 		for (IntPoint block : contrast.size())
 			sortedContrast.add(contrast.get(block));
@@ -186,7 +190,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logRelativeContrastMask(result);
 		return result;
 	}
-	private BooleanMatrix vote(BooleanMatrix input, BooleanMatrix mask, int radius, double majority, int borderDistance) {
+	private static BooleanMatrix vote(BooleanMatrix input, BooleanMatrix mask, int radius, double majority, int borderDistance) {
 		IntPoint size = input.size();
 		IntRect rect = new IntRect(borderDistance, borderDistance, size.x - 2 * borderDistance, size.y - 2 * borderDistance);
 		int[] thresholds = IntStream.range(0, Integers.sq(2 * radius + 1) + 1).map(i -> (int)Math.ceil(majority * i)).toArray();
@@ -232,10 +236,10 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private BooleanMatrix filterBlockErrors(BooleanMatrix input) {
+	private static BooleanMatrix filterBlockErrors(BooleanMatrix input) {
 		return vote(input, null, Parameters.BLOCK_ERRORS_VOTE_RADIUS, Parameters.BLOCK_ERRORS_VOTE_MAJORITY, Parameters.BLOCK_ERRORS_VOTE_BORDER_DISTANCE);
 	}
-	private DoubleMatrix equalize(BlockMap blocks, DoubleMatrix image, HistogramCube histogram, BooleanMatrix blockMask) {
+	private static DoubleMatrix equalize(BlockMap blocks, DoubleMatrix image, HistogramCube histogram, BooleanMatrix blockMask) {
 		final double rangeMin = -1;
 		final double rangeMax = 1;
 		final double rangeSize = rangeMax - rangeMin;
@@ -294,7 +298,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logEqualizedImage(result);
 		return result;
 	}
-	private DoubleMatrix orientationMap(DoubleMatrix image, BooleanMatrix mask, BlockMap blocks) {
+	private static DoubleMatrix orientationMap(DoubleMatrix image, BooleanMatrix mask, BlockMap blocks) {
 		DoublePointMatrix accumulated = pixelwiseOrientation(image, mask, blocks);
 		DoublePointMatrix byBlock = blockOrientations(accumulated, blocks, mask);
 		DoublePointMatrix smooth = smoothOrientation(byBlock, mask);
@@ -315,7 +319,7 @@ class TemplateBuilder {
 			return ((state & MASK) + 0.5) * SCALING;
 		}
 	}
-	private ConsideredOrientation[][] planOrientations() {
+	private static ConsideredOrientation[][] planOrientations() {
 		OrientationRandom random = new OrientationRandom();
 		ConsideredOrientation[][] splits = new ConsideredOrientation[Parameters.ORIENTATION_SPLIT][];
 		for (int i = 0; i < Parameters.ORIENTATION_SPLIT; ++i) {
@@ -332,7 +336,7 @@ class TemplateBuilder {
 		}
 		return splits;
 	}
-	private DoublePointMatrix pixelwiseOrientation(DoubleMatrix input, BooleanMatrix mask, BlockMap blocks) {
+	private static DoublePointMatrix pixelwiseOrientation(DoubleMatrix input, BooleanMatrix mask, BlockMap blocks) {
 		ConsideredOrientation[][] neighbors = planOrientations();
 		DoublePointMatrix orientation = new DoublePointMatrix(input.size());
 		for (int blockY = 0; blockY < blocks.primary.blocks.y; ++blockY) {
@@ -377,7 +381,7 @@ class TemplateBuilder {
 		else
 			return IntRange.ZERO;
 	}
-	private DoublePointMatrix blockOrientations(DoublePointMatrix orientation, BlockMap blocks, BooleanMatrix mask) {
+	private static DoublePointMatrix blockOrientations(DoublePointMatrix orientation, BlockMap blocks, BooleanMatrix mask) {
 		DoublePointMatrix sums = new DoublePointMatrix(blocks.primary.blocks);
 		for (IntPoint block : blocks.primary.blocks) {
 			if (mask.get(block)) {
@@ -391,7 +395,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logBlockOrientation(sums);
 		return sums;
 	}
-	private DoublePointMatrix smoothOrientation(DoublePointMatrix orientation, BooleanMatrix mask) {
+	private static DoublePointMatrix smoothOrientation(DoublePointMatrix orientation, BooleanMatrix mask) {
 		IntPoint size = mask.size();
 		DoublePointMatrix smoothed = new DoublePointMatrix(size);
 		for (IntPoint block : size)
@@ -414,7 +418,7 @@ class TemplateBuilder {
 				angles.set(block, DoubleAngle.atan(vectors.get(block)));
 		return angles;
 	}
-	private IntPoint[][] orientedLines(int resolution, int radius, double step) {
+	private static IntPoint[][] orientedLines(int resolution, int radius, double step) {
 		IntPoint[][] result = new IntPoint[resolution][];
 		for (int orientationIndex = 0; orientationIndex < resolution; ++orientationIndex) {
 			List<IntPoint> line = new ArrayList<>();
@@ -452,7 +456,7 @@ class TemplateBuilder {
 		}
 		return output;
 	}
-	private BooleanMatrix binarize(DoubleMatrix input, DoubleMatrix baseline, BooleanMatrix mask, BlockMap blocks) {
+	private static BooleanMatrix binarize(DoubleMatrix input, DoubleMatrix baseline, BooleanMatrix mask, BlockMap blocks) {
 		IntPoint size = input.size();
 		BooleanMatrix binarized = new BooleanMatrix(size);
 		for (IntPoint block : blocks.primary.blocks)
@@ -467,7 +471,7 @@ class TemplateBuilder {
 		FingerprintTransparency.current().logBinarizedImage(binarized);
 		return binarized;
 	}
-	private void cleanupBinarized(BooleanMatrix binary, BooleanMatrix mask) {
+	private static void cleanupBinarized(BooleanMatrix binary, BooleanMatrix mask) {
 		IntPoint size = binary.size();
 		BooleanMatrix inverted = new BooleanMatrix(binary);
 		inverted.invert();
@@ -513,7 +517,7 @@ class TemplateBuilder {
 				inverted.set(x, y, !binary.get(x, y) && mask.get(x, y));
 		return inverted;
 	}
-	private BooleanMatrix innerMask(BooleanMatrix outer) {
+	private static BooleanMatrix innerMask(BooleanMatrix outer) {
 		IntPoint size = outer.size();
 		BooleanMatrix inner = new BooleanMatrix(size);
 		for (int y = 1; y < size.y - 1; ++y)
@@ -540,43 +544,37 @@ class TemplateBuilder {
 				shrunk.set(x, y, mask.get(x, y - amount) && mask.get(x, y + amount) && mask.get(x - amount, y) && mask.get(x + amount, y));
 		return shrunk;
 	}
-	private void collectMinutiae(Skeleton skeleton, MinutiaType type) {
+	private static void collectMinutiae(List<MutableMinutia> minutiae, Skeleton skeleton, MinutiaType type) {
 		for (SkeletonMinutia sminutia : skeleton.minutiae)
 			if (sminutia.ridges.size() == 1)
 				minutiae.add(new MutableMinutia(sminutia.position, sminutia.ridges.get(0).direction(), type));
 	}
-	private void maskMinutiae(BooleanMatrix mask) {
+	private static void maskMinutiae(List<MutableMinutia> minutiae, BooleanMatrix mask) {
 		minutiae.removeIf(minutia -> {
 			IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.MASK_DISPLACEMENT).round();
 			return !mask.get(minutia.position.plus(arrow), false);
 		});
-		// https://sourceafis.machinezoo.com/transparency/inner-minutiae
-		FingerprintTransparency.current().logInnerMinutiae(this);
 	}
-	private void removeMinutiaClouds() {
+	private static void removeMinutiaClouds(List<MutableMinutia> minutiae) {
 		int radiusSq = Integers.sq(Parameters.MINUTIA_CLOUD_RADIUS);
 		minutiae.removeAll(minutiae.stream()
 			.filter(minutia -> Parameters.MAX_CLOUD_SIZE < minutiae.stream()
 				.filter(neighbor -> neighbor.position.minus(minutia.position).lengthSq() <= radiusSq)
 				.count() - 1)
 			.collect(toList()));
-		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
-		FingerprintTransparency.current().logRemovedMinutiaClouds(this);
 	}
-	private void limitTemplateSize() {
-		if (minutiae.size() > Parameters.MAX_MINUTIAE) {
-			minutiae = minutiae.stream()
-				.sorted(Comparator.<MutableMinutia>comparingInt(
-					minutia -> minutiae.stream()
-						.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
-						.sorted()
-						.skip(Parameters.SORT_BY_NEIGHBOR)
-						.findFirst().orElse(Integer.MAX_VALUE))
-					.reversed())
-				.limit(Parameters.MAX_MINUTIAE)
-				.collect(toList());
-		}
-		// https://sourceafis.machinezoo.com/transparency/top-minutiae
-		FingerprintTransparency.current().logTopMinutiae(this);
+	private static List<MutableMinutia> limitTemplateSize(List<MutableMinutia> minutiae) {
+		if (minutiae.size() <= Parameters.MAX_MINUTIAE)
+			return minutiae;
+		return minutiae.stream()
+			.sorted(Comparator.<MutableMinutia>comparingInt(
+				minutia -> minutiae.stream()
+					.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
+					.sorted()
+					.skip(Parameters.SORT_BY_NEIGHBOR)
+					.findFirst().orElse(Integer.MAX_VALUE))
+				.reversed())
+			.limit(Parameters.MAX_MINUTIAE)
+			.collect(toList());
 	}
 }

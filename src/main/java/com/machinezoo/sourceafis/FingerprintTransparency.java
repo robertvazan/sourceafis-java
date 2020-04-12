@@ -510,33 +510,31 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logRemovedFragments(Skeleton skeleton) {
 		logSkeleton("removed-fragments", skeleton);
 	}
-	private void logMinutiae(String key, TemplateBuilder template) {
-		logCbor(key, () -> {
-			MutableTemplate mutable = new MutableTemplate();
-			mutable.size = template.size;
-			mutable.minutiae = template.minutiae;
-			return new PersistentTemplate(mutable);
-		});
+	private void logMinutiae(String key, Supplier<MutableTemplate> supplier) {
+		logCbor(key, () -> new PersistentTemplate(supplier.get()));
+	}
+	private void logMinutiae(String key, MutableTemplate template) {
+		logMinutiae(key, () -> template);
 	}
 	// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
-	void logSkeletonMinutiae(TemplateBuilder template) {
+	void logSkeletonMinutiae(MutableTemplate template) {
 		logMinutiae("skeleton-minutiae", template);
 	}
 	// https://sourceafis.machinezoo.com/transparency/inner-minutiae
-	void logInnerMinutiae(TemplateBuilder template) {
+	void logInnerMinutiae(MutableTemplate template) {
 		logMinutiae("inner-minutiae", template);
 	}
 	// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
-	void logRemovedMinutiaClouds(TemplateBuilder template) {
+	void logRemovedMinutiaClouds(MutableTemplate template) {
 		logMinutiae("removed-minutia-clouds", template);
 	}
 	// https://sourceafis.machinezoo.com/transparency/top-minutiae
-	void logTopMinutiae(TemplateBuilder template) {
+	void logTopMinutiae(MutableTemplate template) {
 		logMinutiae("top-minutiae", template);
 	}
 	// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
-	void logShuffledMinutiae(TemplateBuilder template) {
-		logMinutiae("shuffled-minutiae", template);
+	void logShuffledMinutiae(Supplier<MutableTemplate> supplier) {
+		logMinutiae("shuffled-minutiae", supplier);
 	}
 	// https://sourceafis.machinezoo.com/transparency/edge-table
 	void logEdgeTable(NeighborEdge[][] table) {

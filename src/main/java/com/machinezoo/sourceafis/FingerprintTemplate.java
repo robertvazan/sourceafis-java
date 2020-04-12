@@ -95,7 +95,7 @@ public class FingerprintTemplate {
 	public FingerprintTemplate(FingerprintImage image) {
 		Objects.requireNonNull(image);
 		Objects.requireNonNull(image.matrix);
-		immutable = new ImmutableTemplate(new TemplateBuilder().extract(image.matrix, image.dpi));
+		immutable = new ImmutableTemplate(FeatureExtractor.extract(image.matrix, image.dpi));
 	}
 	/**
 	 * Deserializes fingerprint template from compressed JSON.
@@ -233,7 +233,7 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(FingerprintImage)
 	 */
 	@Deprecated public FingerprintTemplate create(byte[] image) {
-		immutable = new ImmutableTemplate(new TemplateBuilder().extract(new FingerprintImage().decode(image).matrix, dpi));
+		immutable = new ImmutableTemplate(FeatureExtractor.extract(new FingerprintImage().decode(image).matrix, dpi));
 		return this;
 	}
 	/**

@@ -58,7 +58,7 @@ public class FingerprintTemplateTest {
 		for (int i = 0; i < 10; ++i) {
 			DoubleMatrix clipped = clip(original, random.nextInt(clipY), random.nextInt(clipX), random.nextInt(clipY), random.nextInt(clipX));
 			double dpi = 500 + 2 * (random.nextDouble() - 0.5) * 200;
-			DoubleMatrix scaled = TemplateBuilder.scaleImage(clipped, 500 * 1 / (dpi / 500));
+			DoubleMatrix scaled = FeatureExtractor.scaleImage(clipped, 500 * 1 / (dpi / 500));
 			byte[] reencoded = encodeImage(scaled);
 			FingerprintTemplate candidate = new FingerprintTemplate(new FingerprintImage()
 				.dpi(dpi)

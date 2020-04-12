@@ -27,10 +27,7 @@ class ImmutableTemplate {
 				.thenComparing(m -> m.type))
 			.toArray(ImmutableMinutia[]::new);
 		// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
-		TemplateBuilder tb = new TemplateBuilder();
-		tb.size = size;
-		tb.minutiae = mutable().minutiae;
-		FingerprintTransparency.current().logShuffledMinutiae(tb);
+		FingerprintTransparency.current().logShuffledMinutiae(this::mutable);
 		edges = NeighborEdge.buildTable(minutiae);
 	}
 	MutableTemplate mutable() {
