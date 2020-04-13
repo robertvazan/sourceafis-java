@@ -427,26 +427,33 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			return Arrays.stream(roots).limit(count).map(p -> new CborPair(p.probe, p.candidate)).collect(toList());
 		}
 	}
-	// https://sourceafis.machinezoo.com/transparency/root-pairs
-	void logRootPairs(int count, MinutiaPair[] roots) {
-		log("root-pairs", () -> CborPair.roots(count, roots));
-	}
 	/*
 	 * Cache accepts() for matcher logs in volatile variables, because calling accepts() directly every time
 	 * could slow down matching perceptibly due to the high number of pairings per match.
 	 */
 	private volatile boolean matcherOffered;
+	private volatile boolean acceptsRootPairs;
 	private volatile boolean acceptsPairing;
 	private volatile boolean acceptsScore;
 	private volatile boolean acceptsBestMatch;
 	private void offerMatcher() {
 		if (!matcherOffered) {
+			acceptsRootPairs = accepts("root-pairs");
 			acceptsPairing = accepts("pairing");
 			acceptsScore = accepts("score");
 			acceptsBestMatch = accepts("best-match");
 			matcherOffered = true;
 		}
 	}
+	// https://sourceafis.machinezoo.com/transparency/root-pairs
+	void logRootPairs(int count, MinutiaPair[] roots) {
+		offerMatcher();
+		if (acceptsRootPairs)
+			log("root-pairs", () -> CborPair.roots(count, roots));
+	}
+	/*
+	 * Expose fast method to check whether pairing should be logged, so that we can easily skip support edge logging.
+	 */
 	boolean acceptsPairing() {
 		offerMatcher();
 		return acceptsPairing;
