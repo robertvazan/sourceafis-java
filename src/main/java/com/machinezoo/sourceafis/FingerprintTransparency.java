@@ -4,6 +4,7 @@ package com.machinezoo.sourceafis;
 import static java.util.stream.Collectors.*;
 import java.io.*;
 import java.nio.*;
+import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.zip.*;
@@ -331,12 +332,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	private byte[] cbor(Object data) {
 		return Exceptions.wrap(IllegalArgumentException::new).get(() -> mapper.writeValueAsBytes(data));
 	}
-	@SuppressWarnings("unused") private static class CborVersion {
-		String version;
-		CborVersion(String version) {
-			this.version = version;
-		}
-	}
 	/*
 	 * Use fast double-checked locking, because this could be called in tight loops.
 	 */
@@ -351,7 +346,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				}
 			}
 			if (offer && accepts("version"))
-				take("version", "application/cbor", cbor(new CborVersion(FingerprintCompatibility.version())));
+				take("version", "text/plain", FingerprintCompatibility.version().getBytes(StandardCharsets.UTF_8));
 		}
 	}
 	private void log(String key, String mime, Supplier<byte[]> supplier) {
@@ -492,16 +487,10 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		if (acceptsScore)
 			log("score", score);
 	}
-	@SuppressWarnings("unused") private static class CborBestMatch {
-		int offset;
-		CborBestMatch(int offset) {
-			this.offset = offset;
-		}
-	}
 	// https://sourceafis.machinezoo.com/transparency/best-match
 	void logBestMatch(int nth) {
 		offerMatcher();
 		if (acceptsBestMatch)
-			log("best-match", new CborBestMatch(nth));
+			take("best-match", "text/plain", Integer.toString(nth).getBytes(StandardCharsets.UTF_8));
 	}
 }

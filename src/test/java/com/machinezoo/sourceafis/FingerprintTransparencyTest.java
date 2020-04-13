@@ -11,7 +11,7 @@ public class FingerprintTransparencyTest {
 		final List<String> keys = new ArrayList<>();
 		@Override public void take(String key, String mime, byte[] data) {
 			keys.add(key);
-			assertThat(key, mime, is(oneOf("application/cbor")));
+			assertThat(key, mime, is(oneOf("application/cbor", "text/plain")));
 			assertThat(key, data.length, greaterThan(0));
 		}
 	}
