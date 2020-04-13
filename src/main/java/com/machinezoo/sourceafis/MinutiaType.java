@@ -2,9 +2,6 @@
 package com.machinezoo.sourceafis;
 
 enum MinutiaType {
-	ENDING("ending"), BIFURCATION("bifurcation");
-	final String json;
-	MinutiaType(String json) {
-		this.json = json;
-	}
+	ENDING,
+	BIFURCATION
 }

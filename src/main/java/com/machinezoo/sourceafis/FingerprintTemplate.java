@@ -1,13 +1,13 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
-import java.io.*;
-import java.nio.charset.*;
 import java.util.*;
-import java.util.zip.*;
 import javax.imageio.*;
-import org.apache.commons.io.*;
 import org.slf4j.*;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.*;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.dataformat.cbor.*;
 import com.google.gson.*;
 import com.machinezoo.noexception.*;
 
@@ -98,15 +98,15 @@ public class FingerprintTemplate {
 		immutable = new ImmutableTemplate(FeatureExtractor.extract(image.matrix, image.dpi));
 	}
 	/**
-	 * Deserializes fingerprint template from compressed JSON.
-	 * This constructor reads gzip-compressed JSON template produced by {@link #toByteArray()}
+	 * Deserializes fingerprint template from byte array.
+	 * This constructor reads <a href="https://cbor.io/">CBOR</a>-encoded template produced by {@link #toByteArray()}
 	 * and reconstructs an exact copy of the original fingerprint template.
 	 * <p>
 	 * Templates produced by previous versions of SourceAFIS may fail to deserialize correctly.
 	 * Applications should re-extract all templates from original raw images when upgrading SourceAFIS.
 	 * 
 	 * @param serialized
-	 *            serialized fingerprint template in gzip-compressed JSON format produced by {@link #toByteArray()}
+	 *            serialized fingerprint template in <a href="https://cbor.io/">CBOR</a> format produced by {@link #toByteArray()}
 	 * @throws NullPointerException
 	 *             if {@code serialized} is {@code null}
 	 * @throws RuntimeException
@@ -120,21 +120,17 @@ public class FingerprintTemplate {
 	public FingerprintTemplate(byte[] serialized) {
 		this(serialized, true);
 	}
+	private static final ObjectMapper mapper = new ObjectMapper(new CBORFactory())
+		.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
 	FingerprintTemplate(byte[] serialized, boolean foreignToo) {
 		try {
 			Objects.requireNonNull(serialized);
-			byte[] decompressed = Exceptions.wrap().get(() -> {
-				try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(serialized))) {
-					return IOUtils.toByteArray(gzip);
-				}
-			});
-			String json = new String(decompressed, StandardCharsets.UTF_8);
-			PersistentTemplate persistent = new Gson().fromJson(json, PersistentTemplate.class);
+			PersistentTemplate persistent = mapper.readValue(serialized, PersistentTemplate.class);
 			persistent.validate();
 			immutable = new ImmutableTemplate(persistent.mutable());
 		} catch (Throwable ex) {
 			if (!foreignToo)
-				throw ex;
+				throw new IllegalArgumentException("This is not a valid SourceAFIS template.", ex);
 			try {
 				FingerprintTemplate converted = FingerprintCompatibility.convert(serialized);
 				immutable = converted.immutable;
@@ -146,7 +142,7 @@ public class FingerprintTemplate {
 				/*
 				 * Throw the original exception. We don't want to hide it with exception from this fallback.
 				 */
-				throw ex;
+				throw new IllegalArgumentException("This is neither a valid SourceAFIS template nor any supported foreign template format.", ex);
 			}
 		}
 	}
@@ -262,7 +258,7 @@ public class FingerprintTemplate {
 		return this;
 	}
 	/**
-	 * Serializes fingerprint template as compressed JSON.
+	 * Serializes fingerprint template into byte array.
 	 * Serialized template can be stored in a database or sent over network.
 	 * It can be deserialized by calling {@link #FingerprintTemplate(byte[])} constructor.
 	 * Persisting templates alongside fingerprint images allows applications to start faster,
@@ -276,21 +272,14 @@ public class FingerprintTemplate {
 	 * Template format for current version of SourceAFIS is
 	 * <a href="https://sourceafis.machinezoo.com/template">documented on SourceAFIS website</a>.
 	 * 
-	 * @return serialized fingerprint template in gzip-compressed JSON format
+	 * @return serialized fingerprint template in <a href="https://cbor.io/">CBOR</a> format
 	 * 
 	 * @see #FingerprintTemplate(byte[])
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 */
 	public byte[] toByteArray() {
-		String json = new Gson().toJson(new PersistentTemplate(immutable.mutable()));
-		byte[] uncompressed = json.getBytes(StandardCharsets.UTF_8);
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		Exceptions.sneak().run(() -> {
-			try (GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
-				gzip.write(uncompressed);
-			}
-		});
-		return buffer.toByteArray();
+		PersistentTemplate persistent = new PersistentTemplate(immutable.mutable());
+		return Exceptions.wrap().get(() -> mapper.writeValueAsBytes(persistent));
 	}
 	/**
 	 * Serializes fingerprint template to JSON string.
