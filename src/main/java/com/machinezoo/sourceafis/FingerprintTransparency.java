@@ -359,99 +359,11 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		if (accepts(key))
 			take(key, mime, supplier.get());
 	}
-	private void logCbor(String key, Supplier<?> supplier) {
+	void log(String key, Supplier<?> supplier) {
 		log(key, "application/cbor", () -> cbor(supplier.get()));
 	}
-	private void logCbor(String key, Object data) {
+	void log(String key, Object data) {
 		log(key, "application/cbor", () -> cbor(data));
-	}
-	// https://sourceafis.machinezoo.com/transparency/decoded-image
-	void logDecodedImage(DoubleMatrix image) {
-		logCbor("decoded-image", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/scaled-image
-	void logScaledImage(DoubleMatrix image) {
-		logCbor("scaled-image", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/block-map
-	void logBlockMap(BlockMap blocks) {
-		logCbor("block-map", blocks);
-	}
-	// https://sourceafis.machinezoo.com/transparency/histogram
-	void logHistogram(HistogramCube histogram) {
-		logCbor("histogram", histogram);
-	}
-	// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
-	void logSmoothedHistogram(HistogramCube histogram) {
-		logCbor("smoothed-histogram", histogram);
-	}
-	// https://sourceafis.machinezoo.com/transparency/clipped-contrast
-	void logClippedContrast(DoubleMatrix contrast) {
-		logCbor("clipped-contrast", contrast);
-	}
-	// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
-	void logAbsoluteContrastMask(BooleanMatrix mask) {
-		logCbor("absolute-contrast-mask", mask);
-	}
-	// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
-	void logRelativeContrastMask(BooleanMatrix mask) {
-		logCbor("relative-contrast-mask", mask);
-	}
-	// https://sourceafis.machinezoo.com/transparency/combined-mask
-	void logCombinedMask(BooleanMatrix mask) {
-		logCbor("combined-mask", mask);
-	}
-	// https://sourceafis.machinezoo.com/transparency/filtered-mask
-	void logFilteredMask(BooleanMatrix mask) {
-		logCbor("filtered-mask", mask);
-	}
-	// https://sourceafis.machinezoo.com/transparency/equalized-image
-	void logEqualizedImage(DoubleMatrix image) {
-		logCbor("equalized-image", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
-	void logPixelwiseOrientation(DoublePointMatrix orientations) {
-		logCbor("pixelwise-orientation", orientations);
-	}
-	// https://sourceafis.machinezoo.com/transparency/block-orientation
-	void logBlockOrientation(DoublePointMatrix orientations) {
-		logCbor("block-orientation", orientations);
-	}
-	// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
-	void logSmoothedOrientation(DoublePointMatrix orientations) {
-		logCbor("smoothed-orientation", orientations);
-	}
-	// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
-	void logParallelSmoothing(DoubleMatrix smoothed) {
-		logCbor("parallel-smoothing", smoothed);
-	}
-	// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
-	void logOrthogonalSmoothing(DoubleMatrix smoothed) {
-		logCbor("orthogonal-smoothing", smoothed);
-	}
-	// https://sourceafis.machinezoo.com/transparency/binarized-image
-	void logBinarizedImage(BooleanMatrix image) {
-		logCbor("binarized-image", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
-	void logFilteredBinarydImage(BooleanMatrix image) {
-		logCbor("filtered-binary-image", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/pixel-mask
-	void logPixelMask(BooleanMatrix image) {
-		logCbor("pixel-mask", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/inner-mask
-	void logInnerMask(BooleanMatrix image) {
-		logCbor("inner-mask", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
-	void logBinarizedSkeleton(SkeletonType type, BooleanMatrix image) {
-		logCbor(type.prefix + "binarized-skeleton", image);
-	}
-	// https://sourceafis.machinezoo.com/transparency/thinned-skeleton
-	void logThinnedSkeleton(SkeletonType type, BooleanMatrix image) {
-		logCbor(type.prefix + "thinned-skeleton", image);
 	}
 	@SuppressWarnings("unused") private static class CborSkeletonRidge {
 		int start;
@@ -483,56 +395,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				.collect(toList());
 		}
 	}
-	private void logSkeleton(String keyword, Skeleton skeleton) {
-		logCbor(skeleton.type.prefix + keyword, () -> new CborSkeleton(skeleton));
-	}
-	// https://sourceafis.machinezoo.com/transparency/traced-skeleton
-	void logTracedSkeleton(Skeleton skeleton) {
-		logSkeleton("traced-skeleton", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-dots
-	void logRemovedDots(Skeleton skeleton) {
-		logSkeleton("removed-dots", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-pores
-	void logRemovedPores(Skeleton skeleton) {
-		logSkeleton("removed-pores", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-gaps
-	void logRemovedGaps(Skeleton skeleton) {
-		logSkeleton("removed-gaps", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-tails
-	void logRemovedTails(Skeleton skeleton) {
-		logSkeleton("removed-tails", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-fragments
-	void logRemovedFragments(Skeleton skeleton) {
-		logSkeleton("removed-fragments", skeleton);
-	}
-	// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
-	void logSkeletonMinutiae(MutableTemplate template) {
-		logCbor("skeleton-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/inner-minutiae
-	void logInnerMinutiae(MutableTemplate template) {
-		logCbor("inner-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
-	void logRemovedMinutiaClouds(MutableTemplate template) {
-		logCbor("removed-minutia-clouds", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/top-minutiae
-	void logTopMinutiae(MutableTemplate template) {
-		logCbor("top-minutiae", template);
-	}
-	// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
-	void logShuffledMinutiae(Supplier<MutableTemplate> supplier) {
-		logCbor("shuffled-minutiae", supplier);
-	}
-	// https://sourceafis.machinezoo.com/transparency/edge-table
-	void logEdgeTable(NeighborEdge[][] table) {
-		logCbor("edge-table", table);
+	void logSkeleton(String keyword, Skeleton skeleton) {
+		log(skeleton.type.prefix + keyword, () -> new CborSkeleton(skeleton));
 	}
 	@SuppressWarnings("unused") private static class CborHashEntry {
 		int key;
@@ -540,7 +404,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	// https://sourceafis.machinezoo.com/transparency/edge-hash
 	void logEdgeHash(Int2ObjectMap<List<IndexedEdge>> hash) {
-		logCbor("edge-hash", () -> {
+		log("edge-hash", () -> {
 			return Arrays.stream(hash.keySet().toIntArray())
 				.sorted()
 				.mapToObj(key -> {
@@ -565,7 +429,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	}
 	// https://sourceafis.machinezoo.com/transparency/root-pairs
 	void logRootPairs(int count, MinutiaPair[] roots) {
-		logCbor("root-pairs", () -> CborPair.roots(count, roots));
+		log("root-pairs", () -> CborPair.roots(count, roots));
 	}
 	/*
 	 * Cache accepts() for matcher logs in volatile variables, because calling accepts() directly every time
@@ -613,13 +477,13 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logPairing(int count, MinutiaPair[] pairs, List<MinutiaPair> support) {
 		offerMatcher();
 		if (acceptsPairing)
-			logCbor("pairing", new CborPairing(count, pairs, support));
+			log("pairing", new CborPairing(count, pairs, support));
 	}
 	// https://sourceafis.machinezoo.com/transparency/score
 	void logScore(Score score) {
 		offerMatcher();
 		if (acceptsScore)
-			logCbor("score", score);
+			log("score", score);
 	}
 	@SuppressWarnings("unused") private static class CborBestMatch {
 		int offset;
@@ -631,6 +495,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logBestMatch(int nth) {
 		offerMatcher();
 		if (acceptsBestMatch)
-			logCbor("best-match", new CborBestMatch(nth));
+			log("best-match", new CborBestMatch(nth));
 	}
 }

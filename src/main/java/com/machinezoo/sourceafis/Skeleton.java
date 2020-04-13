@@ -10,7 +10,7 @@ class Skeleton {
 	Skeleton(BooleanMatrix binary, SkeletonType type) {
 		this.type = type;
 		// https://sourceafis.machinezoo.com/transparency/binarized-skeleton
-		FingerprintTransparency.current().logBinarizedSkeleton(type, binary);
+		FingerprintTransparency.current().log(type.prefix + "binarized-skeleton", binary);
 		size = binary.size();
 		BooleanMatrix thinned = thin(binary);
 		List<IntPoint> minutiaPoints = findMinutiae(thinned);
@@ -19,7 +19,7 @@ class Skeleton {
 		traceRidges(thinned, minutiaMap);
 		fixLinkingGaps();
 		// https://sourceafis.machinezoo.com/transparency/traced-skeleton
-		FingerprintTransparency.current().logTracedSkeleton(this);
+		FingerprintTransparency.current().logSkeleton("traced-skeleton", this);
 		filter();
 	}
 	private enum NeighborhoodType {
@@ -60,7 +60,7 @@ class Skeleton {
 							}
 		}
 		// https://sourceafis.machinezoo.com/transparency/thinned-skeleton
-		FingerprintTransparency.current().logThinnedSkeleton(type, thinned);
+		FingerprintTransparency.current().log(type.prefix + "thinned-skeleton", thinned);
 		return thinned;
 	}
 	private static NeighborhoodType[] neighborhoodTypes() {
@@ -202,7 +202,7 @@ class Skeleton {
 	private void filter() {
 		removeDots();
 		// https://sourceafis.machinezoo.com/transparency/removed-dots
-		FingerprintTransparency.current().logRemovedDots(this);
+		FingerprintTransparency.current().logSkeleton("removed-dots", this);
 		removePores();
 		removeGaps();
 		removeTails();
@@ -241,7 +241,7 @@ class Skeleton {
 		}
 		removeKnots();
 		// https://sourceafis.machinezoo.com/transparency/removed-pores
-		FingerprintTransparency.current().logRemovedPores(this);
+		FingerprintTransparency.current().logSkeleton("removed-pores", this);
 	}
 	private static class Gap implements Comparable<Gap> {
 		int distance;
@@ -275,7 +275,7 @@ class Skeleton {
 		}
 		removeKnots();
 		// https://sourceafis.machinezoo.com/transparency/removed-gaps
-		FingerprintTransparency.current().logRemovedGaps(this);
+		FingerprintTransparency.current().logSkeleton("removed-gaps", this);
 	}
 	private boolean isWithinGapLimits(SkeletonMinutia end1, SkeletonMinutia end2) {
 		int distanceSq = end1.position.minus(end2.position).lengthSq();
@@ -323,7 +323,7 @@ class Skeleton {
 		removeDots();
 		removeKnots();
 		// https://sourceafis.machinezoo.com/transparency/removed-tails
-		FingerprintTransparency.current().logRemovedTails(this);
+		FingerprintTransparency.current().logSkeleton("removed-tails", this);
 	}
 	private void removeFragments() {
 		for (SkeletonMinutia minutia : minutiae)
@@ -334,7 +334,7 @@ class Skeleton {
 			}
 		removeDots();
 		// https://sourceafis.machinezoo.com/transparency/removed-fragments
-		FingerprintTransparency.current().logRemovedFragments(this);
+		FingerprintTransparency.current().logSkeleton("removed-fragments", this);
 	}
 	private void removeKnots() {
 		for (SkeletonMinutia minutia : minutiae) {

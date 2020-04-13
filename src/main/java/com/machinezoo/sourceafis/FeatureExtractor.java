@@ -9,15 +9,15 @@ class FeatureExtractor {
 	static MutableTemplate extract(DoubleMatrix raw, double dpi) {
 		MutableTemplate template = new MutableTemplate();
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
-		FingerprintTransparency.current().logDecodedImage(raw);
+		FingerprintTransparency.current().log("decoded-image", raw);
 		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
 			raw = scaleImage(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
-		FingerprintTransparency.current().logScaledImage(raw);
+		FingerprintTransparency.current().log("scaled-image", raw);
 		template.size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.BLOCK_SIZE);
 		// https://sourceafis.machinezoo.com/transparency/block-map
-		FingerprintTransparency.current().logBlockMap(blocks);
+		FingerprintTransparency.current().log("block-map", blocks);
 		HistogramCube histogram = histogram(blocks, raw);
 		HistogramCube smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMatrix mask = mask(blocks, histogram);
@@ -26,16 +26,16 @@ class FeatureExtractor {
 		IntPoint[][] smoothedLines = orientedLines(Parameters.PARALLEL_SMOOTHING_RESOLUTION, Parameters.PARALLEL_SMOOTHING_RADIUS, Parameters.PARALLEL_SMOOTHING_STEP);
 		DoubleMatrix smoothed = smoothRidges(equalized, orientation, mask, blocks, 0, smoothedLines);
 		// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
-		FingerprintTransparency.current().logParallelSmoothing(smoothed);
+		FingerprintTransparency.current().log("parallel-smoothing", smoothed);
 		IntPoint[][] orthogonalLines = orientedLines(Parameters.ORTHOGONAL_SMOOTHING_RESOLUTION, Parameters.ORTHOGONAL_SMOOTHING_RADIUS, Parameters.ORTHOGONAL_SMOOTHING_STEP);
 		DoubleMatrix orthogonal = smoothRidges(smoothed, orientation, mask, blocks, Math.PI, orthogonalLines);
 		// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
-		FingerprintTransparency.current().logOrthogonalSmoothing(orthogonal);
+		FingerprintTransparency.current().log("orthogonal-smoothing", orthogonal);
 		BooleanMatrix binary = binarize(smoothed, orthogonal, mask, blocks);
 		BooleanMatrix pixelMask = fillBlocks(mask, blocks);
 		cleanupBinarized(binary, pixelMask);
 		// https://sourceafis.machinezoo.com/transparency/pixel-mask
-		FingerprintTransparency.current().logPixelMask(pixelMask);
+		FingerprintTransparency.current().log("pixel-mask", pixelMask);
 		BooleanMatrix inverted = invert(binary, pixelMask);
 		BooleanMatrix innerMask = innerMask(pixelMask);
 		Skeleton ridges = new Skeleton(binary, SkeletonType.RIDGES);
@@ -44,16 +44,16 @@ class FeatureExtractor {
 		collectMinutiae(template.minutiae, ridges, MinutiaType.ENDING);
 		collectMinutiae(template.minutiae, valleys, MinutiaType.BIFURCATION);
 		// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
-		FingerprintTransparency.current().logSkeletonMinutiae(template);
+		FingerprintTransparency.current().log("skeleton-minutiae", template);
 		maskMinutiae(template.minutiae, innerMask);
 		// https://sourceafis.machinezoo.com/transparency/inner-minutiae
-		FingerprintTransparency.current().logInnerMinutiae(template);
+		FingerprintTransparency.current().log("inner-minutiae", template);
 		removeMinutiaClouds(template.minutiae);
 		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
-		FingerprintTransparency.current().logRemovedMinutiaClouds(template);
+		FingerprintTransparency.current().log("removed-minutia-clouds", template);
 		template.minutiae = limitTemplateSize(template.minutiae);
 		// https://sourceafis.machinezoo.com/transparency/top-minutiae
-		FingerprintTransparency.current().logTopMinutiae(template);
+		FingerprintTransparency.current().log("top-minutiae", template);
 		return template;
 	}
 	static DoubleMatrix scaleImage(DoubleMatrix input, double dpi) {
@@ -99,7 +99,7 @@ class FeatureExtractor {
 				}
 		}
 		// https://sourceafis.machinezoo.com/transparency/histogram
-		FingerprintTransparency.current().logHistogram(histogram);
+		FingerprintTransparency.current().log("histogram", histogram);
 		return histogram;
 	}
 	private static HistogramCube smoothHistogram(BlockMap blocks, HistogramCube input) {
@@ -115,7 +115,7 @@ class FeatureExtractor {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/smoothed-histogram
-		FingerprintTransparency.current().logSmoothedHistogram(output);
+		FingerprintTransparency.current().log("smoothed-histogram", output);
 		return output;
 	}
 	private static BooleanMatrix mask(BlockMap blocks, HistogramCube histogram) {
@@ -123,7 +123,7 @@ class FeatureExtractor {
 		BooleanMatrix mask = filterAbsoluteContrast(contrast);
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		// https://sourceafis.machinezoo.com/transparency/combined-mask
-		FingerprintTransparency.current().logCombinedMask(mask);
+		FingerprintTransparency.current().log("combined-mask", mask);
 		mask.merge(vote(mask, null, Parameters.CONTRAST_VOTE_RADIUS, Parameters.CONTRAST_VOTE_MAJORITY, Parameters.CONTRAST_VOTE_BORDER_DISTANCE));
 		mask.merge(filterBlockErrors(mask));
 		mask.invert();
@@ -131,7 +131,7 @@ class FeatureExtractor {
 		mask.merge(filterBlockErrors(mask));
 		mask.merge(vote(mask, null, Parameters.MASK_VOTE_RADIUS, Parameters.MASK_VOTE_MAJORITY, Parameters.MASK_VOTE_BORDER_DISTANCE));
 		// https://sourceafis.machinezoo.com/transparency/filtered-mask
-		FingerprintTransparency.current().logFilteredMask(mask);
+		FingerprintTransparency.current().log("filtered-mask", mask);
 		return mask;
 	}
 	private static DoubleMatrix clipContrast(BlockMap blocks, HistogramCube histogram) {
@@ -160,7 +160,7 @@ class FeatureExtractor {
 			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.bins - 1)));
 		}
 		// https://sourceafis.machinezoo.com/transparency/clipped-contrast
-		FingerprintTransparency.current().logClippedContrast(result);
+		FingerprintTransparency.current().log("clipped-contrast", result);
 		return result;
 	}
 	private static BooleanMatrix filterAbsoluteContrast(DoubleMatrix contrast) {
@@ -169,7 +169,7 @@ class FeatureExtractor {
 			if (contrast.get(block) < Parameters.MIN_ABSOLUTE_CONTRAST)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/absolute-contrast-mask
-		FingerprintTransparency.current().logAbsoluteContrastMask(result);
+		FingerprintTransparency.current().log("absolute-contrast-mask", result);
 		return result;
 	}
 	private static BooleanMatrix filterRelativeContrast(DoubleMatrix contrast, BlockMap blocks) {
@@ -187,7 +187,7 @@ class FeatureExtractor {
 			if (contrast.get(block) < limit)
 				result.set(block, true);
 		// https://sourceafis.machinezoo.com/transparency/relative-contrast-mask
-		FingerprintTransparency.current().logRelativeContrastMask(result);
+		FingerprintTransparency.current().log("relative-contrast-mask", result);
 		return result;
 	}
 	private static BooleanMatrix vote(BooleanMatrix input, BooleanMatrix mask, int radius, double majority, int borderDistance) {
@@ -295,7 +295,7 @@ class FeatureExtractor {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/equalized-image
-		FingerprintTransparency.current().logEqualizedImage(result);
+		FingerprintTransparency.current().log("equalized-image", result);
 		return result;
 	}
 	private static DoubleMatrix orientationMap(DoubleMatrix image, BooleanMatrix mask, BlockMap blocks) {
@@ -364,7 +364,7 @@ class FeatureExtractor {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/pixelwise-orientation
-		FingerprintTransparency.current().logPixelwiseOrientation(orientation);
+		FingerprintTransparency.current().log("pixelwise-orientation", orientation);
 		return orientation;
 	}
 	private static IntRange maskRange(BooleanMatrix mask, int y) {
@@ -392,7 +392,7 @@ class FeatureExtractor {
 			}
 		}
 		// https://sourceafis.machinezoo.com/transparency/block-orientation
-		FingerprintTransparency.current().logBlockOrientation(sums);
+		FingerprintTransparency.current().log("block-orientation", sums);
 		return sums;
 	}
 	private static DoublePointMatrix smoothOrientation(DoublePointMatrix orientation, BooleanMatrix mask) {
@@ -407,7 +407,7 @@ class FeatureExtractor {
 							smoothed.add(block, orientation.get(nx, ny));
 			}
 		// https://sourceafis.machinezoo.com/transparency/smoothed-orientation
-		FingerprintTransparency.current().logSmoothedOrientation(smoothed);
+		FingerprintTransparency.current().log("smoothed-orientation", smoothed);
 		return smoothed;
 	}
 	private static DoubleMatrix orientationAngles(DoublePointMatrix vectors, BooleanMatrix mask) {
@@ -468,7 +468,7 @@ class FeatureExtractor {
 							binarized.set(x, y, true);
 			}
 		// https://sourceafis.machinezoo.com/transparency/binarized-image
-		FingerprintTransparency.current().logBinarizedImage(binarized);
+		FingerprintTransparency.current().log("binarized-image", binarized);
 		return binarized;
 	}
 	private static void cleanupBinarized(BooleanMatrix binary, BooleanMatrix mask) {
@@ -482,7 +482,7 @@ class FeatureExtractor {
 				binary.set(x, y, binary.get(x, y) && !islands.get(x, y) || holes.get(x, y));
 		removeCrosses(binary);
 		// https://sourceafis.machinezoo.com/transparency/filtered-binary-image
-		FingerprintTransparency.current().logFilteredBinarydImage(binary);
+		FingerprintTransparency.current().log("filtered-binary-image", binary);
 	}
 	private static void removeCrosses(BooleanMatrix input) {
 		IntPoint size = input.size();
@@ -533,7 +533,7 @@ class FeatureExtractor {
 		if (total < Parameters.INNER_MASK_BORDER_DISTANCE)
 			inner = shrinkMask(inner, Parameters.INNER_MASK_BORDER_DISTANCE - total);
 		// https://sourceafis.machinezoo.com/transparency/inner-mask
-		FingerprintTransparency.current().logInnerMask(inner);
+		FingerprintTransparency.current().log("inner-mask", inner);
 		return inner;
 	}
 	private static BooleanMatrix shrinkMask(BooleanMatrix mask, int amount) {

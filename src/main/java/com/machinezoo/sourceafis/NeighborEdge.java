@@ -33,7 +33,7 @@ class NeighborEdge extends EdgeShape {
 			star.clear();
 		}
 		// https://sourceafis.machinezoo.com/transparency/edge-table
-		FingerprintTransparency.current().logEdgeTable(edges);
+		FingerprintTransparency.current().log("edge-table", edges);
 		return edges;
 	}
 }
