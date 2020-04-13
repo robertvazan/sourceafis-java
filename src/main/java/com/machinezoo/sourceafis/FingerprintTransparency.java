@@ -440,11 +440,11 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			matcherOffered = true;
 		}
 	}
-	// https://sourceafis.machinezoo.com/transparency/root-pairs
+	// https://sourceafis.machinezoo.com/transparency/roots
 	void logRootPairs(int count, MinutiaPair[] roots) {
 		offerMatcher();
 		if (acceptsRootPairs)
-			log("root-pairs", () -> CborPair.roots(count, roots));
+			log("roots", () -> CborPair.roots(count, roots));
 	}
 	/*
 	 * Expose fast method to check whether pairing should be logged, so that we can easily skip support edge logging.

@@ -16,8 +16,8 @@ class FeatureExtractor {
 		FingerprintTransparency.current().log("scaled-image", raw);
 		template.size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.BLOCK_SIZE);
-		// https://sourceafis.machinezoo.com/transparency/block-map
-		FingerprintTransparency.current().log("block-map", blocks);
+		// https://sourceafis.machinezoo.com/transparency/blocks
+		FingerprintTransparency.current().log("blocks", blocks);
 		HistogramCube histogram = histogram(blocks, raw);
 		HistogramCube smoothHistogram = smoothHistogram(blocks, histogram);
 		BooleanMatrix mask = mask(blocks, histogram);
@@ -159,8 +159,8 @@ class FeatureExtractor {
 			}
 			result.set(block, (upperBound - lowerBound) * (1.0 / (histogram.bins - 1)));
 		}
-		// https://sourceafis.machinezoo.com/transparency/clipped-contrast
-		FingerprintTransparency.current().log("clipped-contrast", result);
+		// https://sourceafis.machinezoo.com/transparency/contrast
+		FingerprintTransparency.current().log("contrast", result);
 		return result;
 	}
 	private static BooleanMatrix filterAbsoluteContrast(DoubleMatrix contrast) {
