@@ -15,15 +15,15 @@ class NeighborEdge extends EdgeShape {
 		int[] allSqDistances = new int[minutiae.length];
 		for (int reference = 0; reference < edges.length; ++reference) {
 			IntPoint referencePosition = minutiae[reference].position;
-			int sqMaxDistance = Integers.sq(Parameters.EDGE_TABLE_RANGE);
+			int maxSqDistance = Integer.MAX_VALUE;
 			if (minutiae.length - 1 > Parameters.EDGE_TABLE_NEIGHBORS) {
 				for (int neighbor = 0; neighbor < minutiae.length; ++neighbor)
 					allSqDistances[neighbor] = referencePosition.minus(minutiae[neighbor].position).lengthSq();
 				Arrays.sort(allSqDistances);
-				sqMaxDistance = allSqDistances[Parameters.EDGE_TABLE_NEIGHBORS];
+				maxSqDistance = allSqDistances[Parameters.EDGE_TABLE_NEIGHBORS];
 			}
 			for (int neighbor = 0; neighbor < minutiae.length; ++neighbor) {
-				if (neighbor != reference && referencePosition.minus(minutiae[neighbor].position).lengthSq() <= sqMaxDistance)
+				if (neighbor != reference && referencePosition.minus(minutiae[neighbor].position).lengthSq() <= maxSqDistance)
 					star.add(new NeighborEdge(minutiae, reference, neighbor));
 			}
 			star.sort(Comparator.<NeighborEdge>comparingInt(e -> e.length).thenComparingInt(e -> e.neighbor));

@@ -41,7 +41,6 @@ class Parameters {
 	static final int MAX_CLOUD_SIZE = 4;
 	static final int MAX_MINUTIAE = 100;
 	static final int SORT_BY_NEIGHBOR = 5;
-	static final int EDGE_TABLE_RANGE = 490;
 	static final int EDGE_TABLE_NEIGHBORS = 9;
 	static final int THINNING_ITERATIONS = 26;
 	static final int MAX_PORE_ARM = 41;
