@@ -124,7 +124,6 @@ class FeatureExtractor {
 		mask.merge(filterRelativeContrast(contrast, blocks));
 		// https://sourceafis.machinezoo.com/transparency/combined-mask
 		FingerprintTransparency.current().log("combined-mask", mask);
-		mask.merge(vote(mask, null, Parameters.CONTRAST_VOTE_RADIUS, Parameters.CONTRAST_VOTE_MAJORITY, Parameters.CONTRAST_VOTE_BORDER_DISTANCE));
 		mask.merge(filterBlockErrors(mask));
 		mask.invert();
 		mask.merge(filterBlockErrors(mask));

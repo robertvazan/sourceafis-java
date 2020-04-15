@@ -10,9 +10,6 @@ class Parameters {
 	static final double MIN_RELATIVE_CONTRAST = 0.34;
 	static final int RELATIVE_CONTRAST_SAMPLE = 168568;
 	static final double RELATIVE_CONTRAST_PERCENTILE = 0.49;
-	static final int CONTRAST_VOTE_RADIUS = 9;
-	static final double CONTRAST_VOTE_MAJORITY = 0.86;
-	static final int CONTRAST_VOTE_BORDER_DISTANCE = 7;
 	static final int MASK_VOTE_RADIUS = 7;
 	static final double MASK_VOTE_MAJORITY = 0.51;
 	static final int MASK_VOTE_BORDER_DISTANCE = 4;
