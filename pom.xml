@@ -65,6 +65,11 @@
 			<version>1.4.4</version>
 		</dependency>
 		<dependency>
+			<groupId>com.machinezoo.fingerprintio</groupId>
+			<artifactId>fingerprintio</artifactId>
+			<version>0.1.1</version>
+		</dependency>
+		<dependency>
 			<groupId>com.github.mhshams</groupId>
 			<artifactId>jnbis</artifactId>
 			<version>2.0.2</version>

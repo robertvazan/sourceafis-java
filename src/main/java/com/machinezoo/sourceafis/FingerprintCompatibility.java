@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.nio.charset.*;
 import java.util.*;
 import org.slf4j.*;
+import com.machinezoo.fingerprintio.*;
 
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.
@@ -97,9 +98,11 @@ public class FingerprintCompatibility {
 	public static List<FingerprintTemplate> convertAll(byte[] template) {
 		Objects.requireNonNull(template);
 		try {
-			ForeignTemplate foreign = ForeignTemplate.read(template);
-			return foreign.fingerprints.stream()
-				.map(fingerprint -> new FingerprintTemplate(new ImmutableTemplate(foreign.mutable(fingerprint))))
+			TemplateFormat format = TemplateFormat.detect(template);
+			if (format == null || !TemplateCodec.ALL.containsKey(format))
+				throw new IllegalArgumentException("Unsupported template format.");
+			return TemplateCodec.ALL.get(format).decode(template).stream()
+				.map(fp -> new FingerprintTemplate(new ImmutableTemplate(fp)))
 				.collect(toList());
 		} catch (Throwable ex) {
 			/*
@@ -115,8 +118,8 @@ public class FingerprintCompatibility {
 				/*
 				 * It is an error to pass native template here, so at least log a warning.
 				 */
-				logger.warn(
-					"Native SourceAFIS template was passed to convert() or convertAll() in FingerprintCompatibility. It was accepted, but FingerprintTemplate constructor should be used instead.");
+				logger.warn("Native SourceAFIS template was passed to convert() or convertAll() in FingerprintCompatibility. " +
+					"It was accepted, but FingerprintTemplate constructor should be used instead.");
 				return deserialized;
 			} catch (Throwable ex2) {
 				/*
@@ -126,8 +129,8 @@ public class FingerprintCompatibility {
 			}
 		}
 	}
-	private static ForeignTemplate foreign(FingerprintTemplate... templates) {
-		return new ForeignTemplate(Arrays.stream(templates).map(t -> t.immutable.mutable()).collect(toList()));
+	private static byte[] encode(TemplateFormat format, FingerprintTemplate[] templates) {
+		return TemplateCodec.ALL.get(format).encode(Arrays.stream(templates).map(t -> t.immutable.mutable()).collect(toList()));
 	}
 	/**
 	 * Converts native fingerprint template to ANSI 378-2004 template.
@@ -148,9 +151,7 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2004">ANSI INCITS 378-2004</a>
 	 */
 	public static byte[] toAnsiIncits378v2004(FingerprintTemplate... templates) {
-		ForeignTemplate foreign = foreign(templates);
-		foreign.format = ForeignFormat.ANSI_378_2004;
-		return foreign.write();
+		return encode(TemplateFormat.ANSI_378, templates);
 	}
 	/**
 	 * Converts native fingerprint template to ANSI 378-2009 template.
@@ -171,9 +172,7 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2009-r2014">ANSI INCITS 378-2009[R2014]</a>
 	 */
 	public static byte[] toAnsiIncits378v2009(FingerprintTemplate... templates) {
-		ForeignTemplate foreign = foreign(templates);
-		foreign.format = ForeignFormat.ANSI_378_2009;
-		return foreign.write();
+		return encode(TemplateFormat.ANSI_378_2009, templates);
 	}
 	/**
 	 * Converts native fingerprint template to ANSI 378-2009/AM1 template.
@@ -194,8 +193,6 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2009-am1-2010-r2015">ANSI INCITS 378:2009/AM 1:2010[R2015]</a>
 	 */
 	public static byte[] toAnsiIncits378v2009AM1(FingerprintTemplate... templates) {
-		ForeignTemplate foreign = foreign(templates);
-		foreign.format = ForeignFormat.ANSI_378_2009_AM1;
-		return foreign.write();
+		return encode(TemplateFormat.ANSI_378_2009_AM1, templates);
 	}
 }
