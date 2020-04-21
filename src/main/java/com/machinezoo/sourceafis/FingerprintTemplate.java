@@ -103,7 +103,7 @@ public class FingerprintTemplate {
 	 * and reconstructs an exact copy of the original fingerprint template.
 	 * <p>
 	 * Templates produced by previous versions of SourceAFIS may fail to deserialize correctly.
-	 * Applications should re-extract all templates from original raw images when upgrading SourceAFIS.
+	 * Applications should re-extract all templates from original images when upgrading SourceAFIS.
 	 * 
 	 * @param serialized
 	 *            serialized fingerprint template in <a href="https://cbor.io/">CBOR</a> format produced by {@link #toByteArray()}
@@ -260,7 +260,7 @@ public class FingerprintTemplate {
 	/**
 	 * Serializes fingerprint template into byte array.
 	 * Serialized template can be stored in a database or sent over network.
-	 * It can be deserialized by calling {@link #FingerprintTemplate(byte[])} constructor.
+	 * It can be then deserialized by calling {@link #FingerprintTemplate(byte[])} constructor.
 	 * Persisting templates alongside fingerprint images allows applications to start faster,
 	 * because template deserialization is more than 100x faster than re-extraction from fingerprint image.
 	 * <p>

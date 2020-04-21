@@ -9,7 +9,8 @@ import com.machinezoo.fingerprintio.*;
 
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.
- * Only <a href="https://templates.machinezoo.com/">publicly documented formats</a> are supported.
+ * Only <a href="https://templates.machinezoo.com/">publicly documented formats</a>
+ * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> are supported.
  * Three versions of ANSI 378 can be both imported and exported.
  * Limited support for import of ISO 19794-2 is also provided.
  * <p>
@@ -25,6 +26,7 @@ import com.machinezoo.fingerprintio.*;
  * in favor of plain fingerprint images.
  * 
  * @see <a href="https://templates.machinezoo.com/">Fingerprint template formats</a>
+ * @see <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>
  * @see <a href="https://templates.machinezoo.com/discouraged">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
@@ -51,7 +53,8 @@ public class FingerprintCompatibility {
 	 * that returns the first fingerprint in the template or throws if there are none.
 	 * <p>
 	 * This method accepts all template formats documented on the
-	 * <a href="https://templates.machinezoo.com/">template formats website</a>,
+	 * <a href="https://templates.machinezoo.com/">template formats website</a>
+	 * and implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>,
 	 * specifically all versions of ANSI 378 and the initial version of ISO 19794-2.
 	 * Foreign template can come from feature extractor other than SourceAFIS.
 	 * 
@@ -78,7 +81,8 @@ public class FingerprintCompatibility {
 	/**
 	 * Converts foreign fingerprint template to a list of native SourceAFIS templates.
 	 * This method accepts all template formats documented on the
-	 * <a href="https://templates.machinezoo.com/">template formats website</a>,
+	 * <a href="https://templates.machinezoo.com/">template formats website</a>
+	 * and implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>,
 	 * specifically all versions of ANSI 378 and the initial version of ISO 19794-2.
 	 * Foreign template can come from feature extractor other than SourceAFIS.
 	 * Several native templates can be returned, because many foreign template formats can contain multiple fingerprints.
