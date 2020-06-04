@@ -1,5 +1,7 @@
 # SourceAFIS for Java #
 
+[![Maven Central](https://img.shields.io/maven-central/v/com.machinezoo.sourceafis/sourceafis)](https://search.maven.org/artifact/com.machinezoo.sourceafis/sourceafis)
+
 SourceAFIS is a fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score.
 It can do 1:1 comparisons as well as efficient 1:N search. This is the Java implementation of the SourceAFIS algorithm.
 
