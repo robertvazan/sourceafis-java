@@ -1,0 +1,9 @@
+language: java
+jdk:
+  - openjdk8
+install: skip
+script: mvn install jacoco:report coveralls:report -Dgpg.skip=true -B -V
+cache:
+  directories:
+  - $HOME/.m2
+
