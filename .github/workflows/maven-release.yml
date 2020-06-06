@@ -22,7 +22,7 @@ jobs:
       env:
         MAVEN_SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
     - name: Maven Deploy
-      run: mvn -B deploy
+      run: mvn -B -V deploy
       env:
         MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
