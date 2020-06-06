@@ -154,6 +154,7 @@ public class FingerprintTemplate {
 	 * 
 	 * @see #FingerprintTemplate(FingerprintImage)
 	 * @see #FingerprintTemplate(byte[])
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintTemplate() {
 	}
@@ -183,6 +184,7 @@ public class FingerprintTemplate {
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see FingerprintTransparency
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintTemplate transparency(FingerprintTransparency transparency) {
 		return this;
@@ -201,6 +203,7 @@ public class FingerprintTemplate {
 	 * 
 	 * @see FingerprintImage#dpi(double)
 	 * @see #FingerprintTemplate(FingerprintImage)
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintTemplate dpi(double dpi) {
 		this.dpi = dpi;
@@ -227,6 +230,7 @@ public class FingerprintTemplate {
 	 * 
 	 * @see FingerprintImage#decode(byte[])
 	 * @see #FingerprintTemplate(FingerprintImage)
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintTemplate create(byte[] image) {
 		immutable = new ImmutableTemplate(FeatureExtractor.extract(new FingerprintImage().decode(image).matrix, dpi));
@@ -249,6 +253,7 @@ public class FingerprintTemplate {
 	 *             if {@code json} is is not in the correct format or it is corrupted
 	 * 
 	 * @see #FingerprintTemplate(byte[])
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintTemplate deserialize(String json) {
 		Objects.requireNonNull(json);
@@ -289,6 +294,7 @@ public class FingerprintTemplate {
 	 * @return serialized fingerprint template in JSON format
 	 * 
 	 * @see #toByteArray()
+	 * @deprecated
 	 */
 	@Deprecated public String serialize() {
 		return new Gson().toJson(new PersistentTemplate(immutable.mutable()));
@@ -305,6 +311,7 @@ public class FingerprintTemplate {
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see #FingerprintTemplate(byte[])
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintTemplate convert(byte[] template) {
 		immutable = FingerprintCompatibility.convert(template).immutable;

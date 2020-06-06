@@ -198,6 +198,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 *            a map of suffixes (like {@code .cbor} or {@code .dat}) to {@link Supplier} of the available transparency data
 	 * 
 	 * @see #take(String, String, byte[])
+	 * @deprecated
 	 */
 	@Deprecated protected void capture(String key, Map<String, Supplier<byte[]>> data) {
 		/*
@@ -219,6 +220,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 *            a map of suffixes (like {@code .cbor} or {@code .dat}) to {@link Supplier} of the available transparency data
 	 * 
 	 * @see #take(String, String, byte[])
+	 * @deprecated
 	 */
 	@Deprecated protected void log(String key, Map<String, Supplier<ByteBuffer>> data) {
 	}

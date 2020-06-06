@@ -61,6 +61,7 @@ public class FingerprintMatcher {
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see FingerprintTransparency
+	 * @deprecated
 	 */
 	@Deprecated public FingerprintMatcher transparency(FingerprintTransparency transparency) {
 		return this;
