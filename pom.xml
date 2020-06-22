@@ -7,7 +7,7 @@
 	<version>3.10.0</version>
 	<packaging>jar</packaging>
 
-	<name>SourceAFIS</name>
+	<name>SourceAFIS for Java</name>
 	<url>https://sourceafis.machinezoo.com/</url>
 	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score. Supports efficient 1:N search.</description>
 
@@ -173,12 +173,7 @@
 				<configuration>
 					<!-- Make the CI server email us when we break javadoc. -->
 					<failOnWarnings>true</failOnWarnings>
-					<nohelp>true</nohelp>
-					<noindex>true</noindex>
-					<notree>true</notree>
 					<notimestamp>true</notimestamp>
-					<use>false</use>
-					<doctitle>${project.name} for Java API Reference</doctitle>
 				</configuration>
 				<executions>
 					<execution>
