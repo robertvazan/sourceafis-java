@@ -10,6 +10,7 @@
 	<name>SourceAFIS for Java</name>
 	<url>https://sourceafis.machinezoo.com/</url>
 	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score. Supports efficient 1:N search.</description>
+	<inceptionYear>2009</inceptionYear>
 
 	<licenses>
 		<license>
@@ -18,6 +19,10 @@
 		</license>
 	</licenses>
 
+	<organization>
+		<name>Robert Važan</name>
+		<url>https://robert.machinezoo.com/</url>
+	</organization>
 	<developers>
 		<developer>
 			<name>Robert Važan</name>
