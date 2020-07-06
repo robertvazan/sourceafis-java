@@ -7,7 +7,6 @@ import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 import javax.imageio.*;
-import org.apache.sanselan.*;
 import org.jnbis.api.*;
 import org.jnbis.api.model.*;
 import com.machinezoo.noexception.*;
@@ -56,7 +55,6 @@ abstract class ImageDecoder {
 	 */
 	private static final List<ImageDecoder> all = Arrays.asList(
 		new ImageIODecoder(),
-		new SanselanDecoder(),
 		new WsqDecoder(),
 		new AndroidDecoder());
 	static DecodedImage decodeAny(byte[] image) {
@@ -105,36 +103,6 @@ abstract class ImageDecoder {
 				BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(image));
 				if (buffered == null)
 					throw new IllegalArgumentException("Unsupported image format.");
-				int width = buffered.getWidth();
-				int height = buffered.getHeight();
-				int[] pixels = new int[width * height];
-				buffered.getRGB(0, 0, width, height, pixels, 0, width);
-				return new DecodedImage(width, height, pixels);
-			});
-		}
-	}
-	/*
-	 * While Sanselan contains pure Java decoders, the whole library depends on AWT imaging
-	 * and thus sadly doesn't run on Android. It does provide us with TIFF support on desktop though.
-	 * TIFF is often used to encode fingerprints, which is why Sanselan decoder is valuable.
-	 * 
-	 * Sanselan is used instead of Apache Commons Imaging, because it has an official maven artifact
-	 * in Maven Central while Commons Imaging only has some random unofficial (untrusted) releases.
-	 */
-	private static class SanselanDecoder extends ImageDecoder {
-		@Override boolean available() {
-			/*
-			 * We aren't testing for presence of Sanselan class, because that one is always present
-			 * (provided by maven). We instead check for AWT, which Sanselan depends on.
-			 */
-			return PlatformCheck.hasClass("java.awt.image.BufferedImage");
-		}
-		@Override String name() {
-			return "Sanselan";
-		}
-		@Override DecodedImage decode(byte[] image) {
-			return Exceptions.sneak().get(() -> {
-				BufferedImage buffered = Sanselan.getBufferedImage(new ByteArrayInputStream(image));
 				int width = buffered.getWidth();
 				int height = buffered.getHeight();
 				int[] pixels = new int[width * height];

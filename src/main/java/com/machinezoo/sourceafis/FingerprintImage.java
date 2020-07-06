@@ -64,7 +64,6 @@ public class FingerprintImage {
 	 * <p>
 	 * The image may be in any format commonly used to store fingerprint images, including PNG, JPEG, BMP, TIFF, or WSQ.
 	 * SourceAFIS will try to decode the image using Java's {@link ImageIO} (PNG, JPEG, BMP, and on Java 9+ TIFF),
-	 * <a href="https://commons.apache.org/proper/commons-imaging/">Sanselan</a> library (TIFF on Java 8),
 	 * <a href="https://github.com/kareez/jnbis">JNBIS</a> library (WSQ), and Android's
 	 * <a href="https://developer.android.com/reference/android/graphics/Bitmap">Bitmap</a> class (PNG, JPEG, BMP) in this order.
 	 * Note that these libraries might not support all versions and variations of the mentioned formats.

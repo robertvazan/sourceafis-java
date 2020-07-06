@@ -22,9 +22,6 @@ class TestResources {
 	public static byte[] bmp() {
 		return load("probe.bmp");
 	}
-	public static byte[] tiff() {
-		return load("probe.tiff");
-	}
 	public static byte[] originalWsq() {
 		return load("wsq-original.wsq");
 	}

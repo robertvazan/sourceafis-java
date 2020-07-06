@@ -34,9 +34,6 @@ public class FingerprintImageTest {
 	@Test public void decodeBMP() {
 		assertSimilar(TestResources.bmp(), TestResources.png());
 	}
-	@Test public void decodeTIFF() {
-		assertSimilar(TestResources.tiff(), TestResources.png());
-	}
 	@Test public void decodeWSQ() {
 		assertSimilar(TestResources.originalWsq(), TestResources.convertedWsq());
 	}
