@@ -26,7 +26,8 @@ abstract class TemplateCodec {
 		ALL.put(TemplateFormat.ISO_19794_2, new Iso19794p2Codec());
 	}
 	private static class Ansi378Codec extends TemplateCodec {
-		@Override byte[] encode(List<MutableTemplate> templates) {
+		@Override
+		byte[] encode(List<MutableTemplate> templates) {
 			int resolution = (int)Math.round(500 / 2.54);
 			Ansi378Template iotemplate = new Ansi378Template();
 			iotemplate.width = templates.stream().mapToInt(t -> t.size.x).max().orElse(500);
@@ -38,7 +39,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+		@Override
+		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			Ansi378Template iotemplate = new Ansi378Template(serialized, permissive);
 			Resolution resolution = new Resolution();
 			resolution.dpiX = iotemplate.resolutionX * 2.54;
@@ -116,14 +118,16 @@ abstract class TemplateCodec {
 		}
 	}
 	private static class Ansi378v2009Codec extends Ansi378Codec {
-		@Override byte[] encode(List<MutableTemplate> templates) {
+		@Override
+		byte[] encode(List<MutableTemplate> templates) {
 			Ansi378v2009Template iotemplate = new Ansi378v2009Template();
 			iotemplate.fingerprints = IntStream.range(0, templates.size())
 				.mapToObj(n -> encode2009(n, templates.get(n)))
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+		@Override
+		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			return new Ansi378v2009Template(serialized, permissive).fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
@@ -189,14 +193,16 @@ abstract class TemplateCodec {
 		}
 	}
 	private static class Ansi378v2009Am1Codec extends Ansi378v2009Codec {
-		@Override byte[] encode(List<MutableTemplate> templates) {
+		@Override
+		byte[] encode(List<MutableTemplate> templates) {
 			Ansi378v2009Am1Template iotemplate = new Ansi378v2009Am1Template();
 			iotemplate.fingerprints = IntStream.range(0, templates.size())
 				.mapToObj(n -> encode2009am1(n, templates.get(n)))
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+		@Override
+		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			return new Ansi378v2009Am1Template(serialized, permissive).fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
@@ -227,10 +233,12 @@ abstract class TemplateCodec {
 		}
 	}
 	private static class Iso19794p2Codec extends TemplateCodec {
-		@Override byte[] encode(List<MutableTemplate> templates) {
+		@Override
+		byte[] encode(List<MutableTemplate> templates) {
 			throw new UnsupportedOperationException();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+		@Override
+		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			Iso19794p2Template iotemplate = new Iso19794p2Template(serialized, permissive);
 			Resolution resolution = new Resolution();
 			resolution.dpiX = iotemplate.resolutionX * 2.54;

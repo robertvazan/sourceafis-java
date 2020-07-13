@@ -6,19 +6,23 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 
 public class IntPointTest {
-	@Test public void constructor() {
+	@Test
+	public void constructor() {
 		IntPoint c = new IntPoint(2, 3);
 		assertEquals(2, c.x);
 		assertEquals(3, c.y);
 	}
-	@Test public void area() {
+	@Test
+	public void area() {
 		assertEquals(6, new IntPoint(2, 3).area());
 	}
-	@Test public void lengthSq() {
+	@Test
+	public void lengthSq() {
 		assertEquals(5 * 5, new IntPoint(3, 4).lengthSq());
 		assertEquals(5 * 5, new IntPoint(-3, -4).lengthSq());
 	}
-	@Test public void contains() {
+	@Test
+	public void contains() {
 		IntPoint c = new IntPoint(3, 4);
 		assertTrue(c.contains(new IntPoint(1, 1)));
 		assertTrue(c.contains(new IntPoint(0, 0)));
@@ -34,31 +38,39 @@ public class IntPointTest {
 		assertFalse(c.contains(new IntPoint(5, 1)));
 		assertFalse(c.contains(new IntPoint(8, 9)));
 	}
-	@Test public void plus() {
+	@Test
+	public void plus() {
 		assertEquals(new IntPoint(6, 8), new IntPoint(2, 3).plus(new IntPoint(4, 5)));
 	}
-	@Test public void minus() {
+	@Test
+	public void minus() {
 		assertEquals(new IntPoint(2, 3), new IntPoint(6, 8).minus(new IntPoint(4, 5)));
 	}
-	@Test public void negate() {
+	@Test
+	public void negate() {
 		assertEquals(new IntPoint(-2, -3), new IntPoint(2, 3).negate());
 	}
-	@Test public void toPoint() {
+	@Test
+	public void toPoint() {
 		DoublePointTest.assertPointEquals(new DoublePoint(2, 3), new IntPoint(2, 3).toPoint(), 0.001);
 	}
-	@SuppressWarnings("unlikely-arg-type") @Test public void equals() {
+	@SuppressWarnings("unlikely-arg-type")
+	@Test
+	public void equals() {
 		assertTrue(new IntPoint(2, 3).equals(new IntPoint(2, 3)));
 		assertFalse(new IntPoint(2, 3).equals(new IntPoint(0, 3)));
 		assertFalse(new IntPoint(2, 3).equals(new IntPoint(2, 0)));
 		assertFalse(new IntPoint(2, 3).equals(null));
 		assertFalse(new IntPoint(2, 3).equals(new Integer(1)));
 	}
-	@Test public void hashCodeTest() {
+	@Test
+	public void hashCodeTest() {
 		assertEquals(new IntPoint(2, 3).hashCode(), new IntPoint(2, 3).hashCode());
 		assertNotEquals(new IntPoint(2, 3).hashCode(), new IntPoint(-2, 3).hashCode());
 		assertNotEquals(new IntPoint(2, 3).hashCode(), new IntPoint(2, -3).hashCode());
 	}
-	@Test public void edgeNeighbors() {
+	@Test
+	public void edgeNeighbors() {
 		Set<IntPoint> s = new HashSet<>();
 		for (IntPoint n : IntPoint.EDGE_NEIGHBORS) {
 			s.add(n);
@@ -66,7 +78,8 @@ public class IntPointTest {
 		}
 		assertEquals(4, s.size());
 	}
-	@Test public void cornerNeighbors() {
+	@Test
+	public void cornerNeighbors() {
 		Set<IntPoint> s = new HashSet<>();
 		for (IntPoint n : IntPoint.CORNER_NEIGHBORS) {
 			s.add(n);
@@ -74,7 +87,8 @@ public class IntPointTest {
 		}
 		assertEquals(8, s.size());
 	}
-	@Test public void iterator() {
+	@Test
+	public void iterator() {
 		List<IntPoint> l = new ArrayList<>();
 		for (IntPoint c : new IntPoint(2, 3))
 			l.add(c);
@@ -88,7 +102,8 @@ public class IntPointTest {
 		for (IntPoint c : new IntPoint(3, -1))
 			fail(c.toString());
 	}
-	@Test public void lineTo() {
+	@Test
+	public void lineTo() {
 		checkLineTo(2, 3, 2, 3, 2, 3);
 		checkLineTo(2, 3, 1, 4, 2, 3, 1, 4);
 		checkLineTo(2, 3, -1, 3, 2, 3, 1, 3, 0, 3, -1, 3);
@@ -102,7 +117,8 @@ public class IntPointTest {
 			l[i] = new IntPoint(p[2 * i], p[2 * i + 1]);
 		assertArrayEquals(l, new IntPoint(x1, y1).lineTo(new IntPoint(x2, y2)));
 	}
-	@Test public void toString_readable() {
+	@Test
+	public void toString_readable() {
 		assertEquals("[2,3]", new IntPoint(2, 3).toString());
 	}
 }

@@ -92,13 +92,16 @@ abstract class ImageDecoder {
 	 * this extension mechanism is cumbersome and on Android the whole ImageIO is missing.
 	 */
 	private static class ImageIODecoder extends ImageDecoder {
-		@Override boolean available() {
+		@Override
+		boolean available() {
 			return PlatformCheck.hasClass("javax.imageio.ImageIO");
 		}
-		@Override String name() {
+		@Override
+		String name() {
 			return "ImageIO";
 		}
-		@Override DecodedImage decode(byte[] image) {
+		@Override
+		DecodedImage decode(byte[] image) {
 			return Exceptions.sneak().get(() -> {
 				BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(image));
 				if (buffered == null)
@@ -115,16 +118,19 @@ abstract class ImageDecoder {
 	 * WSQ is often used to compress fingerprints, which is why JNBIS WSQ decoder is very valuable.
 	 */
 	private static class WsqDecoder extends ImageDecoder {
-		@Override boolean available() {
+		@Override
+		boolean available() {
 			/*
 			 * JNBIS WSQ decoder is pure Java, which means it is always available.
 			 */
 			return true;
 		}
-		@Override String name() {
+		@Override
+		String name() {
 			return "WSQ";
 		}
-		@Override DecodedImage decode(byte[] image) {
+		@Override
+		DecodedImage decode(byte[] image) {
 			if (image.length < 2 || image[0] != (byte)0xff || image[1] != (byte)0xa0)
 				throw new IllegalArgumentException("This is not a WSQ image.");
 			return Exceptions.sneak().get(() -> {
@@ -151,13 +157,16 @@ abstract class ImageDecoder {
 	 * we will reference BitmapFactory and Bitmap via reflection.
 	 */
 	private static class AndroidDecoder extends ImageDecoder {
-		@Override boolean available() {
+		@Override
+		boolean available() {
 			return PlatformCheck.hasClass("android.graphics.BitmapFactory");
 		}
-		@Override String name() {
+		@Override
+		String name() {
 			return "Android";
 		}
-		@Override DecodedImage decode(byte[] image) {
+		@Override
+		DecodedImage decode(byte[] image) {
 			AndroidBitmap bitmap = AndroidBitmapFactory.decodeByteArray(image, 0, image.length);
 			if (bitmap.instance == null)
 				throw new IllegalArgumentException("Unsupported image format.");

@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
 public class BlockMapTest {
-	@Test public void constructor() {
+	@Test
+	public void constructor() {
 		BlockMap m = new BlockMap(400, 600, 20);
 		assertEquals(new IntPoint(400, 600), m.pixels);
 		assertEquals(new IntPoint(20, 30), m.primary.blocks);

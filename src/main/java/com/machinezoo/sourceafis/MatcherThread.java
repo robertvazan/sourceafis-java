@@ -10,7 +10,8 @@ class MatcherThread {
 		 * ThreadLocal has method withInitial() that is more convenient,
 		 * but that method alone would force whole SourceAFIS to require Android API level 26 instead of 24.
 		 */
-		@Override protected MatcherThread initialValue() {
+		@Override
+		protected MatcherThread initialValue() {
 			return new MatcherThread();
 		}
 	};

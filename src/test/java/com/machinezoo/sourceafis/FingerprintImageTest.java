@@ -7,7 +7,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
 
 public class FingerprintImageTest {
-	@Test public void decodePNG() {
+	@Test
+	public void decodePNG() {
 		new FingerprintImage().decode(TestResources.png());
 	}
 	private void assertSimilar(DoubleMatrix map, DoubleMatrix reference) {
@@ -28,13 +29,16 @@ public class FingerprintImageTest {
 	private void assertSimilar(byte[] image, byte[] reference) {
 		assertSimilar(new FingerprintImage().decode(image).matrix, new FingerprintImage().decode(reference).matrix);
 	}
-	@Test public void decodeJPEG() {
+	@Test
+	public void decodeJPEG() {
 		assertSimilar(TestResources.jpeg(), TestResources.png());
 	}
-	@Test public void decodeBMP() {
+	@Test
+	public void decodeBMP() {
 		assertSimilar(TestResources.bmp(), TestResources.png());
 	}
-	@Test public void decodeWSQ() {
+	@Test
+	public void decodeWSQ() {
 		assertSimilar(TestResources.originalWsq(), TestResources.convertedWsq());
 	}
 	public static FingerprintImage probe() {
@@ -55,7 +59,8 @@ public class FingerprintImageTest {
 	public static FingerprintImage nonmatchingGray() {
 		return new FingerprintImage().grayscale(333, 435, TestResources.nonmatchingGray());
 	}
-	@Test public void decodeGray() {
+	@Test
+	public void decodeGray() {
 		double score = new FingerprintMatcher()
 			.index(new FingerprintTemplate(probeGray()))
 			.match(new FingerprintTemplate(matchingGray()));

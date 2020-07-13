@@ -200,7 +200,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @see #take(String, String, byte[])
 	 * @deprecated
 	 */
-	@Deprecated protected void capture(String key, Map<String, Supplier<byte[]>> data) {
+	@Deprecated
+	protected void capture(String key, Map<String, Supplier<byte[]>> data) {
 		/*
 		 * If nobody overrode this method, assume it is legacy code and call the old log() method.
 		 */
@@ -222,7 +223,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * @see #take(String, String, byte[])
 	 * @deprecated
 	 */
-	@Deprecated protected void log(String key, Map<String, Supplier<ByteBuffer>> data) {
+	@Deprecated
+	protected void log(String key, Map<String, Supplier<ByteBuffer>> data) {
 	}
 	private boolean closed;
 	/**
@@ -242,7 +244,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * 
 	 * @see #FingerprintTransparency()
 	 */
-	@Override public void close() {
+	@Override
+	public void close() {
 		/*
 		 * Tolerate double call to close().
 		 */
@@ -265,7 +268,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		 * Synchronize take(), because ZipOutputStream can be accessed only from one thread
 		 * while transparency data may flow from multiple threads.
 		 */
-		@Override public synchronized void take(String key, String mime, byte[] data) {
+		@Override
+		public synchronized void take(String key, String mime, byte[] data) {
 			++offset;
 			/*
 			 * We allow providing custom output stream, which can fail at any moment.
@@ -278,7 +282,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				zip.closeEntry();
 			});
 		}
-		@Override public void close() {
+		@Override
+		public void close() {
 			super.close();
 			Exceptions.wrap().run(zip::close);
 		}
@@ -315,7 +320,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 */
 	private static final FingerprintTransparency NOOP;
 	private static class NoFingerprintTransparency extends FingerprintTransparency {
-		@Override public boolean accepts(String key) {
+		@Override
+		public boolean accepts(String key) {
 			return false;
 		}
 	}
@@ -362,12 +368,14 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void log(String key, Object data) {
 		log(key, "application/cbor", () -> cbor(data));
 	}
-	@SuppressWarnings("unused") private static class CborSkeletonRidge {
+	@SuppressWarnings("unused")
+	private static class CborSkeletonRidge {
 		int start;
 		int end;
 		List<IntPoint> points;
 	}
-	@SuppressWarnings("unused") private static class CborSkeleton {
+	@SuppressWarnings("unused")
+	private static class CborSkeleton {
 		int width;
 		int height;
 		List<IntPoint> minutiae;
@@ -395,7 +403,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	void logSkeleton(String keyword, Skeleton skeleton) {
 		log(skeleton.type.prefix + keyword, () -> new CborSkeleton(skeleton));
 	}
-	@SuppressWarnings("unused") private static class CborHashEntry {
+	@SuppressWarnings("unused")
+	private static class CborHashEntry {
 		int key;
 		List<IndexedEdge> edges;
 	}
@@ -413,7 +422,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 				.collect(toList());
 		});
 	}
-	@SuppressWarnings("unused") private static class CborPair {
+	@SuppressWarnings("unused")
+	private static class CborPair {
 		int probe;
 		int candidate;
 		CborPair(int probe, int candidate) {
@@ -455,7 +465,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 		offerMatcher();
 		return acceptsPairing;
 	}
-	@SuppressWarnings("unused") private static class CborEdge {
+	@SuppressWarnings("unused")
+	private static class CborEdge {
 		int probeFrom;
 		int probeTo;
 		int candidateFrom;
@@ -467,7 +478,8 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 			candidateTo = pair.candidate;
 		}
 	}
-	@SuppressWarnings("unused") private static class CborPairing {
+	@SuppressWarnings("unused")
+	private static class CborPairing {
 		CborPair root;
 		List<CborEdge> tree;
 		List<CborEdge> support;

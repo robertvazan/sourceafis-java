@@ -247,7 +247,8 @@ class Skeleton {
 		int distance;
 		SkeletonMinutia end1;
 		SkeletonMinutia end2;
-		@Override public int compareTo(Gap other) {
+		@Override
+		public int compareTo(Gap other) {
 			return Integer.compare(distance, other.distance);
 		}
 	}

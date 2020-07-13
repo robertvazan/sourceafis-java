@@ -77,25 +77,31 @@ class IntPoint implements Iterable<IntPoint> {
 	private List<Object> fields() {
 		return Arrays.asList(x, y);
 	}
-	@Override public boolean equals(Object obj) {
+	@Override
+	public boolean equals(Object obj) {
 		return obj instanceof IntPoint && fields().equals(((IntPoint)obj).fields());
 	}
-	@Override public int hashCode() {
+	@Override
+	public int hashCode() {
 		return Objects.hash(x, y);
 	}
-	@Override public String toString() {
+	@Override
+	public String toString() {
 		return String.format("[%d,%d]", x, y);
 	}
-	@Override public Iterator<IntPoint> iterator() {
+	@Override
+	public Iterator<IntPoint> iterator() {
 		return new CellIterator();
 	}
 	private class CellIterator implements Iterator<IntPoint> {
 		int atX;
 		int atY;
-		@Override public boolean hasNext() {
+		@Override
+		public boolean hasNext() {
 			return atY < y && atX < x;
 		}
-		@Override public IntPoint next() {
+		@Override
+		public IntPoint next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
 			IntPoint result = new IntPoint(atX, atY);
@@ -106,7 +112,8 @@ class IntPoint implements Iterable<IntPoint> {
 			}
 			return result;
 		}
-		@Override public void remove() {
+		@Override
+		public void remove() {
 			throw new UnsupportedOperationException();
 		}
 	}

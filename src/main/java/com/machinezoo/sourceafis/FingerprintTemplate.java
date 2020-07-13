@@ -156,7 +156,8 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(byte[])
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintTemplate() {
+	@Deprecated
+	public FingerprintTemplate() {
 	}
 	/**
 	 * Gets the empty template with no biometric data.
@@ -186,7 +187,8 @@ public class FingerprintTemplate {
 	 * @see FingerprintTransparency
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintTemplate transparency(FingerprintTransparency transparency) {
+	@Deprecated
+	public FingerprintTemplate transparency(FingerprintTransparency transparency) {
 		return this;
 	}
 	private double dpi = 500;
@@ -205,7 +207,8 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(FingerprintImage)
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintTemplate dpi(double dpi) {
+	@Deprecated
+	public FingerprintTemplate dpi(double dpi) {
 		this.dpi = dpi;
 		return this;
 	}
@@ -232,7 +235,8 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(FingerprintImage)
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintTemplate create(byte[] image) {
+	@Deprecated
+	public FingerprintTemplate create(byte[] image) {
 		immutable = new ImmutableTemplate(FeatureExtractor.extract(new FingerprintImage().decode(image).matrix, dpi));
 		return this;
 	}
@@ -255,7 +259,8 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(byte[])
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintTemplate deserialize(String json) {
+	@Deprecated
+	public FingerprintTemplate deserialize(String json) {
 		Objects.requireNonNull(json);
 		PersistentTemplate persistent = new Gson().fromJson(json, PersistentTemplate.class);
 		persistent.validate();
@@ -296,7 +301,8 @@ public class FingerprintTemplate {
 	 * @see #toByteArray()
 	 * @deprecated
 	 */
-	@Deprecated public String serialize() {
+	@Deprecated
+	public String serialize() {
 		return new Gson().toJson(new PersistentTemplate(immutable.mutable()));
 	}
 	/**
@@ -313,7 +319,8 @@ public class FingerprintTemplate {
 	 * @see #FingerprintTemplate(byte[])
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintTemplate convert(byte[] template) {
+	@Deprecated
+	public FingerprintTemplate convert(byte[] template) {
 		immutable = FingerprintCompatibility.convert(template).immutable;
 		return this;
 	}

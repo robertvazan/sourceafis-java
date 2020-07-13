@@ -9,25 +9,29 @@ import org.junit.jupiter.api.*;
 public class FingerprintTransparencyTest {
 	private static class TransparencyChecker extends FingerprintTransparency {
 		final List<String> keys = new ArrayList<>();
-		@Override public void take(String key, String mime, byte[] data) {
+		@Override
+		public void take(String key, String mime, byte[] data) {
 			keys.add(key);
 			assertThat(key, mime, is(oneOf("application/cbor", "text/plain")));
 			assertThat(key, data.length, greaterThan(0));
 		}
 	}
-	@Test public void versioned() {
+	@Test
+	public void versioned() {
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(FingerprintImageTest.probe());
 			assertThat(transparency.keys, hasItem("version"));
 		}
 	}
-	@Test public void extractor() {
+	@Test
+	public void extractor() {
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(FingerprintImageTest.probe());
 			assertThat(transparency.keys, is(not(empty())));
 		}
 	}
-	@Test public void matcher() {
+	@Test
+	public void matcher() {
 		FingerprintTemplate probe = FingerprintTemplateTest.probe();
 		FingerprintTemplate matching = FingerprintTemplateTest.matching();
 		new FingerprintTemplate(FingerprintImageTest.probe());
@@ -38,7 +42,8 @@ public class FingerprintTransparencyTest {
 			assertThat(transparency.keys, is(not(empty())));
 		}
 	}
-	@Test public void deserialization() {
+	@Test
+	public void deserialization() {
 		byte[] serialized = FingerprintTemplateTest.probe().toByteArray();
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
 			new FingerprintTemplate(serialized);
@@ -47,14 +52,17 @@ public class FingerprintTransparencyTest {
 	}
 	private static class TransparencyFilter extends FingerprintTransparency {
 		final List<String> keys = new ArrayList<>();
-		@Override public boolean accepts(String key) {
+		@Override
+		public boolean accepts(String key) {
 			return false;
 		}
-		@Override public void take(String key, String mime, byte[] data) {
+		@Override
+		public void take(String key, String mime, byte[] data) {
 			keys.add(key);
 		}
 	}
-	@Test public void filtered() {
+	@Test
+	public void filtered() {
 		try (TransparencyFilter transparency = new TransparencyFilter()) {
 			new FingerprintMatcher()
 				.index(new FingerprintTemplate(FingerprintImageTest.probe()))

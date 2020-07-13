@@ -58,25 +58,31 @@ class IntRect implements Iterable<IntPoint> {
 	private List<Object> fields() {
 		return Arrays.asList(x, y, width, height);
 	}
-	@Override public boolean equals(Object obj) {
+	@Override
+	public boolean equals(Object obj) {
 		return obj instanceof IntRect && fields().equals(((IntRect)obj).fields());
 	}
-	@Override public int hashCode() {
+	@Override
+	public int hashCode() {
 		return Objects.hash(x, y, width, height);
 	}
-	@Override public String toString() {
+	@Override
+	public String toString() {
 		return String.format("[%d,%d] @ [%d,%d]", width, height, x, y);
 	}
-	@Override public Iterator<IntPoint> iterator() {
+	@Override
+	public Iterator<IntPoint> iterator() {
 		return new BlockIterator();
 	}
 	private class BlockIterator implements Iterator<IntPoint> {
 		int atX;
 		int atY;
-		@Override public boolean hasNext() {
+		@Override
+		public boolean hasNext() {
 			return atY < height && atX < width;
 		}
-		@Override public IntPoint next() {
+		@Override
+		public IntPoint next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
 			IntPoint result = new IntPoint(x + atX, y + atY);
@@ -87,7 +93,8 @@ class IntRect implements Iterable<IntPoint> {
 			}
 			return result;
 		}
-		@Override public void remove() {
+		@Override
+		public void remove() {
 			throw new UnsupportedOperationException();
 		}
 	}

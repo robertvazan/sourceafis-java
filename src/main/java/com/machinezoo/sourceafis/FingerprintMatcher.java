@@ -63,7 +63,8 @@ public class FingerprintMatcher {
 	 * @see FingerprintTransparency
 	 * @deprecated
 	 */
-	@Deprecated public FingerprintMatcher transparency(FingerprintTransparency transparency) {
+	@Deprecated
+	public FingerprintMatcher transparency(FingerprintTransparency transparency) {
 		return this;
 	}
 	/**

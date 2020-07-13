@@ -8,7 +8,8 @@ class MinutiaPair {
 	int candidateRef;
 	int distance;
 	int supportingEdges;
-	@Override public String toString() {
+	@Override
+	public String toString() {
 		return String.format("%d<->%d @ %d<->%d #%d", probe, candidate, probeRef, candidateRef, supportingEdges);
 	}
 }

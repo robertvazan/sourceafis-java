@@ -27,10 +27,12 @@ public class FingerprintTemplateTest {
 	public static FingerprintTemplate nonmatchingGray() {
 		return new FingerprintTemplate(FingerprintImageTest.nonmatchingGray());
 	}
-	@Test public void constructor() {
+	@Test
+	public void constructor() {
 		probe();
 	}
-	@Test public void roundTripSerialization() {
+	@Test
+	public void roundTripSerialization() {
 		MutableTemplate mt = new MutableTemplate();
 		mt.size = new IntPoint(800, 600);
 		mt.minutiae = new ArrayList<>();
@@ -48,7 +50,8 @@ public class FingerprintTemplateTest {
 		assertEquals(0.5 * Math.PI, b.direction, 0.0000001);
 		assertEquals(MinutiaType.ENDING, b.type);
 	}
-	@Test public void randomScaleMatch() throws Exception {
+	@Test
+	public void randomScaleMatch() throws Exception {
 		FingerprintMatcher matcher = new FingerprintMatcher()
 			.index(probe());
 		DoubleMatrix original = FingerprintImageTest.matching().matrix;
