@@ -8,7 +8,7 @@
 	<packaging>jar</packaging>
 
 	<name>SourceAFIS for Java</name>
-	<url>https://sourceafis.machinezoo.com/</url>
+	<url>https://sourceafis.machinezoo.com/java</url>
 	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score. Supports efficient 1:N search.</description>
 	<inceptionYear>2009</inceptionYear>
 
