@@ -2,7 +2,7 @@
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.machinezoo.sourceafis/sourceafis)](https://search.maven.org/artifact/com.machinezoo.sourceafis/sourceafis)
 [![Build Status](https://travis-ci.com/robertvazan/sourceafis-java.svg?branch=master)](https://travis-ci.com/robertvazan/sourceafis-java)
-[![Coverage Status](https://coveralls.io/repos/github/robertvazan/sourceafis-java/badge.svg?branch=master)](https://coveralls.io/github/robertvazan/sourceafis-java?branch=master)
+[![Coverage Status](https://codecov.io/gh/robertvazan/sourceafis-java/branch/master/graph/badge.svg)](https://codecov.io/gh/robertvazan/sourceafis-java)
 
 SourceAFIS is a fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score.
 It can do 1:1 comparisons as well as efficient 1:N search. This is the Java implementation of the SourceAFIS algorithm.
