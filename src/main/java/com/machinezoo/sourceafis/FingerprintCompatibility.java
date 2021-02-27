@@ -102,7 +102,7 @@ public class FingerprintCompatibility {
 	public static List<FingerprintTemplate> convertAll(byte[] template) {
 		Objects.requireNonNull(template);
 		try {
-			TemplateFormat format = TemplateFormat.detect(template);
+			TemplateFormat format = TemplateFormat.identify(template);
 			if (format == null || !TemplateCodec.ALL.containsKey(format))
 				throw new IllegalArgumentException("Unsupported template format.");
 			return TemplateCodec.ALL.get(format).decode(template).stream()
@@ -155,7 +155,7 @@ public class FingerprintCompatibility {
 	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2004">ANSI INCITS 378-2004</a>
 	 */
 	public static byte[] toAnsiIncits378v2004(FingerprintTemplate... templates) {
-		return encode(TemplateFormat.ANSI_378, templates);
+		return encode(TemplateFormat.ANSI_378_2004, templates);
 	}
 	/**
 	 * Converts native fingerprint template to ANSI 378-2009 template.

@@ -5,8 +5,10 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
 import com.machinezoo.fingerprintio.*;
-import com.machinezoo.fingerprintio.ansi378.*;
-import com.machinezoo.fingerprintio.iso19794p2.*;
+import com.machinezoo.fingerprintio.ansi378v2004.*;
+import com.machinezoo.fingerprintio.ansi378v2009.*;
+import com.machinezoo.fingerprintio.ansi378v2009am1.*;
+import com.machinezoo.fingerprintio.iso19794p2v2005.*;
 
 abstract class TemplateCodec {
 	abstract byte[] encode(List<MutableTemplate> templates);
@@ -20,16 +22,25 @@ abstract class TemplateCodec {
 	}
 	static final Map<TemplateFormat, TemplateCodec> ALL = new HashMap<>();
 	static {
-		ALL.put(TemplateFormat.ANSI_378, new Ansi378Codec());
+		ALL.put(TemplateFormat.ANSI_378_2004, new Ansi378Codec());
 		ALL.put(TemplateFormat.ANSI_378_2009, new Ansi378v2009Codec());
 		ALL.put(TemplateFormat.ANSI_378_2009_AM1, new Ansi378v2009Am1Codec());
-		ALL.put(TemplateFormat.ISO_19794_2, new Iso19794p2Codec());
+		ALL.put(TemplateFormat.ISO_19794_2_2005, new Iso19794p2Codec());
+	}
+	private static class Resolution {
+		double dpiX;
+		double dpiY;
+	}
+	private static IntPoint decode(int x, int y, Resolution resolution) {
+		return new IntPoint(decode(x, resolution.dpiX), decode(y, resolution.dpiY));
+	}
+	private static int decode(int value, double dpi) {
+		return (int)Math.round(value / dpi * 500);
 	}
 	private static class Ansi378Codec extends TemplateCodec {
-		@Override
-		byte[] encode(List<MutableTemplate> templates) {
+		@Override byte[] encode(List<MutableTemplate> templates) {
 			int resolution = (int)Math.round(500 / 2.54);
-			Ansi378Template iotemplate = new Ansi378Template();
+			Ansi378v2004Template iotemplate = new Ansi378v2004Template();
 			iotemplate.width = templates.stream().mapToInt(t -> t.size.x).max().orElse(500);
 			iotemplate.height = templates.stream().mapToInt(t -> t.size.y).max().orElse(500);
 			iotemplate.resolutionX = resolution;
@@ -39,9 +50,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override
-		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			Ansi378Template iotemplate = new Ansi378Template(serialized, permissive);
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+			Ansi378v2004Template iotemplate = new Ansi378v2004Template(serialized, permissive);
 			Resolution resolution = new Resolution();
 			resolution.dpiX = iotemplate.resolutionX * 2.54;
 			resolution.dpiY = iotemplate.resolutionY * 2.54;
@@ -49,15 +59,15 @@ abstract class TemplateCodec {
 				.map(fp -> decode(fp, iotemplate, resolution))
 				.collect(toList());
 		}
-		static Ansi378Fingerprint encode(int offset, MutableTemplate template) {
-			Ansi378Fingerprint iofingerprint = new Ansi378Fingerprint();
+		static Ansi378v2004Fingerprint encode(int offset, MutableTemplate template) {
+			Ansi378v2004Fingerprint iofingerprint = new Ansi378v2004Fingerprint();
 			iofingerprint.view = offset;
 			iofingerprint.minutiae = template.minutiae.stream()
 				.map(m -> encode(m))
 				.collect(toList());
 			return iofingerprint;
 		}
-		static MutableTemplate decode(Ansi378Fingerprint iofingerprint, Ansi378Template iotemplate, Resolution resolution) {
+		static MutableTemplate decode(Ansi378v2004Fingerprint iofingerprint, Ansi378v2004Template iotemplate, Resolution resolution) {
 			MutableTemplate template = new MutableTemplate();
 			template.size = decode(iotemplate.width, iotemplate.height, resolution);
 			template.minutiae = iofingerprint.minutiae.stream()
@@ -65,15 +75,15 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return template;
 		}
-		static Ansi378Minutia encode(MutableMinutia minutia) {
-			Ansi378Minutia iominutia = new Ansi378Minutia();
+		static Ansi378v2004Minutia encode(MutableMinutia minutia) {
+			Ansi378v2004Minutia iominutia = new Ansi378v2004Minutia();
 			iominutia.positionX = minutia.position.x;
 			iominutia.positionY = minutia.position.y;
 			iominutia.angle = encodeAngle(minutia.direction);
 			iominutia.type = encode(minutia.type);
 			return iominutia;
 		}
-		static MutableMinutia decode(Ansi378Minutia iominutia, Resolution resolution) {
+		static MutableMinutia decode(Ansi378v2004Minutia iominutia, Resolution resolution) {
 			MutableMinutia minutia = new MutableMinutia();
 			minutia.position = decode(iominutia.positionX, iominutia.positionY, resolution);
 			minutia.direction = decodeAngle(iominutia.angle);
@@ -86,17 +96,17 @@ abstract class TemplateCodec {
 		static double decodeAngle(int ioangle) {
 			return DoubleAngle.complementary(((2 * ioangle - 1 + 360) % 360) / 360.0 * DoubleAngle.PI2);
 		}
-		static Ansi378MinutiaType encode(MinutiaType type) {
+		static Ansi378v2004MinutiaType encode(MinutiaType type) {
 			switch (type) {
 			case ENDING:
-				return Ansi378MinutiaType.ENDING;
+				return Ansi378v2004MinutiaType.ENDING;
 			case BIFURCATION:
-				return Ansi378MinutiaType.BIFURCATION;
+				return Ansi378v2004MinutiaType.BIFURCATION;
 			default:
-				return Ansi378MinutiaType.ENDING;
+				return Ansi378v2004MinutiaType.ENDING;
 			}
 		}
-		static MinutiaType decode(Ansi378MinutiaType iotype) {
+		static MinutiaType decode(Ansi378v2004MinutiaType iotype) {
 			switch (iotype) {
 			case ENDING:
 				return MinutiaType.ENDING;
@@ -106,33 +116,21 @@ abstract class TemplateCodec {
 				return MinutiaType.ENDING;
 			}
 		}
-		static class Resolution {
-			double dpiX;
-			double dpiY;
-		}
-		static IntPoint decode(int x, int y, Resolution resolution) {
-			return new IntPoint(decode(x, resolution.dpiX), decode(y, resolution.dpiY));
-		}
-		static int decode(int value, double dpi) {
-			return (int)Math.round(value / dpi * 500);
-		}
 	}
-	private static class Ansi378v2009Codec extends Ansi378Codec {
-		@Override
-		byte[] encode(List<MutableTemplate> templates) {
+	private static class Ansi378v2009Codec extends TemplateCodec {
+		@Override byte[] encode(List<MutableTemplate> templates) {
 			Ansi378v2009Template iotemplate = new Ansi378v2009Template();
 			iotemplate.fingerprints = IntStream.range(0, templates.size())
-				.mapToObj(n -> encode2009(n, templates.get(n)))
+				.mapToObj(n -> encode(n, templates.get(n)))
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override
-		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			return new Ansi378v2009Template(serialized, permissive).fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
 		}
-		static Ansi378v2009Fingerprint encode2009(int offset, MutableTemplate template) {
+		static Ansi378v2009Fingerprint encode(int offset, MutableTemplate template) {
 			int resolution = (int)Math.round(500 / 2.54);
 			Ansi378v2009Fingerprint iofingerprint = new Ansi378v2009Fingerprint();
 			iofingerprint.view = offset;
@@ -141,7 +139,7 @@ abstract class TemplateCodec {
 			iofingerprint.resolutionX = resolution;
 			iofingerprint.resolutionY = resolution;
 			iofingerprint.minutiae = template.minutiae.stream()
-				.map(m -> encode2009(m))
+				.map(m -> encode(m))
 				.collect(toList());
 			return iofingerprint;
 		}
@@ -156,12 +154,12 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return template;
 		}
-		static Ansi378v2009Minutia encode2009(MutableMinutia minutia) {
+		static Ansi378v2009Minutia encode(MutableMinutia minutia) {
 			Ansi378v2009Minutia iominutia = new Ansi378v2009Minutia();
 			iominutia.positionX = minutia.position.x;
 			iominutia.positionY = minutia.position.y;
 			iominutia.angle = encodeAngle(minutia.direction);
-			iominutia.type = encode2009(minutia.type);
+			iominutia.type = encode(minutia.type);
 			return iominutia;
 		}
 		static MutableMinutia decode(Ansi378v2009Minutia iominutia, Resolution resolution) {
@@ -171,7 +169,13 @@ abstract class TemplateCodec {
 			minutia.type = decode(iominutia.type);
 			return minutia;
 		}
-		static Ansi378v2009MinutiaType encode2009(MinutiaType type) {
+		static int encodeAngle(double angle) {
+			return (int)Math.ceil(DoubleAngle.complementary(angle) * DoubleAngle.INV_PI2 * 360 / 2) % 180;
+		}
+		static double decodeAngle(int ioangle) {
+			return DoubleAngle.complementary(((2 * ioangle - 1 + 360) % 360) / 360.0 * DoubleAngle.PI2);
+		}
+		static Ansi378v2009MinutiaType encode(MinutiaType type) {
 			switch (type) {
 			case ENDING:
 				return Ansi378v2009MinutiaType.ENDING;
@@ -192,22 +196,20 @@ abstract class TemplateCodec {
 			}
 		}
 	}
-	private static class Ansi378v2009Am1Codec extends Ansi378v2009Codec {
-		@Override
-		byte[] encode(List<MutableTemplate> templates) {
+	private static class Ansi378v2009Am1Codec extends TemplateCodec {
+		@Override byte[] encode(List<MutableTemplate> templates) {
 			Ansi378v2009Am1Template iotemplate = new Ansi378v2009Am1Template();
 			iotemplate.fingerprints = IntStream.range(0, templates.size())
-				.mapToObj(n -> encode2009am1(n, templates.get(n)))
+				.mapToObj(n -> encode(n, templates.get(n)))
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override
-		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			return new Ansi378v2009Am1Template(serialized, permissive).fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
 		}
-		static Ansi378v2009Am1Fingerprint encode2009am1(int offset, MutableTemplate template) {
+		static Ansi378v2009Am1Fingerprint encode(int offset, MutableTemplate template) {
 			int resolution = (int)Math.round(500 / 2.54);
 			Ansi378v2009Am1Fingerprint iofingerprint = new Ansi378v2009Am1Fingerprint();
 			iofingerprint.view = offset;
@@ -216,7 +218,7 @@ abstract class TemplateCodec {
 			iofingerprint.resolutionX = resolution;
 			iofingerprint.resolutionY = resolution;
 			iofingerprint.minutiae = template.minutiae.stream()
-				.map(m -> encode2009(m))
+				.map(m -> encode(m))
 				.collect(toList());
 			return iofingerprint;
 		}
@@ -231,41 +233,38 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return template;
 		}
-	}
-	private static class Iso19794p2Codec extends TemplateCodec {
-		@Override
-		byte[] encode(List<MutableTemplate> templates) {
-			throw new UnsupportedOperationException();
+		static Ansi378v2009Am1Minutia encode(MutableMinutia minutia) {
+			Ansi378v2009Am1Minutia iominutia = new Ansi378v2009Am1Minutia();
+			iominutia.positionX = minutia.position.x;
+			iominutia.positionY = minutia.position.y;
+			iominutia.angle = encodeAngle(minutia.direction);
+			iominutia.type = encode(minutia.type);
+			return iominutia;
 		}
-		@Override
-		List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			Iso19794p2Template iotemplate = new Iso19794p2Template(serialized, permissive);
-			Resolution resolution = new Resolution();
-			resolution.dpiX = iotemplate.resolutionX * 2.54;
-			resolution.dpiY = iotemplate.resolutionY * 2.54;
-			return iotemplate.fingerprints.stream()
-				.map(fp -> decode(fp, iotemplate, resolution))
-				.collect(toList());
-		}
-		static MutableTemplate decode(Iso19794p2Fingerprint iofingerprint, Iso19794p2Template iotemplate, Resolution resolution) {
-			MutableTemplate template = new MutableTemplate();
-			template.size = decode(iotemplate.width, iotemplate.height, resolution);
-			template.minutiae = iofingerprint.minutiae.stream()
-				.map(m -> decode(m, resolution))
-				.collect(toList());
-			return template;
-		}
-		static MutableMinutia decode(Iso19794p2Minutia iominutia, Resolution resolution) {
+		static MutableMinutia decode(Ansi378v2009Am1Minutia iominutia, Resolution resolution) {
 			MutableMinutia minutia = new MutableMinutia();
 			minutia.position = decode(iominutia.positionX, iominutia.positionY, resolution);
 			minutia.direction = decodeAngle(iominutia.angle);
 			minutia.type = decode(iominutia.type);
 			return minutia;
 		}
-		static double decodeAngle(int ioangle) {
-			return DoubleAngle.complementary(ioangle / 256.0 * DoubleAngle.PI2);
+		static int encodeAngle(double angle) {
+			return (int)Math.ceil(DoubleAngle.complementary(angle) * DoubleAngle.INV_PI2 * 360 / 2) % 180;
 		}
-		static MinutiaType decode(Iso19794p2MinutiaType iotype) {
+		static double decodeAngle(int ioangle) {
+			return DoubleAngle.complementary(((2 * ioangle - 1 + 360) % 360) / 360.0 * DoubleAngle.PI2);
+		}
+		static Ansi378v2009Am1MinutiaType encode(MinutiaType type) {
+			switch (type) {
+			case ENDING:
+				return Ansi378v2009Am1MinutiaType.ENDING;
+			case BIFURCATION:
+				return Ansi378v2009Am1MinutiaType.BIFURCATION;
+			default:
+				return Ansi378v2009Am1MinutiaType.ENDING;
+			}
+		}
+		static MinutiaType decode(Ansi378v2009Am1MinutiaType iotype) {
 			switch (iotype) {
 			case ENDING:
 				return MinutiaType.ENDING;
@@ -275,15 +274,47 @@ abstract class TemplateCodec {
 				return MinutiaType.ENDING;
 			}
 		}
-		static class Resolution {
-			double dpiX;
-			double dpiY;
+	}
+	private static class Iso19794p2Codec extends TemplateCodec {
+		@Override byte[] encode(List<MutableTemplate> templates) {
+			throw new UnsupportedOperationException();
 		}
-		static IntPoint decode(int x, int y, Resolution resolution) {
-			return new IntPoint(decode(x, resolution.dpiX), decode(y, resolution.dpiY));
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
+			Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template(serialized, permissive);
+			Resolution resolution = new Resolution();
+			resolution.dpiX = iotemplate.resolutionX * 2.54;
+			resolution.dpiY = iotemplate.resolutionY * 2.54;
+			return iotemplate.fingerprints.stream()
+				.map(fp -> decode(fp, iotemplate, resolution))
+				.collect(toList());
 		}
-		static int decode(int value, double dpi) {
-			return (int)Math.round(value / dpi * 500);
+		static MutableTemplate decode(Iso19794p2v2005Fingerprint iofingerprint, Iso19794p2v2005Template iotemplate, Resolution resolution) {
+			MutableTemplate template = new MutableTemplate();
+			template.size = decode(iotemplate.width, iotemplate.height, resolution);
+			template.minutiae = iofingerprint.minutiae.stream()
+				.map(m -> decode(m, resolution))
+				.collect(toList());
+			return template;
+		}
+		static MutableMinutia decode(Iso19794p2v2005Minutia iominutia, Resolution resolution) {
+			MutableMinutia minutia = new MutableMinutia();
+			minutia.position = decode(iominutia.positionX, iominutia.positionY, resolution);
+			minutia.direction = decodeAngle(iominutia.angle);
+			minutia.type = decode(iominutia.type);
+			return minutia;
+		}
+		static double decodeAngle(int ioangle) {
+			return DoubleAngle.complementary(ioangle / 256.0 * DoubleAngle.PI2);
+		}
+		static MinutiaType decode(Iso19794p2v2005MinutiaType iotype) {
+			switch (iotype) {
+			case ENDING:
+				return MinutiaType.ENDING;
+			case BIFURCATION:
+				return MinutiaType.BIFURCATION;
+			default:
+				return MinutiaType.ENDING;
+			}
 		}
 	}
 }
