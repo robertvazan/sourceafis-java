@@ -26,5 +26,6 @@ public class DoublePointTest {
 	}
 	public static void assertPointEquals(DoublePoint expected, DoublePoint actual, double tolerance) {
 		assertEquals(expected.x, actual.x, tolerance);
+		assertEquals(expected.y, actual.y, tolerance);
 	}
 }

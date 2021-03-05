@@ -21,6 +21,16 @@ import javax.imageio.*;
 public class FingerprintImage {
 	/*
 	 * API roadmap:
+	 * + FingerprintImage(byte[])
+	 * + FingerprintImage(byte[], options)
+	 * + FingerprintImage(width, height, byte[])
+	 * + FingerprintImage(width, height, byte[], options)
+	 * - grayscale()
+	 * - decode()
+	 * - dpi()
+	 * 
+	 * FingerprintImageOptions:
+	 * + dpi(double)
 	 * + position(FingerprintPosition)
 	 * + other fingerprint properties
 	 */

@@ -22,7 +22,7 @@ public class FingerprintMatcher {
 	 * + FingerprintMatcher(FingerprintTemplate)
 	 * - index(FingerprintTemplate)
 	 * + FingerprintMatcher(FingerprintTemplate, FingerprintMatcherOptions)
-	 * + compare(FingerprintTemplate) - returns bits of evidence instead of current score
+	 * + compare(FingerprintTemplate) - returns match log-odds in bits instead of current score, may be negative
 	 * - match(FingerprintTemplate)
 	 * + maybe features to support 1:N identification (parallelization, score adjustment, person model, ...)
 	 * 

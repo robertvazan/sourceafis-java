@@ -17,7 +17,7 @@ public class DoubleMatrixTest {
 		assertEquals(4, m.height);
 	}
 	@Test
-	public void constructorFromCell() {
+	public void constructorFromPoint() {
 		DoubleMatrix m = new DoubleMatrix(new IntPoint(3, 4));
 		assertEquals(3, m.width);
 		assertEquals(4, m.height);
@@ -28,42 +28,42 @@ public class DoubleMatrixTest {
 		assertEquals(4, m.size().y);
 	}
 	@Test
-	public void getAt() {
+	public void get() {
 		assertEquals(12, m.get(1, 2), 0.001);
 		assertEquals(21, m.get(2, 1), 0.001);
 	}
 	@Test
-	public void getCell() {
+	public void getAt() {
 		assertEquals(3, m.get(new IntPoint(0, 3)), 0.001);
 		assertEquals(22, m.get(new IntPoint(2, 2)), 0.001);
 	}
 	@Test
-	public void setAt() {
+	public void set() {
 		m.set(1, 2, 101);
 		assertEquals(101, m.get(1, 2), 0.001);
 	}
 	@Test
-	public void setCell() {
+	public void setAt() {
 		m.set(new IntPoint(2, 3), 101);
 		assertEquals(101, m.get(2, 3), 0.001);
 	}
 	@Test
-	public void addAt() {
+	public void add() {
 		m.add(2, 1, 100);
 		assertEquals(121, m.get(2, 1), 0.001);
 	}
 	@Test
-	public void addCell() {
+	public void addAt() {
 		m.add(new IntPoint(2, 3), 100);
 		assertEquals(123, m.get(2, 3), 0.001);
 	}
 	@Test
-	public void multiplyAt() {
+	public void multiply() {
 		m.multiply(1, 3, 10);
 		assertEquals(130, m.get(1, 3), 0.001);
 	}
 	@Test
-	public void multiplyCell() {
+	public void multiplyAt() {
 		m.multiply(new IntPoint(1, 2), 10);
 		assertEquals(120, m.get(1, 2), 0.001);
 	}

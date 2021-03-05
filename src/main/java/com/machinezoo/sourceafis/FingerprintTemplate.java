@@ -41,7 +41,7 @@ public class FingerprintTemplate {
 	 * + FingerprintTemplate(FingerprintImage, FingerprintTemplateOptions)
 	 * + double surface() - in metric units
 	 * + FingerprintPosition position()
-	 * + other fingerprint properties set in FingerprintImage (only those relevant to matching, so no width/height)
+	 * + other fingerprint properties set in FingerprintImageOptions (only those relevant to matching, so no width/height for example)
 	 * + FingerprintModel model()
 	 * + FingerprintTemplate(FingerprintModel)
 	 * + FingerprintTemplate narrow(FingerprintTemplateOptions) - for reducing RAM usage by dropping features
@@ -61,7 +61,6 @@ public class FingerprintTemplate {
 	 * + List<FingerprintMinutia> minutiae() - mutable list of mutable minutiae
 	 * + all properties exposed by FingerprintTemplate
 	 * + setters for everything
-	 * + String svg() - maybe, unless there is dedicated visualization library/API
 	 * 
 	 * FingerprintMinutia:
 	 * + double x/y()

@@ -30,6 +30,15 @@ import com.machinezoo.fingerprintio.*;
  * @see <a href="https://templates.machinezoo.com/discouraged">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
+	/*
+	 * API roadmap:
+	 * + List<FingerprintTemplate> decodeTemplates(byte[])
+	 * + FingerprintTemplate decodeTemplate(byte[])
+	 * + byte[] encode(TemplateFormat, FingerprintTemplate...)
+	 * - convertAll()
+	 * - convert()
+	 * - toX()
+	 */
 	static {
 		PlatformCheck.run();
 	}

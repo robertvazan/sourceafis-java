@@ -8,9 +8,9 @@ import org.junit.jupiter.api.*;
 public class IntPointTest {
 	@Test
 	public void constructor() {
-		IntPoint c = new IntPoint(2, 3);
-		assertEquals(2, c.x);
-		assertEquals(3, c.y);
+		IntPoint p = new IntPoint(2, 3);
+		assertEquals(2, p.x);
+		assertEquals(3, p.y);
 	}
 	@Test
 	public void area() {
@@ -23,20 +23,20 @@ public class IntPointTest {
 	}
 	@Test
 	public void contains() {
-		IntPoint c = new IntPoint(3, 4);
-		assertTrue(c.contains(new IntPoint(1, 1)));
-		assertTrue(c.contains(new IntPoint(0, 0)));
-		assertTrue(c.contains(new IntPoint(2, 3)));
-		assertTrue(c.contains(new IntPoint(0, 3)));
-		assertTrue(c.contains(new IntPoint(2, 0)));
-		assertFalse(c.contains(new IntPoint(-1, 1)));
-		assertFalse(c.contains(new IntPoint(1, -1)));
-		assertFalse(c.contains(new IntPoint(-2, -3)));
-		assertFalse(c.contains(new IntPoint(1, 4)));
-		assertFalse(c.contains(new IntPoint(3, 1)));
-		assertFalse(c.contains(new IntPoint(1, 7)));
-		assertFalse(c.contains(new IntPoint(5, 1)));
-		assertFalse(c.contains(new IntPoint(8, 9)));
+		IntPoint p = new IntPoint(3, 4);
+		assertTrue(p.contains(new IntPoint(1, 1)));
+		assertTrue(p.contains(new IntPoint(0, 0)));
+		assertTrue(p.contains(new IntPoint(2, 3)));
+		assertTrue(p.contains(new IntPoint(0, 3)));
+		assertTrue(p.contains(new IntPoint(2, 0)));
+		assertFalse(p.contains(new IntPoint(-1, 1)));
+		assertFalse(p.contains(new IntPoint(1, -1)));
+		assertFalse(p.contains(new IntPoint(-2, -3)));
+		assertFalse(p.contains(new IntPoint(1, 4)));
+		assertFalse(p.contains(new IntPoint(3, 1)));
+		assertFalse(p.contains(new IntPoint(1, 7)));
+		assertFalse(p.contains(new IntPoint(5, 1)));
+		assertFalse(p.contains(new IntPoint(8, 9)));
 	}
 	@Test
 	public void plus() {
@@ -90,17 +90,17 @@ public class IntPointTest {
 	@Test
 	public void iterator() {
 		List<IntPoint> l = new ArrayList<>();
-		for (IntPoint c : new IntPoint(2, 3))
-			l.add(c);
+		for (IntPoint p : new IntPoint(2, 3))
+			l.add(p);
 		assertEquals(Arrays.asList(new IntPoint(0, 0), new IntPoint(1, 0), new IntPoint(0, 1), new IntPoint(1, 1), new IntPoint(0, 2), new IntPoint(1, 2)), l);
-		for (IntPoint c : new IntPoint(0, 3))
-			fail(c.toString());
-		for (IntPoint c : new IntPoint(3, 0))
-			fail(c.toString());
-		for (IntPoint c : new IntPoint(-1, 3))
-			fail(c.toString());
-		for (IntPoint c : new IntPoint(3, -1))
-			fail(c.toString());
+		for (IntPoint p : new IntPoint(0, 3))
+			fail(p.toString());
+		for (IntPoint p : new IntPoint(3, 0))
+			fail(p.toString());
+		for (IntPoint p : new IntPoint(-1, 3))
+			fail(p.toString());
+		for (IntPoint p : new IntPoint(3, -1))
+			fail(p.toString());
 	}
 	@Test
 	public void lineTo() {

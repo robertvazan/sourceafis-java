@@ -23,7 +23,7 @@ public class DoubleAngleTest {
 		DoublePointTest.assertPointEquals(new DoublePoint(1, 0), DoubleAngle.toVector(2 * DoubleAngle.PI2), 0.01);
 	}
 	@Test
-	public void atanPoint() {
+	public void atan() {
 		assertEquals(0, DoubleAngle.atan(new DoublePoint(5, 0)), 0.001);
 		assertEquals(0.25 * Math.PI, DoubleAngle.atan(new DoublePoint(1, 1)), 0.001);
 		assertEquals(0.5 * Math.PI, DoubleAngle.atan(new DoublePoint(0, 3)), 0.001);
@@ -32,7 +32,7 @@ public class DoubleAngleTest {
 		assertEquals(1.75 * Math.PI, DoubleAngle.atan(new DoublePoint(1, -1)), 0.001);
 	}
 	@Test
-	public void atanCell() {
+	public void atanPoint() {
 		assertEquals(0.5 * Math.PI, DoubleAngle.atan(new IntPoint(0, 2)), 0.001);
 	}
 	@Test

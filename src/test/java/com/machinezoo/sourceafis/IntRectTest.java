@@ -15,7 +15,7 @@ public class IntRectTest {
 		assertEquals(20, b.height);
 	}
 	@Test
-	public void constructorFromCell() {
+	public void constructorFromPoint() {
 		IntRect b = new IntRect(new IntPoint(2, 3));
 		assertEquals(0, b.x);
 		assertEquals(0, b.y);
@@ -47,7 +47,7 @@ public class IntRectTest {
 		assertEquals(new IntRect(2, 3, 4, 5), IntRect.between(2, 3, 6, 8));
 	}
 	@Test
-	public void betweenCells() {
+	public void betweenPoints() {
 		assertEquals(new IntRect(2, 3, 4, 5), IntRect.between(new IntPoint(2, 3), new IntPoint(6, 8)));
 	}
 	@Test
@@ -55,7 +55,7 @@ public class IntRectTest {
 		assertEquals(new IntRect(2, 3, 5, 5), IntRect.around(4, 5, 2));
 	}
 	@Test
-	public void aroundCell() {
+	public void aroundPoint() {
 		assertEquals(new IntRect(2, 3, 5, 5), IntRect.around(new IntPoint(4, 5), 2));
 	}
 	@Test

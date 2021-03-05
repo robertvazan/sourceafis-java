@@ -18,25 +18,25 @@ public class BlockGridTest {
 		assertEquals(5, g.y.length);
 	}
 	@Test
-	public void constructorFromCell() {
+	public void constructorFromPoint() {
 		BlockGrid g = new BlockGrid(new IntPoint(2, 3));
 		assertEquals(3, g.x.length);
 		assertEquals(4, g.y.length);
 	}
 	@Test
-	public void cornerAt() {
+	public void cornerXY() {
 		assertEquals(new IntPoint(20, 300), g.corner(1, 2));
 	}
 	@Test
-	public void cornerByCell() {
+	public void cornerAt() {
 		assertEquals(new IntPoint(10, 200), g.corner(new IntPoint(0, 1)));
 	}
 	@Test
-	public void blockAt() {
+	public void blockXY() {
 		assertEquals(new IntRect(20, 300, 10, 100), g.block(1, 2));
 	}
 	@Test
-	public void blockByCell() {
-		assertEquals(new IntRect(10, 200, 10, 100), g.block(0, 1));
+	public void blockAt() {
+		assertEquals(new IntRect(10, 200, 10, 100), g.block(new IntPoint(0, 1)));
 	}
 }

@@ -17,7 +17,7 @@ public class BooleanMatrixTest {
 		assertEquals(5, m.height);
 	}
 	@Test
-	public void constructorFromCell() {
+	public void constructorFromPoint() {
 		BooleanMatrix m = new BooleanMatrix(new IntPoint(4, 5));
 		assertEquals(4, m.width);
 		assertEquals(5, m.height);
@@ -37,17 +37,17 @@ public class BooleanMatrixTest {
 		assertEquals(5, m.size().y);
 	}
 	@Test
-	public void getAt() {
+	public void get() {
 		assertEquals(true, m.get(1, 4));
 		assertEquals(false, m.get(3, 1));
 	}
 	@Test
-	public void getCell() {
+	public void getAt() {
 		assertEquals(true, m.get(new IntPoint(3, 2)));
 		assertEquals(false, m.get(new IntPoint(2, 4)));
 	}
 	@Test
-	public void getAtFallback() {
+	public void getFallback() {
 		assertEquals(false, m.get(0, 0, true));
 		assertEquals(true, m.get(3, 0, false));
 		assertEquals(false, m.get(0, 4, true));
@@ -59,7 +59,7 @@ public class BooleanMatrixTest {
 		assertEquals(false, m.get(2, 5, false));
 	}
 	@Test
-	public void getCellFallback() {
+	public void getAtFallback() {
 		assertEquals(false, m.get(new IntPoint(0, 0), true));
 		assertEquals(true, m.get(new IntPoint(3, 0), false));
 		assertEquals(false, m.get(new IntPoint(0, 4), true));
@@ -71,13 +71,13 @@ public class BooleanMatrixTest {
 		assertEquals(false, m.get(new IntPoint(0, 5), false));
 	}
 	@Test
-	public void setAt() {
+	public void set() {
 		assertEquals(false, m.get(2, 4));
 		m.set(2, 4, true);
 		assertEquals(true, m.get(2, 4));
 	}
 	@Test
-	public void setCell() {
+	public void setAt() {
 		assertEquals(true, m.get(1, 2));
 		m.set(new IntPoint(1, 2), false);
 		assertEquals(false, m.get(1, 2));

@@ -26,7 +26,6 @@ public class FingerprintCompatibilityTest {
 		RoundtripTemplates(FingerprintTemplate extracted, Function<FingerprintTemplate[], byte[]> exporter) {
 			this.extracted = extracted;
 			roundtripped = FingerprintCompatibility.convert(exporter.apply(new FingerprintTemplate[] { extracted }));
-			;
 		}
 	}
 	private void match(RoundtripTemplates probe, RoundtripTemplates candidate, boolean matching) {
