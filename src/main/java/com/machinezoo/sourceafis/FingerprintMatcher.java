@@ -9,18 +9,14 @@ import it.unimi.dsi.fastutil.ints.*;
  * {@code FingerprintMatcher} maintains data structures that improve matching speed at the cost of some RAM.
  * It can efficiently match one probe fingerprint to many candidate fingerprints.
  * <p>
- * New matcher is created by passing probe fingerprint template to {@link #index(FingerprintTemplate)}
- * on an empty fingerprint matcher instantiated with {@link #FingerprintMatcher()} constructor.
+ * New matcher is created by passing probe fingerprint template to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
  * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)}.
  * 
- * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
 	/*
 	 * API roadmap:
-	 * + FingerprintMatcher(FingerprintTemplate)
-	 * - index(FingerprintTemplate)
 	 * + FingerprintMatcher(FingerprintTemplate, FingerprintMatcherOptions)
 	 * + compare(FingerprintTemplate) - returns match log-odds in bits instead of current score, may be negative
 	 * - match(FingerprintTemplate)
@@ -41,38 +37,48 @@ public class FingerprintMatcher {
 	 */
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.NULL;
 	/**
-	 * Instantiates an empty fingerprint matcher.
-	 * Empty matcher does not match any {@link FingerprintTemplate} passed to {@link #match(FingerprintTemplate)}.
-	 * You can call {@link #index(FingerprintTemplate)} to index probe fingerprint
-	 * and {@link #match(FingerprintTemplate)} to match it to some candidate fingerprint.
+	 * Create fingerprint template representation optimized for fast 1:N matching.
+	 * Once the probe template is processed, candidate templates can be compared to it
+	 * by calling {@link #match(FingerprintTemplate)}.
+	 * <p>
+	 * This constructor is expensive in terms of RAM footprint and CPU usage.
+	 * Initialized {@code FingerprintMatcher} should be reused for multiple {@link #match(FingerprintTemplate)} calls in 1:N matching.
 	 * 
-	 * @see #index(FingerprintTemplate)
+	 * @param probe
+	 *            probe fingerprint template to be matched to candidate fingerprints
+	 * @throws NullPointerException
+	 *             if {@code probe} is {@code null}
+	 * 
+	 * @see #match(FingerprintTemplate)
 	 */
+	public FingerprintMatcher(FingerprintTemplate probe) {
+		Objects.requireNonNull(probe);
+		ImmutableTemplate template = probe.immutable;
+		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
+	}
+	/**
+	 * @deprecated Use {@link #FingerprintMatcher(FingerprintTemplate)} constructor to fully initialize the matcher.
+	 * 
+	 * @see #FingerprintMatcher(FingerprintTemplate)
+	 */
+	@Deprecated
 	public FingerprintMatcher() {
 	}
 	/**
-	 * Enables algorithm transparency.
-	 * Since {@link FingerprintTransparency} is activated automatically via thread-local variable
-	 * in recent versions of SourceAFIS, this method does nothing in current version of SourceAFIS.
-	 * It will be removed in some later version.
+	 * @deprecated Use thread-local instance of {@link FingerprintTransparency} instead.
 	 * 
 	 * @param transparency
 	 *            target {@link FingerprintTransparency} or {@code null} to disable algorithm transparency
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see FingerprintTransparency
-	 * @deprecated
 	 */
 	@Deprecated
 	public FingerprintMatcher transparency(FingerprintTransparency transparency) {
 		return this;
 	}
 	/**
-	 * Builds search data structures over probe fingerprint template.
-	 * Once this method is called, it is possible to call {@link #match(FingerprintTemplate)} to compare fingerprints.
-	 * <p>
-	 * This method is heavy in terms of RAM footprint and CPU usage.
-	 * Initialized {@code FingerprintMatcher} should be reused for multiple {@link #match(FingerprintTemplate)} calls in 1:N matching.
+	 * @deprecated Use {@link #FingerprintMatcher(FingerprintTemplate)} constructor to initialize the matcher.
 	 * 
 	 * @param probe
 	 *            probe fingerprint template to be matched to candidate fingerprints
@@ -80,8 +86,9 @@ public class FingerprintMatcher {
 	 * @throws NullPointerException
 	 *             if {@code probe} is {@code null}
 	 * 
-	 * @see #match(FingerprintTemplate)
+	 * @see #FingerprintMatcher(FingerprintTemplate)
 	 */
+	@Deprecated
 	public FingerprintMatcher index(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
@@ -124,7 +131,8 @@ public class FingerprintMatcher {
 	}
 	/**
 	 * Matches candidate fingerprint to probe fingerprint and calculates similarity score.
-	 * Candidate fingerprint in {@code candidate} parameter is matched to probe fingerprint previously passed to {@link #index(FingerprintTemplate)}.
+	 * Candidate fingerprint in {@code candidate} parameter is matched to probe fingerprint
+	 * previously passed to {@link FingerprintMatcher} constructor.
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
 	 * Application should compare the score to a threshold with expression {@code (score >= threshold)} to arrive at boolean match/non-match decision.
@@ -143,8 +151,6 @@ public class FingerprintMatcher {
 	 * @return similarity score between probe and candidate fingerprints
 	 * @throws NullPointerException
 	 *             if {@code candidate} is {@code null}
-	 * 
-	 * @see #index(FingerprintTemplate)
 	 */
 	public double match(FingerprintTemplate candidate) {
 		Objects.requireNonNull(candidate);

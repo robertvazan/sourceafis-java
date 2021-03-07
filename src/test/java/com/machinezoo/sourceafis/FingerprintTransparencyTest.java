@@ -36,8 +36,7 @@ public class FingerprintTransparencyTest {
 		FingerprintTemplate matching = FingerprintTemplateTest.matching();
 		new FingerprintTemplate(FingerprintImageTest.probe());
 		try (TransparencyChecker transparency = new TransparencyChecker()) {
-			new FingerprintMatcher()
-				.index(probe)
+			new FingerprintMatcher(probe)
 				.match(matching);
 			assertThat(transparency.keys, is(not(empty())));
 		}
@@ -64,8 +63,7 @@ public class FingerprintTransparencyTest {
 	@Test
 	public void filtered() {
 		try (TransparencyFilter transparency = new TransparencyFilter()) {
-			new FingerprintMatcher()
-				.index(new FingerprintTemplate(FingerprintImageTest.probe()))
+			new FingerprintMatcher(new FingerprintTemplate(FingerprintImageTest.probe()))
 				.match(FingerprintTemplateTest.matching());
 			assertThat(transparency.keys, is(empty()));
 		}

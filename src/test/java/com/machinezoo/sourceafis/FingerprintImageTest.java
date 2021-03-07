@@ -9,7 +9,7 @@ import org.junit.jupiter.api.*;
 public class FingerprintImageTest {
 	@Test
 	public void decodePNG() {
-		new FingerprintImage().decode(TestResources.png());
+		new FingerprintImage(TestResources.png());
 	}
 	private void assertSimilar(DoubleMatrix map, DoubleMatrix reference) {
 		assertEquals(reference.width, map.width);
@@ -27,7 +27,7 @@ public class FingerprintImageTest {
 		assertTrue(delta / (map.width * map.height) < 0.01);
 	}
 	private void assertSimilar(byte[] image, byte[] reference) {
-		assertSimilar(new FingerprintImage().decode(image).matrix, new FingerprintImage().decode(reference).matrix);
+		assertSimilar(new FingerprintImage(image).matrix, new FingerprintImage(reference).matrix);
 	}
 	@Test
 	public void decodeJPEG() {
@@ -42,27 +42,26 @@ public class FingerprintImageTest {
 		assertSimilar(TestResources.originalWsq(), TestResources.convertedWsq());
 	}
 	public static FingerprintImage probe() {
-		return new FingerprintImage().decode(TestResources.probe());
+		return new FingerprintImage(TestResources.probe());
 	}
 	public static FingerprintImage matching() {
-		return new FingerprintImage().decode(TestResources.matching());
+		return new FingerprintImage(TestResources.matching());
 	}
 	public static FingerprintImage nonmatching() {
-		return new FingerprintImage().decode(TestResources.nonmatching());
+		return new FingerprintImage(TestResources.nonmatching());
 	}
 	public static FingerprintImage probeGray() {
-		return new FingerprintImage().grayscale(332, 533, TestResources.probeGray());
+		return new FingerprintImage(332, 533, TestResources.probeGray());
 	}
 	public static FingerprintImage matchingGray() {
-		return new FingerprintImage().grayscale(320, 407, TestResources.matchingGray());
+		return new FingerprintImage(320, 407, TestResources.matchingGray());
 	}
 	public static FingerprintImage nonmatchingGray() {
-		return new FingerprintImage().grayscale(333, 435, TestResources.nonmatchingGray());
+		return new FingerprintImage(333, 435, TestResources.nonmatchingGray());
 	}
 	@Test
 	public void decodeGray() {
-		double score = new FingerprintMatcher()
-			.index(new FingerprintTemplate(probeGray()))
+		double score = new FingerprintMatcher(new FingerprintTemplate(probeGray()))
 			.match(new FingerprintTemplate(matchingGray()));
 		assertThat(score, greaterThan(40.0));
 	}

@@ -7,14 +7,12 @@ import org.junit.jupiter.api.*;
 
 public class FingerprintMatcherTest {
 	private void matching(FingerprintTemplate probe, FingerprintTemplate candidate) {
-		double score = new FingerprintMatcher()
-			.index(probe)
+		double score = new FingerprintMatcher(probe)
 			.match(candidate);
 		assertThat(score, greaterThan(40.0));
 	}
 	private void nonmatching(FingerprintTemplate probe, FingerprintTemplate candidate) {
-		double score = new FingerprintMatcher()
-			.index(probe)
+		double score = new FingerprintMatcher(probe)
 			.match(candidate);
 		assertThat(score, lessThan(20.0));
 	}

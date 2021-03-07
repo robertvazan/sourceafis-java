@@ -146,14 +146,10 @@ public class FingerprintTemplate {
 		}
 	}
 	/**
-	 * Instantiates an empty fingerprint template. This constructor is deprecated.
-	 * In the past, it was used together with methods {@link #create(byte[])}, {@link #deserialize(String)},
-	 * and {@link #convert(byte[])}, which are all deprecated now.
-	 * Use {@link #FingerprintTemplate(FingerprintImage)} and {@link #FingerprintTemplate(byte[])} instead.
+	 * @deprecated Use one of the constructors that take parameters to create fully initialized template instead.
 	 * 
 	 * @see #FingerprintTemplate(FingerprintImage)
 	 * @see #FingerprintTemplate(byte[])
-	 * @deprecated
 	 */
 	@Deprecated
 	public FingerprintTemplate() {
@@ -174,17 +170,13 @@ public class FingerprintTemplate {
 		this.immutable = immutable;
 	}
 	/**
-	 * Enables algorithm transparency.
-	 * Since {@link FingerprintTransparency} is activated automatically via thread-local variable
-	 * in recent versions of SourceAFIS, this method does nothing in current version of SourceAFIS.
-	 * It will be removed in some later version.
+	 * @deprecated Use thread-local instance of {@link FingerprintTransparency} instead.
 	 * 
 	 * @param transparency
 	 *            target {@link FingerprintTransparency} or {@code null} to disable algorithm transparency
 	 * @return {@code this} (fluent method)
 	 * 
 	 * @see FingerprintTransparency
-	 * @deprecated
 	 */
 	@Deprecated
 	public FingerprintTemplate transparency(FingerprintTransparency transparency) {
@@ -192,19 +184,13 @@ public class FingerprintTemplate {
 	}
 	private double dpi = 500;
 	/**
-	 * Sets DPI (dots per inch) of the fingerprint image.
-	 * This is the DPI of the image later passed to {@link #create(byte[])}.
-	 * Check your fingerprint reader specification for correct DPI value. Default DPI is 500.
-	 * <p>
-	 * This method is deprecated. Use {@link FingerprintImage#dpi(double)} and {@link #FingerprintTemplate(FingerprintImage)} instead.
+	 * @deprecated Set DPI via {@link FingerprintImageOptions}{@link #dpi(double)} instead.
 	 * 
 	 * @param dpi
 	 *            DPI of the fingerprint image, usually around 500
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see FingerprintImage#dpi(double)
-	 * @see #FingerprintTemplate(FingerprintImage)
-	 * @deprecated
+	 * @see FingerprintImageOptions#dpi(double)
 	 */
 	@Deprecated
 	public FingerprintTemplate dpi(double dpi) {
@@ -212,40 +198,21 @@ public class FingerprintTemplate {
 		return this;
 	}
 	/**
-	 * Creates fingerprint template from fingerprint image.
-	 * The image must contain black fingerprint on white background at the DPI specified by calling {@link #dpi(double)}.
-	 * <p>
-	 * The image may be in any format commonly used to store fingerprint images, including PNG, JPEG, BMP, TIFF, or WSQ.
-	 * SourceAFIS will try to decode the image using Java's {@link ImageIO} (PNG, JPEG, BMP),
-	 * <a href="https://commons.apache.org/proper/commons-imaging/">Sanselan</a> library (TIFF),
-	 * <a href="https://github.com/kareez/jnbis">JNBIS</a> library (WSQ), and Android's
-	 * <a href="https://developer.android.com/reference/android/graphics/Bitmap">Bitmap</a> class (PNG, JPEG, BMP) in this order.
-	 * Note that these libraries might not support all versions and variations of the mentioned formats.
-	 * <p>
-	 * This method replaces any previously added biometric data in this template.
-	 * <p>
-	 * This method is deprecated. Use {@link FingerprintImage#decode(byte[])} and {@link #FingerprintTemplate(FingerprintImage)} instead.
+	 * @deprecated Use {@link #FingerprintTemplate(FingerprintImage)} constructor to create template from image.
 	 * 
 	 * @param image
 	 *            fingerprint image in {@link ImageIO}-supported format
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see FingerprintImage#decode(byte[])
 	 * @see #FingerprintTemplate(FingerprintImage)
-	 * @deprecated
 	 */
 	@Deprecated
 	public FingerprintTemplate create(byte[] image) {
-		immutable = new ImmutableTemplate(FeatureExtractor.extract(new FingerprintImage().decode(image).matrix, dpi));
+		immutable = new ImmutableTemplate(FeatureExtractor.extract(new FingerprintImage(image).matrix, dpi));
 		return this;
 	}
 	/**
-	 * Deserializes fingerprint template from JSON string.
-	 * This method does the same thing as {@link #FingerprintTemplate(byte[])} constructor
-	 * except it uses plain JSON format produced by {@link #serialize()}.
-	 * Use {@link #toByteArray()}} and {@link #FingerprintTemplate(byte[])} instead.
-	 * <p>
-	 * This method replaces any previously added biometric data in this template.
+	 * @deprecated Use {@link #FingerprintTemplate(byte[])} constructor to deserialize the template.
 	 * 
 	 * @param json
 	 *            serialized fingerprint template in JSON format produced by {@link #serialize()}
@@ -256,7 +223,6 @@ public class FingerprintTemplate {
 	 *             if {@code json} is is not in the correct format or it is corrupted
 	 * 
 	 * @see #FingerprintTemplate(byte[])
-	 * @deprecated
 	 */
 	@Deprecated
 	public FingerprintTemplate deserialize(String json) {
@@ -291,32 +257,24 @@ public class FingerprintTemplate {
 		return Exceptions.wrap().get(() -> mapper.writeValueAsBytes(persistent));
 	}
 	/**
-	 * Serializes fingerprint template to JSON string.
-	 * This deprecated method is equivalent to {@link #toByteArray()}
-	 * except that the output format is an uncompressed JSON string.
+	 * @deprecated Use {@link #toByteArray()} to serialize the template.
 	 * 
 	 * @return serialized fingerprint template in JSON format
 	 * 
 	 * @see #toByteArray()
-	 * @deprecated
 	 */
 	@Deprecated
 	public String serialize() {
 		return new Gson().toJson(new PersistentTemplate(immutable.mutable()));
 	}
 	/**
-	 * Imports ANSI INCITS 378 or ISO 19794-2 fingerprint template from another fingerprint recognition system.
-	 * <p>
-	 * This method replaces any previously added biometric data in this template.
-	 * <p>
-	 * This method is deprecated. Use {@link FingerprintCompatibility#convert(byte[])} instead.
+	 * @deprecated Use {@link FingerprintCompatibility} methods to import other template formats.
 	 * 
 	 * @param template
 	 *            foreign template to import
 	 * @return {@code this} (fluent method)
 	 * 
-	 * @see #FingerprintTemplate(byte[])
-	 * @deprecated
+	 * @see FingerprintCompatibility#convert(byte[])
 	 */
 	@Deprecated
 	public FingerprintTemplate convert(byte[] template) {

@@ -34,7 +34,7 @@ public class FingerprintCompatibilityTest {
 		match("mixed", probe.extracted, candidate.roundtripped, matching);
 	}
 	private void match(String kind, FingerprintTemplate probe, FingerprintTemplate candidate, boolean matching) {
-		double score = new FingerprintMatcher().index(probe).match(candidate);
+		double score = new FingerprintMatcher(probe).match(candidate);
 		if (matching)
 			assertThat(kind, score, greaterThan(40.0));
 		else

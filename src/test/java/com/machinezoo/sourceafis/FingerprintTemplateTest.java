@@ -52,8 +52,7 @@ public class FingerprintTemplateTest {
 	}
 	@Test
 	public void randomScaleMatch() throws Exception {
-		FingerprintMatcher matcher = new FingerprintMatcher()
-			.index(probe());
+		FingerprintMatcher matcher = new FingerprintMatcher(probe());
 		DoubleMatrix original = FingerprintImageTest.matching().matrix;
 		int clipX = original.width / 10;
 		int clipY = original.height / 10;
@@ -63,9 +62,9 @@ public class FingerprintTemplateTest {
 			double dpi = 500 + 2 * (random.nextDouble() - 0.5) * 200;
 			DoubleMatrix scaled = FeatureExtractor.scaleImage(clipped, 500 * 1 / (dpi / 500));
 			byte[] reencoded = encodeImage(scaled);
-			FingerprintTemplate candidate = new FingerprintTemplate(new FingerprintImage()
-				.dpi(dpi)
-				.decode(reencoded));
+			FingerprintTemplate candidate = new FingerprintTemplate(
+				new FingerprintImage(reencoded, new FingerprintImageOptions()
+					.dpi(dpi)));
 			double score = matcher.match(candidate);
 			assertTrue(score >= 40, "Score " + score + " @ DPI " + dpi);
 		}

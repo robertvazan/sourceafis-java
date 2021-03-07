@@ -32,9 +32,9 @@ import com.machinezoo.fingerprintio.*;
 public class FingerprintCompatibility {
 	/*
 	 * API roadmap:
-	 * + List<FingerprintTemplate> decodeTemplates(byte[])
-	 * + FingerprintTemplate decodeTemplate(byte[])
-	 * + byte[] encode(TemplateFormat, FingerprintTemplate...)
+	 * + List<FingerprintTemplate> importAllTemplates(byte[])
+	 * + FingerprintTemplate importTemplate(byte[])
+	 * + byte[] exportTemplate(TemplateFormat, FingerprintTemplate...)
 	 * - convertAll()
 	 * - convert()
 	 * - toX()
