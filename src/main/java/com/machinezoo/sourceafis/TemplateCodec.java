@@ -27,14 +27,14 @@ abstract class TemplateCodec {
 		ALL.put(TemplateFormat.ANSI_378_2009_AM1, new Ansi378v2009Am1Codec());
 		ALL.put(TemplateFormat.ISO_19794_2_2005, new Iso19794p2Codec());
 	}
-	private static class Resolution {
+	static class Resolution {
 		double dpiX;
 		double dpiY;
 	}
-	private static IntPoint decode(int x, int y, Resolution resolution) {
+	static IntPoint decode(int x, int y, Resolution resolution) {
 		return new IntPoint(decode(x, resolution.dpiX), decode(y, resolution.dpiY));
 	}
-	private static int decode(int value, double dpi) {
+	static int decode(int value, double dpi) {
 		return (int)Math.round(value / dpi * 500);
 	}
 	private static class Ansi378Codec extends TemplateCodec {
