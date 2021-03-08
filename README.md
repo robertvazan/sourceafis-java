@@ -15,15 +15,16 @@ It can do 1:1 comparisons as well as efficient 1:N search. This is the Java impl
 
 ```java
 FingerprintTemplate probe = new FingerprintTemplate(
-    new FingerprintImage()
-        .dpi(500)
-        .decode(Files.readAllBytes(Paths.get("probe.jpeg"))));
+	new FingerprintImage(
+		Files.readAllBytes(Paths.get("probe.jpeg")),
+		new FingerprintImageOptions()
+			.dpi(500)));
 FingerprintTemplate candidate = new FingerprintTemplate(
-    new FingerprintImage()
-        .dpi(500)
-        .decode(Files.readAllBytes(Paths.get("candidate.jpeg"))));
-double score = new FingerprintMatcher()
-    .index(probe)
-    .match(candidate);
+	new FingerprintImage(
+		Files.readAllBytes(Paths.get("candidate.jpeg")),
+		new FingerprintImageOptions()
+			.dpi(500)));
+double score = new FingerprintMatcher(probe)
+	.match(candidate);
 boolean matches = score >= 40;
 ```
