@@ -19,19 +19,18 @@ import com.machinezoo.noexception.*;
  * {@link FingerprintImage} can be converted to template by calling {@link #FingerprintTemplate(FingerprintImage)} constructor.
  * <p>
  * Since image processing is expensive, applications should cache serialized templates.
- * Serialization into JSON format is performed by {@link #toByteArray()} method.
- * JSON template can be deserialized by calling {@link #FingerprintTemplate(byte[])}.
- * on an empty fingerprint template instantiated with {@link #FingerprintTemplate()} constructor.
+ * Serialization into CBOR format is performed by {@link #toByteArray()} method.
+ * CBOR template can be deserialized by calling {@link #FingerprintTemplate(byte[])} constructor.
  * <p>
  * Matching is performed by constructing {@link FingerprintMatcher},
- * passing probe fingerprint to its {@link FingerprintMatcher#index(FingerprintTemplate)} method,
+ * passing probe fingerprint to its {@link FingerprintMatcher#FingerprintMatcher(FingerprintTemplate)} constructor,
  * and then passing candidate fingerprints to its {@link FingerprintMatcher#match(FingerprintTemplate)} method.
  * <p>
  * {@code FingerprintTemplate} contains two kinds of data: fingerprint features and search data structures.
  * Search data structures speed up matching at the cost of some RAM.
  * Only fingerprint features are serialized. Search data structures are recomputed after every deserialization.
  * 
- * @see <a href="https://sourceafis.machinezoo.com/">SourceAFIS overview</a>
+ * @see <a href="https://sourceafis.machinezoo.com/java">SourceAFIS for Java tutorial</a>
  * @see FingerprintImage
  * @see FingerprintMatcher
  */
@@ -89,11 +88,10 @@ public class FingerprintTemplate {
 	 * @param image
 	 *            fingerprint image to process
 	 * @throws NullPointerException
-	 *             if {@code image} is {@code null} or image data in it was not set
+	 *             if {@code image} is {@code null}
 	 */
 	public FingerprintTemplate(FingerprintImage image) {
 		Objects.requireNonNull(image);
-		Objects.requireNonNull(image.matrix);
 		immutable = new ImmutableTemplate(FeatureExtractor.extract(image.matrix, image.dpi));
 	}
 	/**
@@ -109,11 +107,11 @@ public class FingerprintTemplate {
 	 * @throws NullPointerException
 	 *             if {@code serialized} is {@code null}
 	 * @throws RuntimeException
-	 *             if {@code serialized} is is not in the correct format or it is corrupted
+	 *             if {@code serialized} is not in the correct format or it is corrupted
 	 * 
 	 * @see #toByteArray()
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
-	 * @see FingerprintImage#decode(byte[])
+	 * @see FingerprintImage#FingerprintImage(byte[])
 	 * @see FingerprintCompatibility#convert(byte[])
 	 */
 	public FingerprintTemplate(byte[] serialized) {
@@ -155,10 +153,10 @@ public class FingerprintTemplate {
 	public FingerprintTemplate() {
 	}
 	/**
-	 * Gets the empty template with no biometric data.
+	 * Gets the empty fallback template with no biometric data.
 	 * Empty template is useful as a fallback to simplify code.
-	 * It contains no biometric data and it doesn't match any other template including itself.
-	 * There is only one global instance. This method doesn't instantiate any new objects.
+	 * It contains no biometric data and it does not match any other template including itself.
+	 * There is only one global instance. This method does not instantiate any new objects.
 	 * 
 	 * @return empty template
 	 */

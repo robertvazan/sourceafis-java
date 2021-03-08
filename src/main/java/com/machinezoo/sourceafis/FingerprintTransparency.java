@@ -239,7 +239,7 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * Default implementation of this method performs deactivation.
 	 * It must be called by overriding methods for deactivation to work correctly.
 	 * <p>
-	 * This method doesn't declare any checked exceptions in order to spare callers of mandatory exception handling.
+	 * This method does not declare any checked exceptions in order to spare callers of mandatory exception handling.
 	 * If your code needs to throw a checked exception, wrap it in an unchecked exception.
 	 * 
 	 * @see #FingerprintTransparency()

@@ -10,8 +10,9 @@ import it.unimi.dsi.fastutil.ints.*;
  * It can efficiently match one probe fingerprint to many candidate fingerprints.
  * <p>
  * New matcher is created by passing probe fingerprint template to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
- * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)}.
+ * Candidate fingerprint templates are then passed one by one to {@link #match(FingerprintTemplate)} method.
  * 
+ * @see <a href="https://sourceafis.machinezoo.com/java">SourceAFIS for Java tutorial</a>
  * @see FingerprintTemplate
  */
 public class FingerprintMatcher {
@@ -37,7 +38,7 @@ public class FingerprintMatcher {
 	 */
 	private volatile ImmutableMatcher immutable = ImmutableMatcher.NULL;
 	/**
-	 * Create fingerprint template representation optimized for fast 1:N matching.
+	 * Creates fingerprint template representation optimized for fast 1:N matching.
 	 * Once the probe template is processed, candidate templates can be compared to it
 	 * by calling {@link #match(FingerprintTemplate)}.
 	 * <p>
@@ -132,7 +133,7 @@ public class FingerprintMatcher {
 	/**
 	 * Matches candidate fingerprint to probe fingerprint and calculates similarity score.
 	 * Candidate fingerprint in {@code candidate} parameter is matched to probe fingerprint
-	 * previously passed to {@link FingerprintMatcher} constructor.
+	 * previously passed to {@link #FingerprintMatcher(FingerprintTemplate)} constructor.
 	 * <p>
 	 * Returned similarity score is a non-negative number that increases with similarity between probe and candidate fingerprints.
 	 * Application should compare the score to a threshold with expression {@code (score >= threshold)} to arrive at boolean match/non-match decision.
@@ -147,7 +148,7 @@ public class FingerprintMatcher {
 	 * This method is thread-safe. Multiple threads can match candidates against single {@code FingerprintMatcher}.
 	 * 
 	 * @param candidate
-	 *            fingerprint template to be matched with probe fingerprint indexed by this {@code FingerprintMatcher}
+	 *            fingerprint template to be matched with probe fingerprint represented by this {@code FingerprintMatcher}
 	 * @return similarity score between probe and candidate fingerprints
 	 * @throws NullPointerException
 	 *             if {@code candidate} is {@code null}
