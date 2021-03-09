@@ -3,7 +3,7 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 
-class IntPoint implements Iterable<IntPoint> {
+class IntPoint implements Iterable<IntPoint>, Comparable<IntPoint> {
 	static final IntPoint ZERO = new IntPoint(0, 0);
 	static final IntPoint[] EDGE_NEIGHBORS = new IntPoint[] {
 		new IntPoint(0, -1),
@@ -84,6 +84,13 @@ class IntPoint implements Iterable<IntPoint> {
 	@Override
 	public int hashCode() {
 		return Objects.hash(x, y);
+	}
+	@Override
+	public int compareTo(IntPoint other) {
+		int resultY = Integer.compare(y, other.y);
+		if (resultY != 0)
+			return resultY;
+		return Integer.compare(x, other.x);
 	}
 	@Override
 	public String toString() {

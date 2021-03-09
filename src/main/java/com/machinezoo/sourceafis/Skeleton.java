@@ -1,6 +1,7 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis;
 
+import static java.util.stream.Collectors.*;
 import java.util.*;
 
 class Skeleton {
@@ -141,7 +142,7 @@ class Skeleton {
 	}
 	private Map<IntPoint, SkeletonMinutia> minutiaCenters(Map<IntPoint, List<IntPoint>> linking) {
 		Map<IntPoint, SkeletonMinutia> centers = new HashMap<>();
-		for (IntPoint currentPos : linking.keySet()) {
+		for (IntPoint currentPos : linking.keySet().stream().sorted().collect(toList())) {
 			List<IntPoint> linkedMinutiae = linking.get(currentPos);
 			IntPoint primaryPos = linkedMinutiae.get(0);
 			if (!centers.containsKey(primaryPos)) {
@@ -159,7 +160,7 @@ class Skeleton {
 	}
 	private void traceRidges(BooleanMatrix thinned, Map<IntPoint, SkeletonMinutia> minutiaePoints) {
 		Map<IntPoint, SkeletonRidge> leads = new HashMap<>();
-		for (IntPoint minutiaPoint : minutiaePoints.keySet()) {
+		for (IntPoint minutiaPoint : minutiaePoints.keySet().stream().sorted().collect(toList())) {
 			for (IntPoint startRelative : IntPoint.CORNER_NEIGHBORS) {
 				IntPoint start = minutiaPoint.plus(startRelative);
 				if (thinned.get(start, false) && !minutiaePoints.containsKey(start) && !leads.containsKey(start)) {
