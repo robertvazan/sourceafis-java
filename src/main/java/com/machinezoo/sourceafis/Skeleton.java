@@ -250,7 +250,13 @@ class Skeleton {
 		SkeletonMinutia end2;
 		@Override
 		public int compareTo(Gap other) {
-			return Integer.compare(distance, other.distance);
+			int distanceCmp = Integer.compare(distance, other.distance);
+			if (distanceCmp != 0)
+				return distanceCmp;
+			int end1Cmp = end1.position.compareTo(other.end1.position);
+			if (end1Cmp != 0)
+				return end1Cmp;
+			return end2.position.compareTo(other.end2.position);
 		}
 	}
 	private void removeGaps() {
