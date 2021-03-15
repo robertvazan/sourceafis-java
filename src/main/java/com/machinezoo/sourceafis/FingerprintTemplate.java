@@ -78,7 +78,7 @@ public class FingerprintTemplate {
 	 * and FingerprintTemplate itself becomes immutable.
 	 */
 	volatile ImmutableTemplate immutable = ImmutableTemplate.EMPTY;
-	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
+	private static final Logger logger = LoggerFactory.getLogger(FingerprintTemplate.class);
 	/**
 	 * Creates fingerprint template from fingerprint image.
 	 * <p>

@@ -25,7 +25,7 @@ public class FingerprintMatcher {
 	 * 
 	 * FingerprintMatcherOptions:
 	 * + matchX(boolean) - enable or disable various parts of the matcher for performance reasons
-	 * + cpu(long) - automated feature/algorithm selection to target CPU cycles per candidate
+	 * + processorBudget(double) - automated feature/algorithm selection to target "average" compute cost per candidate
 	 * 
 	 * FingerprintEvidence:
 	 * = calculation of effective score in multi-finger or 1:N matching
