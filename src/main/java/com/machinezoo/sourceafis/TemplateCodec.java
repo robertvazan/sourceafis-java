@@ -13,12 +13,12 @@ import com.machinezoo.fingerprintio.iso19794p2v2011.*;
 
 abstract class TemplateCodec {
 	abstract byte[] encode(List<MutableTemplate> templates);
-	abstract List<MutableTemplate> decode(byte[] serialized, boolean permissive);
+	abstract List<MutableTemplate> decode(byte[] serialized, boolean strict);
 	List<MutableTemplate> decode(byte[] serialized) {
 		try {
-			return decode(serialized, false);
-		} catch (Throwable ex) {
 			return decode(serialized, true);
+		} catch (Throwable ex) {
+			return decode(serialized, false);
 		}
 	}
 	static final Map<TemplateFormat, TemplateCodec> ALL = new HashMap<>();
@@ -52,8 +52,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			Ansi378v2004Template iotemplate = new Ansi378v2004Template(serialized, permissive);
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean strict) {
+			Ansi378v2004Template iotemplate = new Ansi378v2004Template(serialized, strict);
 			Resolution resolution = new Resolution();
 			resolution.dpiX = iotemplate.resolutionX * 2.54;
 			resolution.dpiY = iotemplate.resolutionY * 2.54;
@@ -127,8 +127,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			return new Ansi378v2009Template(serialized, permissive).fingerprints.stream()
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean strict) {
+			return new Ansi378v2009Template(serialized, strict).fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
 		}
@@ -206,8 +206,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			return new Ansi378v2009Am1Template(serialized, permissive).fingerprints.stream()
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean strict) {
+			return new Ansi378v2009Am1Template(serialized, strict).fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
 		}
@@ -290,8 +290,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template(serialized, permissive);
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean strict) {
+			Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template(serialized, strict);
 			Resolution resolution = new Resolution();
 			resolution.dpiX = iotemplate.resolutionX * 2.54;
 			resolution.dpiY = iotemplate.resolutionY * 2.54;
@@ -365,8 +365,8 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return iotemplate.toByteArray();
 		}
-		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
-			Iso19794p2v2011Template iotemplate = new Iso19794p2v2011Template(serialized, permissive);
+		@Override List<MutableTemplate> decode(byte[] serialized, boolean strict) {
+			Iso19794p2v2011Template iotemplate = new Iso19794p2v2011Template(serialized, strict);
 			return iotemplate.fingerprints.stream()
 				.map(fp -> decode(fp))
 				.collect(toList());
