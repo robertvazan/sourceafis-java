@@ -62,4 +62,7 @@ public class FingerprintCompatibilityTest {
 	public void roundtripIso19794p2v2005() {
 		roundtrip(TemplateFormat.ISO_19794_2_2005);
 	}
+	public void roundtripIso19794p2v2011() {
+		roundtrip(TemplateFormat.ISO_19794_2_2011);
+	}
 }
