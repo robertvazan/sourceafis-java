@@ -59,4 +59,7 @@ public class FingerprintCompatibilityTest {
 	public void roundtripAnsi378v2009AM1() {
 		roundtrip(TemplateFormat.ANSI_378_2009_AM1);
 	}
+	public void roundtripIso19794p2v2005() {
+		roundtrip(TemplateFormat.ISO_19794_2_2005);
+	}
 }

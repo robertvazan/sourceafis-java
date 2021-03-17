@@ -22,10 +22,10 @@ abstract class TemplateCodec {
 	}
 	static final Map<TemplateFormat, TemplateCodec> ALL = new HashMap<>();
 	static {
-		ALL.put(TemplateFormat.ANSI_378_2004, new Ansi378Codec());
+		ALL.put(TemplateFormat.ANSI_378_2004, new Ansi378v2004Codec());
 		ALL.put(TemplateFormat.ANSI_378_2009, new Ansi378v2009Codec());
 		ALL.put(TemplateFormat.ANSI_378_2009_AM1, new Ansi378v2009Am1Codec());
-		ALL.put(TemplateFormat.ISO_19794_2_2005, new Iso19794p2Codec());
+		ALL.put(TemplateFormat.ISO_19794_2_2005, new Iso19794p2v2005Codec());
 	}
 	static class Resolution {
 		double dpiX;
@@ -37,7 +37,7 @@ abstract class TemplateCodec {
 	static int decode(int value, double dpi) {
 		return (int)Math.round(value / dpi * 500);
 	}
-	private static class Ansi378Codec extends TemplateCodec {
+	private static class Ansi378v2004Codec extends TemplateCodec {
 		@Override byte[] encode(List<MutableTemplate> templates) {
 			int resolution = (int)Math.round(500 / 2.54);
 			Ansi378v2004Template iotemplate = new Ansi378v2004Template();
@@ -275,9 +275,18 @@ abstract class TemplateCodec {
 			}
 		}
 	}
-	private static class Iso19794p2Codec extends TemplateCodec {
+	private static class Iso19794p2v2005Codec extends TemplateCodec {
 		@Override byte[] encode(List<MutableTemplate> templates) {
-			throw new UnsupportedOperationException();
+			int resolution = (int)Math.round(500 / 2.54);
+			Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template();
+			iotemplate.width = templates.stream().mapToInt(t -> t.size.x).max().orElse(500);
+			iotemplate.height = templates.stream().mapToInt(t -> t.size.y).max().orElse(500);
+			iotemplate.resolutionX = resolution;
+			iotemplate.resolutionY = resolution;
+			iotemplate.fingerprints = IntStream.range(0, templates.size())
+				.mapToObj(n -> encode(n, templates.get(n)))
+				.collect(toList());
+			return iotemplate.toByteArray();
 		}
 		@Override List<MutableTemplate> decode(byte[] serialized, boolean permissive) {
 			Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template(serialized, permissive);
@@ -288,6 +297,14 @@ abstract class TemplateCodec {
 				.map(fp -> decode(fp, iotemplate, resolution))
 				.collect(toList());
 		}
+		static Iso19794p2v2005Fingerprint encode(int offset, MutableTemplate template) {
+			Iso19794p2v2005Fingerprint iofingerprint = new Iso19794p2v2005Fingerprint();
+			iofingerprint.view = offset;
+			iofingerprint.minutiae = template.minutiae.stream()
+				.map(m -> encode(m))
+				.collect(toList());
+			return iofingerprint;
+		}
 		static MutableTemplate decode(Iso19794p2v2005Fingerprint iofingerprint, Iso19794p2v2005Template iotemplate, Resolution resolution) {
 			MutableTemplate template = new MutableTemplate();
 			template.size = decode(iotemplate.width, iotemplate.height, resolution);
@@ -296,6 +313,14 @@ abstract class TemplateCodec {
 				.collect(toList());
 			return template;
 		}
+		static Iso19794p2v2005Minutia encode(MutableMinutia minutia) {
+			Iso19794p2v2005Minutia iominutia = new Iso19794p2v2005Minutia();
+			iominutia.positionX = minutia.position.x;
+			iominutia.positionY = minutia.position.y;
+			iominutia.angle = encodeAngle(minutia.direction);
+			iominutia.type = encode(minutia.type);
+			return iominutia;
+		}
 		static MutableMinutia decode(Iso19794p2v2005Minutia iominutia, Resolution resolution) {
 			MutableMinutia minutia = new MutableMinutia();
 			minutia.position = decode(iominutia.positionX, iominutia.positionY, resolution);
@@ -303,8 +328,21 @@ abstract class TemplateCodec {
 			minutia.type = decode(iominutia.type);
 			return minutia;
 		}
+		static int encodeAngle(double angle) {
+			return (int)Math.round(DoubleAngle.complementary(angle) * DoubleAngle.INV_PI2 * 256) & 0xff;
+		}
 		static double decodeAngle(int ioangle) {
 			return DoubleAngle.complementary(ioangle / 256.0 * DoubleAngle.PI2);
+		}
+		static Iso19794p2v2005MinutiaType encode(MinutiaType type) {
+			switch (type) {
+			case ENDING:
+				return Iso19794p2v2005MinutiaType.ENDING;
+			case BIFURCATION:
+				return Iso19794p2v2005MinutiaType.BIFURCATION;
+			default:
+				return Iso19794p2v2005MinutiaType.ENDING;
+			}
 		}
 		static MinutiaType decode(Iso19794p2v2005MinutiaType iotype) {
 			switch (iotype) {
