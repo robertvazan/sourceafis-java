@@ -67,7 +67,7 @@
 		<dependency>
 			<groupId>com.machinezoo.fingerprintio</groupId>
 			<artifactId>fingerprintio</artifactId>
-			<version>0.2.1</version>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.mhshams</groupId>
@@ -172,6 +172,9 @@
 					<!-- Make the CI server email us when we break javadoc. -->
 					<failOnWarnings>true</failOnWarnings>
 					<notimestamp>true</notimestamp>
+					<links>
+						<link>https://fingerprintio.machinezoo.com/javadoc/</link>
+					</links>
 				</configuration>
 				<executions>
 					<execution>

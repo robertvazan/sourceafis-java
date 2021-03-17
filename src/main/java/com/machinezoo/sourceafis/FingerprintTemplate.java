@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.cbor.*;
 import com.google.gson.*;
+import com.machinezoo.fingerprintio.*;
 import com.machinezoo.noexception.*;
 
 /**
@@ -112,7 +113,7 @@ public class FingerprintTemplate {
 	 * @see #toByteArray()
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
 	 * @see FingerprintImage#FingerprintImage(byte[])
-	 * @see FingerprintCompatibility#convert(byte[])
+	 * @see FingerprintCompatibility#importTemplate(byte[])
 	 */
 	public FingerprintTemplate(byte[] serialized) {
 		this(serialized, true);
@@ -129,17 +130,18 @@ public class FingerprintTemplate {
 			if (!foreignToo)
 				throw new IllegalArgumentException("This is not a valid SourceAFIS template.", ex);
 			try {
-				FingerprintTemplate converted = FingerprintCompatibility.convert(serialized);
+				FingerprintTemplate converted = FingerprintCompatibility.importTemplate(serialized);
 				immutable = converted.immutable;
 				/*
 				 * It is an error to pass foreign template here, so at least log a warning.
 				 */
-				logger.warn("Template in foreign format was passed to FingerprintTemplate constructor. It was accepted, but FingerprintCompatibility.convert() should be used instead.");
+				logger.warn("Template in non-native format was passed to FingerprintTemplate constructor. "
+					+ "It was accepted, but FingerprintCompatibility.importTemplate() should be used instead.");
 			} catch (Throwable ex2) {
 				/*
 				 * Throw the original exception. We don't want to hide it with exception from this fallback.
 				 */
-				throw new IllegalArgumentException("This is neither a valid SourceAFIS template nor any supported foreign template format.", ex);
+				throw new IllegalArgumentException("This is neither a valid SourceAFIS template nor any supported non-native template format.", ex);
 			}
 		}
 	}
@@ -249,6 +251,7 @@ public class FingerprintTemplate {
 	 * 
 	 * @see #FingerprintTemplate(byte[])
 	 * @see <a href="https://sourceafis.machinezoo.com/template">Template format</a>
+	 * @see FingerprintCompatibility#exportTemplates(TemplateFormat, FingerprintTemplate...)
 	 */
 	public byte[] toByteArray() {
 		PersistentTemplate persistent = new PersistentTemplate(immutable.mutable());

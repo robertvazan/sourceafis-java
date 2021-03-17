@@ -3,8 +3,8 @@ package com.machinezoo.sourceafis;
 
 import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import java.util.function.*;
 import org.junit.jupiter.api.*;
+import com.machinezoo.fingerprintio.*;
 
 public class FingerprintCompatibilityTest {
 	@Test
@@ -12,20 +12,20 @@ public class FingerprintCompatibilityTest {
 		assertThat(FingerprintCompatibility.version(), matchesPattern("^\\d+\\.\\d+\\.\\d+$"));
 	}
 	public static FingerprintTemplate probeIso() {
-		return FingerprintCompatibility.convert(TestResources.probeIso());
+		return FingerprintCompatibility.importTemplate(TestResources.probeIso());
 	}
 	public static FingerprintTemplate matchingIso() {
-		return FingerprintCompatibility.convert(TestResources.matchingIso());
+		return FingerprintCompatibility.importTemplate(TestResources.matchingIso());
 	}
 	public static FingerprintTemplate nonmatchingIso() {
-		return FingerprintCompatibility.convert(TestResources.nonmatchingIso());
+		return FingerprintCompatibility.importTemplate(TestResources.nonmatchingIso());
 	}
 	private static class RoundtripTemplates {
 		FingerprintTemplate extracted;
 		FingerprintTemplate roundtripped;
-		RoundtripTemplates(FingerprintTemplate extracted, Function<FingerprintTemplate[], byte[]> exporter) {
+		RoundtripTemplates(FingerprintTemplate extracted, TemplateFormat format) {
 			this.extracted = extracted;
-			roundtripped = FingerprintCompatibility.convert(exporter.apply(new FingerprintTemplate[] { extracted }));
+			roundtripped = FingerprintCompatibility.importTemplate(FingerprintCompatibility.exportTemplates(format, extracted));
 		}
 	}
 	private void match(RoundtripTemplates probe, RoundtripTemplates candidate, boolean matching) {
@@ -40,23 +40,23 @@ public class FingerprintCompatibilityTest {
 		else
 			assertThat(kind, score, lessThan(20.0));
 	}
-	private void roundtrip(Function<FingerprintTemplate[], byte[]> exporter) {
-		RoundtripTemplates probe = new RoundtripTemplates(FingerprintTemplateTest.probe(), exporter);
-		RoundtripTemplates matching = new RoundtripTemplates(FingerprintTemplateTest.matching(), exporter);
-		RoundtripTemplates nonmatching = new RoundtripTemplates(FingerprintTemplateTest.nonmatching(), exporter);
+	private void roundtrip(TemplateFormat format) {
+		RoundtripTemplates probe = new RoundtripTemplates(FingerprintTemplateTest.probe(), format);
+		RoundtripTemplates matching = new RoundtripTemplates(FingerprintTemplateTest.matching(), format);
+		RoundtripTemplates nonmatching = new RoundtripTemplates(FingerprintTemplateTest.nonmatching(), format);
 		match(probe, matching, true);
 		match(probe, nonmatching, false);
 	}
 	@Test
 	public void roundtripAnsi378v2004() {
-		roundtrip(FingerprintCompatibility::toAnsiIncits378v2004);
+		roundtrip(TemplateFormat.ANSI_378_2004);
 	}
 	@Test
 	public void roundtripAnsi378v2009() {
-		roundtrip(FingerprintCompatibility::toAnsiIncits378v2009);
+		roundtrip(TemplateFormat.ANSI_378_2009);
 	}
 	@Test
 	public void roundtripAnsi378v2009AM1() {
-		roundtrip(FingerprintCompatibility::toAnsiIncits378v2009AM1);
+		roundtrip(TemplateFormat.ANSI_378_2009_AM1);
 	}
 }

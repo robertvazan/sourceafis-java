@@ -10,9 +10,8 @@ import com.machinezoo.fingerprintio.*;
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.
  * Only <a href="https://templates.machinezoo.com/">publicly documented formats</a>
- * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> are supported.
- * Three versions of ANSI 378 can be both imported and exported.
- * Limited support for import of ISO 19794-2 is also provided.
+ * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> are supported,
+ * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
  * <p>
  * ANSI and ISO template specs prescribe specific ways to calculate minutia position and angle.
  * They even vary these calculations between versions of the same spec.
@@ -30,15 +29,6 @@ import com.machinezoo.fingerprintio.*;
  * @see <a href="https://templates.machinezoo.com/discouraged">Why "standard" templates are a bad idea</a>
  */
 public class FingerprintCompatibility {
-	/*
-	 * API roadmap:
-	 * + List<FingerprintTemplate> importAllTemplates(byte[])
-	 * + FingerprintTemplate importTemplate(byte[])
-	 * + byte[] exportTemplate(TemplateFormat, FingerprintTemplate...)
-	 * - convertAll()
-	 * - convert()
-	 * - toX()
-	 */
 	static {
 		PlatformCheck.run();
 	}
@@ -57,63 +47,38 @@ public class FingerprintCompatibility {
 	private FingerprintCompatibility() {
 	}
 	/**
-	 * Converts foreign fingerprint template to native SourceAFIS template.
-	 * This is a convenience wrapper around {@link #convertAll(byte[])}
-	 * that returns the first fingerprint in the template or throws if there are none.
+	 * Converts non-native fingerprint template to a list of native SourceAFIS templates.
+	 * Several native templates can be returned for one non-native template,
+	 * because many non-native template formats can contain multiple fingerprints
+	 * while native SourceAFIS templates always contain one fingerprint.
 	 * <p>
-	 * This method accepts all template formats documented on the
-	 * <a href="https://templates.machinezoo.com/">template formats website</a>
-	 * and implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>,
-	 * specifically all versions of ANSI 378 and the initial version of ISO 19794-2.
-	 * Foreign template can come from feature extractor other than SourceAFIS.
+	 * This method accepts <a href="https://templates.machinezoo.com/">publicly documented</a> template formats
+	 * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> library,
+	 * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
+	 * <p>
+	 * If you just need to deserialize native SourceAFIS template,
+	 * call {@link FingerprintTemplate#FingerprintTemplate(byte[])} instead.
+	 * To create template from fingerprint image,
+	 * call {@link FingerprintTemplate#FingerprintTemplate(FingerprintImage)}.
 	 * 
 	 * @param template
-	 *            imported foreign template in one of the supported formats
-	 * @return converted native template
+	 *            non-native template in one of the supported formats
+	 * @return native templates containing fingerprints from the non-native template
 	 * @throws NullPointerException
 	 *             if {@code template} is {@code null}
-	 * @throws IllegalArgumentException
-	 *             if {@code template} contains no fingerprints
-	 * @throws RuntimeException
+	 * @throws TemplateFormatException
 	 *             if {@code template} is in an unsupported format or it is corrupted
 	 *
-	 * @see #convertAll(byte[])
-	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
-	 * @see <a href="https://templates.machinezoo.com/">Supported fingerprint template formats</a>
+	 * @see #importTemplate(byte[])
+	 * @see #exportTemplates(TemplateFormat, FingerprintTemplate...)
+	 * @see <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>
 	 */
-	public static FingerprintTemplate convert(byte[] template) {
-		Objects.requireNonNull(template);
-		return convertAll(template).stream()
-			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("No fingerprints found in the template"));
-	}
-	/**
-	 * Converts foreign fingerprint template to a list of native SourceAFIS templates.
-	 * This method accepts all template formats documented on the
-	 * <a href="https://templates.machinezoo.com/">template formats website</a>
-	 * and implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>,
-	 * specifically all versions of ANSI 378 and the initial version of ISO 19794-2.
-	 * Foreign template can come from feature extractor other than SourceAFIS.
-	 * Several native templates can be returned, because many foreign template formats can contain multiple fingerprints.
-	 * 
-	 * @param template
-	 *            imported foreign template in one of the supported formats
-	 * @return list of native templates containing fingerprints from the foreign template
-	 * @throws NullPointerException
-	 *             if {@code template} is {@code null}
-	 * @throws RuntimeException
-	 *             if {@code template} is in an unsupported format or it is corrupted
-	 *
-	 * @see #convert(byte[])
-	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
-	 * @see <a href="https://templates.machinezoo.com/">Supported fingerprint template formats</a>
-	 */
-	public static List<FingerprintTemplate> convertAll(byte[] template) {
+	public static List<FingerprintTemplate> importTemplates(byte[] template) {
 		Objects.requireNonNull(template);
 		try {
 			TemplateFormat format = TemplateFormat.identify(template);
 			if (format == null || !TemplateCodec.ALL.containsKey(format))
-				throw new IllegalArgumentException("Unsupported template format.");
+				throw new TemplateFormatException("Unsupported template format.");
 			return TemplateCodec.ALL.get(format).decode(template).stream()
 				.map(fp -> new FingerprintTemplate(new ImmutableTemplate(fp)))
 				.collect(toList());
@@ -131,7 +96,7 @@ public class FingerprintCompatibility {
 				/*
 				 * It is an error to pass native template here, so at least log a warning.
 				 */
-				logger.warn("Native SourceAFIS template was passed to convert() or convertAll() in FingerprintCompatibility. " +
+				logger.warn("Native SourceAFIS template was passed to importTemplate() or importTemplates() in FingerprintCompatibility. " +
 					"It was accepted, but FingerprintTemplate constructor should be used instead.");
 				return deserialized;
 			} catch (Throwable ex2) {
@@ -142,70 +107,146 @@ public class FingerprintCompatibility {
 			}
 		}
 	}
-	private static byte[] encode(TemplateFormat format, FingerprintTemplate[] templates) {
+	/**
+	 * Converts non-native fingerprint template to native SourceAFIS template.
+	 * This is a convenience wrapper around {@link #importTemplates(byte[])}
+	 * that returns the first fingerprint in the template or throws if there are none.
+	 * <p>
+	 * This method accepts <a href="https://templates.machinezoo.com/">publicly documented</a> template formats
+	 * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> library,
+	 * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
+	 * <p>
+	 * If you just need to deserialize native SourceAFIS template,
+	 * call {@link FingerprintTemplate#FingerprintTemplate(byte[])} instead.
+	 * To create template from fingerprint image,
+	 * call {@link FingerprintTemplate#FingerprintTemplate(FingerprintImage)}.
+	 * 
+	 * @param template
+	 *            non-native template in one of the supported formats
+	 * @return converted native template
+	 * @throws NullPointerException
+	 *             if {@code template} is {@code null}
+	 * @throws TemplateFormatException
+	 *             if {@code template} is in an unsupported format or it is corrupted
+	 * @throws IllegalArgumentException
+	 *             if {@code template} contains no fingerprints
+	 *
+	 * @see FingerprintTemplate#FingerprintTemplate(byte[])
+	 * @see #importTemplates(byte[])
+	 * @see #exportTemplates(TemplateFormat, FingerprintTemplate...)
+	 * @see <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>
+	 */
+	public static FingerprintTemplate importTemplate(byte[] template) {
+		Objects.requireNonNull(template);
+		return importTemplates(template).stream()
+			.findFirst()
+			.orElseThrow(() -> new IllegalArgumentException("No fingerprints found in the template"));
+	}
+	/**
+	 * Converts one or more native templates to non-native template format.
+	 * Several native templates can be provided,
+	 * because many non-native template formats can encode several fingerprints in one template.
+	 * Creating template with zero fingerprints is allowed by some formats.
+	 * <p>
+	 * This method supports <a href="https://templates.machinezoo.com/">publicly documented</a> template formats
+	 * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> library,
+	 * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
+	 * To tweak contents of the exported template, deserialize it with FingerprintIO,
+	 * perform required changes, and serialize it again with FingerprintIO.
+	 * <p>
+	 * If you just need to serialize native SourceAFIS template,
+	 * call {@link FingerprintTemplate#toByteArray()} instead.
+	 * 
+	 * @param format
+	 *            target non-native template format
+	 * @param templates
+	 *            list of native SourceAFIS templates to export
+	 * @return template in the specified non-native format
+	 * @throws NullPointerException
+	 *             if {@code format}, {@code templates}, or any of the templates are {@code null}
+	 * @throws TemplateFormatException
+	 *             if {@code format} is unsupported or export fails for some reason
+	 * 
+	 * @see FingerprintTemplate#toByteArray()
+	 * @see #importTemplates(byte[])
+	 * @see <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>
+	 */
+	public static byte[] exportTemplates(TemplateFormat format, FingerprintTemplate... templates) {
+		Objects.requireNonNull(format);
+		Objects.requireNonNull(templates);
+		if (!TemplateCodec.ALL.containsKey(format))
+			throw new TemplateFormatException("Unsupported template format.");
 		return TemplateCodec.ALL.get(format).encode(Arrays.stream(templates).map(t -> t.immutable.mutable()).collect(toList()));
 	}
 	/**
-	 * Converts native fingerprint template to ANSI 378-2004 template.
-	 * This method produces fingerprint template conforming to
-	 * <a href="https://templates.machinezoo.com/ansi-incits-378-2004">ANSI INCITS 378-2004</a>.
-	 * The template can then be used by fingerprint matcher other than SourceAFIS.
-	 * Several native templates can be supplied, because ANSI 378 template can contain multiple fingerprints.
+	 * @deprecated Use {@link #importTemplates(byte[])} instead.
+	 * 
+	 * @param template
+	 *            foreign template in one of the supported formats
+	 * @return native templates containing fingerprints from the foreign template
+	 * @throws NullPointerException
+	 *             if {@code template} is {@code null}
+	 * @throws TemplateFormatException
+	 *             if {@code template} is in an unsupported format or it is corrupted
+	 */
+	@Deprecated
+	public static List<FingerprintTemplate> convertAll(byte[] template) {
+		return importTemplates(template);
+	}
+	/**
+	 * @deprecated Use {@link #importTemplate(byte[])} instead.
+	 * 
+	 * @param template
+	 *            foreign template in one of the supported formats
+	 * @return converted native template
+	 * @throws NullPointerException
+	 *             if {@code template} is {@code null}
+	 * @throws TemplateFormatException
+	 *             if {@code template} is in an unsupported format or it is corrupted
+	 * @throws IllegalArgumentException
+	 *             if {@code template} contains no fingerprints
+	 */
+	@Deprecated
+	public static FingerprintTemplate convert(byte[] template) {
+		return importTemplate(template);
+	}
+	/**
+	 * @deprecated Use {@link #exportTemplates(TemplateFormat, FingerprintTemplate...)} instead.
 	 * 
 	 * @param templates
 	 *            list of native SourceAFIS templates to export
 	 * @return ANSI 378-2004 template
 	 * @throws NullPointerException
 	 *             if {@code templates} or any of its items is {@code null}
-	 * 
-	 * @see #toAnsiIncits378v2009(FingerprintTemplate...)
-	 * @see #toAnsiIncits378v2009AM1(FingerprintTemplate...)
-	 * @see #convertAll(byte[])
-	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2004">ANSI INCITS 378-2004</a>
 	 */
+	@Deprecated
 	public static byte[] toAnsiIncits378v2004(FingerprintTemplate... templates) {
-		return encode(TemplateFormat.ANSI_378_2004, templates);
+		return exportTemplates(TemplateFormat.ANSI_378_2004, templates);
 	}
 	/**
-	 * Converts native fingerprint template to ANSI 378-2009 template.
-	 * This method produces fingerprint template conforming to
-	 * <a href="https://templates.machinezoo.com/ansi-incits-378-2009-r2014">ANSI INCITS 378-2009[R2014]</a>.
-	 * The template can then be used by fingerprint matcher other than SourceAFIS.
-	 * Several native templates can be supplied, because ANSI 378 template can contain multiple fingerprints.
+	 * @deprecated Use {@link #exportTemplates(TemplateFormat, FingerprintTemplate...)} instead.
 	 * 
 	 * @param templates
 	 *            list of native SourceAFIS templates to export
 	 * @return ANSI 378-2009 template
 	 * @throws NullPointerException
 	 *             if {@code templates} or any of its items is {@code null}
-	 * 
-	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
-	 * @see #toAnsiIncits378v2009AM1(FingerprintTemplate...)
-	 * @see #convertAll(byte[])
-	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2009-r2014">ANSI INCITS 378-2009[R2014]</a>
 	 */
+	@Deprecated
 	public static byte[] toAnsiIncits378v2009(FingerprintTemplate... templates) {
-		return encode(TemplateFormat.ANSI_378_2009, templates);
+		return exportTemplates(TemplateFormat.ANSI_378_2009, templates);
 	}
 	/**
-	 * Converts native fingerprint template to ANSI 378-2009/AM1 template.
-	 * This method produces fingerprint template conforming to
-	 * <a href="https://templates.machinezoo.com/ansi-incits-378-2009-am1-2010-r2015">ANSI INCITS 378:2009/AM 1:2010[R2015]</a>.
-	 * The template can then be used by fingerprint matcher other than SourceAFIS.
-	 * Several native templates can be supplied, because ANSI 378 template can contain multiple fingerprints.
+	 * @deprecated Use {@link #exportTemplates(TemplateFormat, FingerprintTemplate...)} instead.
 	 * 
 	 * @param templates
 	 *            list of native SourceAFIS templates to export
 	 * @return ANSI 378-2009/AM1 template
 	 * @throws NullPointerException
 	 *             if {@code templates} or any of its items is {@code null}
-	 * 
-	 * @see #toAnsiIncits378v2004(FingerprintTemplate...)
-	 * @see #toAnsiIncits378v2009(FingerprintTemplate...)
-	 * @see #convertAll(byte[])
-	 * @see <a href="https://templates.machinezoo.com/ansi-incits-378-2009-am1-2010-r2015">ANSI INCITS 378:2009/AM 1:2010[R2015]</a>
 	 */
+	@Deprecated
 	public static byte[] toAnsiIncits378v2009AM1(FingerprintTemplate... templates) {
-		return encode(TemplateFormat.ANSI_378_2009_AM1, templates);
+		return exportTemplates(TemplateFormat.ANSI_378_2009_AM1, templates);
 	}
 }
