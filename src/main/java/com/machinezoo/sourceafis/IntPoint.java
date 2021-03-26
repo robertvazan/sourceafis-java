@@ -45,7 +45,7 @@ class IntPoint implements Iterable<IntPoint>, Comparable<IntPoint> {
 	IntPoint negate() {
 		return new IntPoint(-x, -y);
 	}
-	DoublePoint toPoint() {
+	DoublePoint toDouble() {
 		return new DoublePoint(x, y);
 	}
 	IntPoint[] lineTo(IntPoint to) {
@@ -98,9 +98,9 @@ class IntPoint implements Iterable<IntPoint>, Comparable<IntPoint> {
 	}
 	@Override
 	public Iterator<IntPoint> iterator() {
-		return new CellIterator();
+		return new IntPointIterator();
 	}
-	private class CellIterator implements Iterator<IntPoint> {
+	private class IntPointIterator implements Iterator<IntPoint> {
 		int atX;
 		int atY;
 		@Override

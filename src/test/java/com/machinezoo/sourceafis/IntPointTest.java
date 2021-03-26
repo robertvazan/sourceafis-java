@@ -51,8 +51,8 @@ public class IntPointTest {
 		assertEquals(new IntPoint(-2, -3), new IntPoint(2, 3).negate());
 	}
 	@Test
-	public void toPoint() {
-		DoublePointTest.assertPointEquals(new DoublePoint(2, 3), new IntPoint(2, 3).toPoint(), 0.001);
+	public void toDouble() {
+		DoublePointTest.assertPointEquals(new DoublePoint(2, 3), new IntPoint(2, 3).toDouble(), 0.001);
 	}
 	@SuppressWarnings("unlikely-arg-type")
 	@Test

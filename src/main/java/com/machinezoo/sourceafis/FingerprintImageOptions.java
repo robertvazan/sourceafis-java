@@ -35,6 +35,8 @@ public class FingerprintImageOptions {
 	 *             if {@code dpi} is non-positive, impossibly low, or impossibly high
 	 */
 	public FingerprintImageOptions dpi(double dpi) {
+		if (dpi < 20 || dpi > 20_000)
+			throw new IllegalArgumentException();
 		this.dpi = dpi;
 		return this;
 	}

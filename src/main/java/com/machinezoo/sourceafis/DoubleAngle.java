@@ -13,7 +13,7 @@ class DoubleAngle {
 		return angle >= 0 ? angle : angle + PI2;
 	}
 	static double atan(IntPoint vector) {
-		return atan(vector.toPoint());
+		return atan(vector.toDouble());
 	}
 	static double atan(IntPoint center, IntPoint point) {
 		return atan(point.minus(center));

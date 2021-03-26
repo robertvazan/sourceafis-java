@@ -330,7 +330,7 @@ class FeatureExtractor {
 					double distance = Doubles.interpolateExponential(Parameters.MIN_ORIENTATION_RADIUS, Parameters.MAX_ORIENTATION_RADIUS, random.next());
 					sample.offset = DoubleAngle.toVector(angle).multiply(distance).round();
 				} while (sample.offset.equals(IntPoint.ZERO) || sample.offset.y < 0 || Arrays.stream(orientations).limit(j).anyMatch(o -> o.offset.equals(sample.offset)));
-				sample.orientation = DoubleAngle.toVector(DoubleAngle.add(DoubleAngle.toOrientation(DoubleAngle.atan(sample.offset.toPoint())), Math.PI));
+				sample.orientation = DoubleAngle.toVector(DoubleAngle.add(DoubleAngle.toOrientation(DoubleAngle.atan(sample.offset.toDouble())), Math.PI));
 			}
 		}
 		return splits;
