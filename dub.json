@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"Hassan Azi"
+	],
+	"copyright": "Copyright © 2021, Hassan Azi",
+	"dependencies": {
+		"d-unit": "~>0.10.1"
+	},
+	"description": "D port of the SourceAFIS library",
+	"license": "Apache License 2.0",
+	"name": "sourceafis-dlang"
+}
