@@ -1,0 +1,15 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: mihails-strasuns/setup-dlang@v1
+      name: Install DMD
+    - name: Build
+      run: dub build
