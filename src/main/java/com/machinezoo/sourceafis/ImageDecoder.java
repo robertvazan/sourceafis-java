@@ -53,13 +53,13 @@ abstract class ImageDecoder {
 	 * This makes sure that SourceAFIS performs equally well for common formats and common decoders
 	 * regardless of how many special-purpose decoders are added to this list.
 	 */
-	private static final List<ImageDecoder> all = Arrays.asList(
+	private static final List<ImageDecoder> ALL = Arrays.asList(
 		new ImageIODecoder(),
 		new WsqDecoder(),
 		new AndroidDecoder());
 	static DecodedImage decodeAny(byte[] image) {
 		Map<ImageDecoder, Throwable> exceptions = new HashMap<>();
-		for (ImageDecoder decoder : all) {
+		for (ImageDecoder decoder : ALL) {
 			try {
 				if (!decoder.available())
 					throw new UnsupportedOperationException("Image decoder is not available.");
@@ -74,7 +74,7 @@ abstract class ImageDecoder {
 		 * It will wait until this code gets moved to a separate image decoding library.
 		 * For now, we just summarize all the exceptions in a long message.
 		 */
-		throw new IllegalArgumentException(String.format("Unsupported image format [%s].", all.stream()
+		throw new IllegalArgumentException(String.format("Unsupported image format [%s].", ALL.stream()
 			.map(d -> String.format("%s = '%s'", d.name(), formatError(exceptions.get(d))))
 			.collect(joining(", "))));
 	}

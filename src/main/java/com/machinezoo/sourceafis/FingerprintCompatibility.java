@@ -33,6 +33,8 @@ public class FingerprintCompatibility {
 		PlatformCheck.run();
 	}
 	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
+	private FingerprintCompatibility() {
+	}
 	private static String version = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
 	/**
 	 * Gets version of the currently running SourceAFIS.
@@ -43,8 +45,6 @@ public class FingerprintCompatibility {
 	 */
 	public static String version() {
 		return version;
-	}
-	private FingerprintCompatibility() {
 	}
 	/**
 	 * Converts non-native fingerprint template to a list of native SourceAFIS templates.
