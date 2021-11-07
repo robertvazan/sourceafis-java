@@ -8,8 +8,10 @@ jdk:
 install: skip
 # JaCoCo phase is needed to create code coverage report that will be later uploaded to Codecov.
 # GPG must be skipped, because CI server does not have release GPG key.
+# Failure on javadoc warnings is enabled only in CI builds,
+# so that warnings specific to one JDK version do not break independent builds.
 # Printing maven version (-V) helps diagnose Travis-specific build behavior.
-script: mvn install jacoco:report -Dgpg.skip=true -B -V
+script: mvn install jacoco:report -Dgpg.skip=true -Dmaven.javadoc.failOnWarnings=true -B -V
 cache:
   directories:
   - $HOME/.m2
