@@ -127,8 +127,8 @@ public class ReversedListTest {
 	@Test
 	public void removeItem() {
 		r.add(4);
-		assertTrue(r.remove(new Integer(4)));
-		assertFalse(r.remove(new Integer(10)));
+		assertTrue(r.remove(Integer.valueOf(4)));
+		assertFalse(r.remove(Integer.valueOf(10)));
 		assertEquals(Arrays.asList(5, 3, 2, 1, 4), r);
 	}
 	@Test

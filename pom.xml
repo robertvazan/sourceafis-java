@@ -39,8 +39,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.release>11</maven.compiler.release>
 	</properties>
 
 	<dependencies>
@@ -67,7 +66,7 @@
 		<dependency>
 			<groupId>com.machinezoo.fingerprintio</groupId>
 			<artifactId>fingerprintio</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.mhshams</groupId>
@@ -121,6 +120,11 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<!-- Needed for Java 11. -->
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.6.2</version>
+				</plugin>
+				<plugin>
 					<!-- Older surefire versions did not support JUnit 5. -->
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>2.22.2</version>
@@ -170,9 +174,6 @@
 				<version>3.2.0</version>
 				<configuration>
 					<notimestamp>true</notimestamp>
-					<links>
-						<link>https://fingerprintio.machinezoo.com/javadoc/</link>
-					</links>
 				</configuration>
 				<executions>
 					<execution>

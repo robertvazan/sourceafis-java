@@ -3,7 +3,7 @@
 if: tag IS blank
 language: java
 jdk:
-  - openjdk8
+  - openjdk11
 # Travis by default tries to install maven dependencies in this phase. It's simpler to run everything in one phase.
 install: skip
 # JaCoCo phase is needed to create code coverage report that will be later uploaded to Codecov.

@@ -24,7 +24,7 @@ public class DoublePointTest {
 		assertEquals(new IntPoint(2, 3), new DoublePoint(2.4, 2.6).round());
 		assertEquals(new IntPoint(-2, -3), new DoublePoint(-2.4, -2.6).round());
 	}
-	public static void assertPointEquals(DoublePoint expected, DoublePoint actual, double tolerance) {
+	static void assertPointEquals(DoublePoint expected, DoublePoint actual, double tolerance) {
 		assertEquals(expected.x, actual.x, tolerance);
 		assertEquals(expected.y, actual.y, tolerance);
 	}

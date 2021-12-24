@@ -113,8 +113,8 @@ public class CircularListTest {
 	}
 	@Test
 	public void removeItem() {
-		assertTrue(l.remove(new Integer(2)));
-		assertFalse(l.remove(new Integer(10)));
+		assertTrue(l.remove(Integer.valueOf(2)));
+		assertFalse(l.remove(Integer.valueOf(10)));
 		assertEquals(Arrays.asList(1, 3, 4, 5), l);
 	}
 	@Test

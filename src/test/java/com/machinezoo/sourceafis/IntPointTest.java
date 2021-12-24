@@ -61,7 +61,7 @@ public class IntPointTest {
 		assertFalse(new IntPoint(2, 3).equals(new IntPoint(0, 3)));
 		assertFalse(new IntPoint(2, 3).equals(new IntPoint(2, 0)));
 		assertFalse(new IntPoint(2, 3).equals(null));
-		assertFalse(new IntPoint(2, 3).equals(new Integer(1)));
+		assertFalse(new IntPoint(2, 3).equals(Integer.valueOf(1)));
 	}
 	@Test
 	public void hashCodeTest() {
