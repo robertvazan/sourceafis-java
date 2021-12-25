@@ -141,7 +141,7 @@ public class FingerprintTemplate {
 				/*
 				 * Throw the original exception. We don't want to hide it with exception from this fallback.
 				 */
-				throw new IllegalArgumentException("This is neither a valid SourceAFIS template nor any supported non-native template format.", ex);
+				throw new IllegalArgumentException("This is not a valid SourceAFIS template.", ex);
 			}
 		}
 	}
