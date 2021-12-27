@@ -175,6 +175,7 @@
 				<version>3.2.0</version>
 				<configuration>
 					<notimestamp>true</notimestamp>
+					<detectLinks>true</detectLinks>
 					<bottom>
 						<![CDATA[<!-- No copyright message. -->]]>
 					</bottom>
