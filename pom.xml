@@ -175,10 +175,14 @@
 				<version>3.2.0</version>
 				<configuration>
 					<notimestamp>true</notimestamp>
-					<detectLinks>true</detectLinks>
 					<bottom>
 						<![CDATA[<!-- No copyright message. -->]]>
 					</bottom>
+					<!-- Explicit link list, because detectLinks would cause every CI build to fail. -->
+					<!-- CI build is configured to fail on javadoc warnings and we want to keep that. -->
+					<links>
+						<link>https://fingerprintio.machinezoo.com/javadoc/</link>
+					</links>
 				</configuration>
 				<executions>
 					<execution>
