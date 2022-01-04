@@ -31,11 +31,7 @@ module com.machinezoo.sourceafis {
 	requires com.google.gson;
 	requires it.unimi.dsi.fastutil;
 	requires org.apache.commons.io;
-	/*
-	 * JNBIS is not yet packaged as a module.
-	 * https://github.com/mhshams/jnbis/issues/32
-	 */
-	requires jnbis;
+	requires com.github.mhshams.jnbis;
 	/*
 	 * Serialization needs reflection access.
 	 */

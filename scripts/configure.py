@@ -25,7 +25,7 @@ def dependencies():
     use_commons_io()
     use_gson()
     use_jackson_cbor()
-    use('com.github.mhshams:jnbis:2.0.2')
+    use('com.github.mhshams:jnbis:2.1.1')
     use_junit()
     use_hamcrest()
     use_slf4j_test()
