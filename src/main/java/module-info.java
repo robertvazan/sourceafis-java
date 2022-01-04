@@ -19,6 +19,10 @@ module com.machinezoo.sourceafis {
 	 * SLF4J is pulled in transitively via noexception, but the transitive dependency will be removed in future versions of noexception.
 	 */
 	requires org.slf4j;
+	/*
+	 * Needed for setVisibility(PropertyAccessor.FIELD, Visibility.ANY).
+	 */
+	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.databind;
 	requires com.fasterxml.jackson.dataformat.cbor;
 	/*
