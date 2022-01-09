@@ -19,7 +19,8 @@ but it's perfectly reasonable to open issues asking for more documentation or be
 
 ## Pull requests
 
-Pull requests are generally welcome, but it's better to open an issue first to discuss your idea.
+Pull requests are generally welcome.
+If you would like to make large or controversial changes, open an issue first to discuss your idea.
 
 Don't worry about formatting and naming too much. Code will be reformatted after merge.
 Just don't run your formatter on whole source files, because it makes diffs hard to understand.
