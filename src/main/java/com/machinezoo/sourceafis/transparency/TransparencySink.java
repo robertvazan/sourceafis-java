@@ -129,13 +129,13 @@ public class TransparencySink implements CloseableScope {
 		return acceptsPairing;
 	}
 	// https://sourceafis.machinezoo.com/transparency/pairing
-	public void logPairing(int count, MinutiaPair[] pairs, List<MinutiaPair> support) {
+	public void logPairing(PairingGraph pairing) {
 		offerMatcher();
 		if (acceptsPairing)
-			log("pairing", new ConsistentPairingGraph(count, pairs, support));
+			log("pairing", new ConsistentPairingGraph(pairing));
 	}
 	// https://sourceafis.machinezoo.com/transparency/score
-	public void logScore(Score score) {
+	public void logScore(Scoring score) {
 		offerMatcher();
 		if (acceptsScore)
 			log("score", score);

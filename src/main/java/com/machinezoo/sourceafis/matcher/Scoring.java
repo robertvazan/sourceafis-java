@@ -4,8 +4,9 @@ package com.machinezoo.sourceafis.matcher;
 import com.machinezoo.sourceafis.configuration.*;
 import com.machinezoo.sourceafis.features.*;
 import com.machinezoo.sourceafis.primitives.*;
+import com.machinezoo.sourceafis.templates.*;
 
-public class Score {
+public class Scoring {
 	public int minutiaCount;
 	public double minutiaScore;
 	public double minutiaFractionInProbe;
@@ -27,25 +28,27 @@ public class Score {
 	public double angleAccuracyScore;
 	public double totalScore;
 	public double shapedScore;
-	public void compute(MatcherThread thread) {
-		minutiaCount = thread.count;
+	public void compute(ImmutableProbe probe, ImmutableTemplate candidate, PairingGraph pairing) {
+		var pminutiae = probe.template.minutiae;
+		var cminutiae = candidate.minutiae;
+		minutiaCount = pairing.count;
 		minutiaScore = Parameters.MINUTIA_SCORE * minutiaCount;
-		minutiaFractionInProbe = thread.count / (double)thread.probe.minutiae.length;
-		minutiaFractionInCandidate = thread.count / (double)thread.candidate.minutiae.length;
+		minutiaFractionInProbe = pairing.count / (double)pminutiae.length;
+		minutiaFractionInCandidate = pairing.count / (double)cminutiae.length;
 		minutiaFraction = 0.5 * (minutiaFractionInProbe + minutiaFractionInCandidate);
 		minutiaFractionScore = Parameters.MINUTIA_FRACTION_SCORE * minutiaFraction;
 		supportingEdgeSum = 0;
 		supportedMinutiaCount = 0;
 		minutiaTypeHits = 0;
-		for (int i = 0; i < thread.count; ++i) {
-			MinutiaPair pair = thread.tree[i];
+		for (int i = 0; i < pairing.count; ++i) {
+			MinutiaPair pair = pairing.tree[i];
 			supportingEdgeSum += pair.supportingEdges;
 			if (pair.supportingEdges >= Parameters.MIN_SUPPORTING_EDGES)
 				++supportedMinutiaCount;
-			if (thread.probe.minutiae[pair.probe].type == thread.candidate.minutiae[pair.candidate].type)
+			if (pminutiae[pair.probe].type == cminutiae[pair.candidate].type)
 				++minutiaTypeHits;
 		}
-		edgeCount = thread.count + supportingEdgeSum;
+		edgeCount = pairing.count + supportingEdgeSum;
 		edgeScore = Parameters.EDGE_SCORE * edgeCount;
 		supportedMinutiaScore = Parameters.SUPPORTED_MINUTIA_SCORE * supportedMinutiaCount;
 		minutiaTypeScore = Parameters.MINUTIA_TYPE_SCORE * minutiaTypeHits;
@@ -53,20 +56,20 @@ public class Score {
 		double innerAngleRadius = Parameters.ANGLE_ERROR_FLATNESS * Parameters.MAX_ANGLE_ERROR;
 		distanceErrorSum = 0;
 		angleErrorSum = 0;
-		for (int i = 1; i < thread.count; ++i) {
-			MinutiaPair pair = thread.tree[i];
-			EdgeShape probeEdge = new EdgeShape(thread.probe.minutiae[pair.probeRef], thread.probe.minutiae[pair.probe]);
-			EdgeShape candidateEdge = new EdgeShape(thread.candidate.minutiae[pair.candidateRef], thread.candidate.minutiae[pair.candidate]);
+		for (int i = 1; i < pairing.count; ++i) {
+			MinutiaPair pair = pairing.tree[i];
+			EdgeShape probeEdge = new EdgeShape(pminutiae[pair.probeRef], pminutiae[pair.probe]);
+			EdgeShape candidateEdge = new EdgeShape(cminutiae[pair.candidateRef], cminutiae[pair.candidate]);
 			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
 			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
 			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		distanceAccuracyScore = 0;
 		angleAccuracyScore = 0;
-		int distanceErrorPotential = Parameters.MAX_DISTANCE_ERROR * Math.max(0, thread.count - 1);
+		int distanceErrorPotential = Parameters.MAX_DISTANCE_ERROR * Math.max(0, pairing.count - 1);
 		distanceAccuracySum = distanceErrorPotential - distanceErrorSum;
 		distanceAccuracyScore = Parameters.DISTANCE_ACCURACY_SCORE * (distanceErrorPotential > 0 ? distanceAccuracySum / (double)distanceErrorPotential : 0);
-		double angleErrorPotential = Parameters.MAX_ANGLE_ERROR * Math.max(0, thread.count - 1) * 2;
+		double angleErrorPotential = Parameters.MAX_ANGLE_ERROR * Math.max(0, pairing.count - 1) * 2;
 		angleAccuracySum = angleErrorPotential - angleErrorSum;
 		angleAccuracyScore = Parameters.ANGLE_ACCURACY_SCORE * (angleErrorPotential > 0 ? angleAccuracySum / angleErrorPotential : 0);
 		totalScore = minutiaScore

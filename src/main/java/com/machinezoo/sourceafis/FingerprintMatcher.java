@@ -37,7 +37,7 @@ public class FingerprintMatcher {
 	 * + sum()
 	 * + thresholdAtFMR(double) - might have variant, still unclear
 	 */
-	private volatile ImmutableMatcher immutable = ImmutableMatcher.NULL;
+	private volatile ImmutableProbe immutable = ImmutableProbe.NULL;
 	/**
 	 * Creates fingerprint template representation optimized for fast 1:N matching.
 	 * Once the probe template is processed, candidate templates can be compared to it
@@ -56,7 +56,7 @@ public class FingerprintMatcher {
 	public FingerprintMatcher(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
-		immutable = new ImmutableMatcher(template, EdgeHash.build(template));
+		immutable = new ImmutableProbe(template, EdgeHash.build(template));
 	}
 	/**
 	 * @deprecated Use {@link #FingerprintMatcher(FingerprintTemplate)} constructor to fully initialize the matcher.
@@ -94,7 +94,7 @@ public class FingerprintMatcher {
 	public FingerprintMatcher index(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
-		immutable = new ImmutableMatcher(template, EdgeHash.build(template));
+		immutable = new ImmutableProbe(template, EdgeHash.build(template));
 		return this;
 	}
 	/**
@@ -122,9 +122,6 @@ public class FingerprintMatcher {
 	 */
 	public double match(FingerprintTemplate candidate) {
 		Objects.requireNonNull(candidate);
-		MatcherThread thread = MatcherThread.current();
-		thread.selectMatcher(immutable);
-		thread.selectCandidate(candidate.immutable);
-		return thread.match();
+		return MatcherEngine.current().match(immutable, candidate.immutable);
 	}
 }

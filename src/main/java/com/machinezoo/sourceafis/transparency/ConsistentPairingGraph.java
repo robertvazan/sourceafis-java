@@ -9,9 +9,9 @@ public class ConsistentPairingGraph {
 	public ConsistentMinutiaPair root;
 	public List<ConsistentEdgePair> tree;
 	public List<ConsistentEdgePair> support;
-	public ConsistentPairingGraph(int count, MinutiaPair[] pairs, List<MinutiaPair> support) {
-		root = new ConsistentMinutiaPair(pairs[0].probe, pairs[0].candidate);
-		tree = Arrays.stream(pairs).limit(count).skip(1).map(ConsistentEdgePair::new).collect(toList());
-		this.support = support.stream().map(ConsistentEdgePair::new).collect(toList());
+	public ConsistentPairingGraph(PairingGraph pairing) {
+		root = new ConsistentMinutiaPair(pairing.tree[0].probe, pairing.tree[0].candidate);
+		tree = Arrays.stream(pairing.tree).limit(pairing.count).skip(1).map(ConsistentEdgePair::new).collect(toList());
+		this.support = pairing.support.stream().map(ConsistentEdgePair::new).collect(toList());
 	}
 }

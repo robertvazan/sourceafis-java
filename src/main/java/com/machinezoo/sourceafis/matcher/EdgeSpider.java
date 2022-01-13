@@ -7,43 +7,31 @@ import com.machinezoo.sourceafis.features.*;
 import com.machinezoo.sourceafis.primitives.*;
 
 public class EdgeSpider {
-	private static void addPair(MatcherThread thread, MinutiaPair pair) {
-		thread.tree[thread.count] = pair;
-		thread.byProbe[pair.probe] = pair;
-		thread.byCandidate[pair.candidate] = pair;
-		++thread.count;
+	private final MinutiaPairPool pool;
+	private final PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
+	public EdgeSpider(MinutiaPairPool pool) {
+		this.pool = pool;
 	}
-	private static void support(MatcherThread thread, MinutiaPair pair) {
-		if (thread.byProbe[pair.probe] != null && thread.byProbe[pair.probe].candidate == pair.candidate) {
-			++thread.byProbe[pair.probe].supportingEdges;
-			++thread.byProbe[pair.probeRef].supportingEdges;
-			if (thread.reportSupport)
-				thread.support.add(pair);
-			else
-				thread.release(pair);
-		} else
-			thread.release(pair);
-	}
-	private static List<MinutiaPair> matchPairs(MatcherThread thread, NeighborEdge[] probeStar, NeighborEdge[] candidateStar) {
+	private List<MinutiaPair> matchPairs(NeighborEdge[] pstar, NeighborEdge[] cstar) {
 		double complementaryAngleError = DoubleAngle.complementary(Parameters.MAX_ANGLE_ERROR);
 		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
 		int end = 0;
-		for (int candidateIndex = 0; candidateIndex < candidateStar.length; ++candidateIndex) {
-			NeighborEdge candidateEdge = candidateStar[candidateIndex];
-			while (start < probeStar.length && probeStar[start].length < candidateEdge.length - Parameters.MAX_DISTANCE_ERROR)
+		for (int candidateIndex = 0; candidateIndex < cstar.length; ++candidateIndex) {
+			NeighborEdge candidateEdge = cstar[candidateIndex];
+			while (start < pstar.length && pstar[start].length < candidateEdge.length - Parameters.MAX_DISTANCE_ERROR)
 				++start;
 			if (end < start)
 				end = start;
-			while (end < probeStar.length && probeStar[end].length <= candidateEdge.length + Parameters.MAX_DISTANCE_ERROR)
+			while (end < pstar.length && pstar[end].length <= candidateEdge.length + Parameters.MAX_DISTANCE_ERROR)
 				++end;
 			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
-				NeighborEdge probeEdge = probeStar[probeIndex];
+				NeighborEdge probeEdge = pstar[probeIndex];
 				double referenceDiff = DoubleAngle.difference(probeEdge.referenceAngle, candidateEdge.referenceAngle);
 				if (referenceDiff <= Parameters.MAX_ANGLE_ERROR || referenceDiff >= complementaryAngleError) {
 					double neighborDiff = DoubleAngle.difference(probeEdge.neighborAngle, candidateEdge.neighborAngle);
 					if (neighborDiff <= Parameters.MAX_ANGLE_ERROR || neighborDiff >= complementaryAngleError) {
-						MinutiaPair pair = thread.allocate();
+						MinutiaPair pair = pool.allocate();
 						pair.probe = probeEdge.neighbor;
 						pair.candidate = candidateEdge.neighbor;
 						pair.distance = candidateEdge.length;
@@ -54,49 +42,29 @@ public class EdgeSpider {
 		}
 		return results;
 	}
-	private static void collectEdges(MatcherThread thread) {
-		MinutiaPair reference = thread.tree[thread.count - 1];
-		NeighborEdge[] probeNeighbors = thread.probe.edges[reference.probe];
-		NeighborEdge[] candidateNeigbors = thread.candidate.edges[reference.candidate];
-		for (MinutiaPair pair : matchPairs(thread, probeNeighbors, candidateNeigbors)) {
+	private void collectEdges(NeighborEdge[][] pedges, NeighborEdge[][] cedges, PairingGraph pairing) {
+		MinutiaPair reference = pairing.tree[pairing.count - 1];
+		NeighborEdge[] pstar = pedges[reference.probe];
+		NeighborEdge[] cstar = cedges[reference.candidate];
+		for (MinutiaPair pair : matchPairs(pstar, cstar)) {
 			pair.probeRef = reference.probe;
 			pair.candidateRef = reference.candidate;
-			if (thread.byCandidate[pair.candidate] == null && thread.byProbe[pair.probe] == null)
-				thread.queue.add(pair);
+			if (pairing.byCandidate[pair.candidate] == null && pairing.byProbe[pair.probe] == null)
+				queue.add(pair);
 			else
-				support(thread, pair);
+				pairing.support(pair);
 		}
 	}
-	private static void skipPaired(MatcherThread thread) {
-		while (!thread.queue.isEmpty() && (thread.byProbe[thread.queue.peek().probe] != null || thread.byCandidate[thread.queue.peek().candidate] != null))
-			support(thread, thread.queue.remove());
+	private void skipPaired(PairingGraph pairing) {
+		while (!queue.isEmpty() && (pairing.byProbe[queue.peek().probe] != null || pairing.byCandidate[queue.peek().candidate] != null))
+			pairing.support(queue.remove());
 	}
-	public static double tryRoot(MatcherThread thread, MinutiaPair root) {
-		thread.queue.add(root);
+	public void crawl(NeighborEdge[][] pedges, NeighborEdge[][] cedges, PairingGraph pairing, MinutiaPair root) {
+		queue.add(root);
 		do {
-			addPair(thread, thread.queue.remove());
-			collectEdges(thread);
-			skipPaired(thread);
-		} while (!thread.queue.isEmpty());
-		// https://sourceafis.machinezoo.com/transparency/pairing
-		thread.transparency.logPairing(thread.count, thread.tree, thread.support);
-		thread.score.compute(thread);
-		// https://sourceafis.machinezoo.com/transparency/score
-		thread.transparency.logScore(thread.score);
-		return thread.score.shapedScore;
-	}
-	public static void clearPairing(MatcherThread thread) {
-		for (int i = 0; i < thread.count; ++i) {
-			thread.byProbe[thread.tree[i].probe] = null;
-			thread.byCandidate[thread.tree[i].candidate] = null;
-			thread.release(thread.tree[i]);
-			thread.tree[i] = null;
-		}
-		thread.count = 0;
-		if (thread.reportSupport) {
-			for (MinutiaPair pair : thread.support)
-				thread.release(pair);
-			thread.support.clear();
-		}
+			pairing.addPair(queue.remove());
+			collectEdges(pedges, cedges, pairing);
+			skipPaired(pairing);
+		} while (!queue.isEmpty());
 	}
 }

@@ -6,16 +6,16 @@ import com.machinezoo.sourceafis.features.*;
 import com.machinezoo.sourceafis.templates.*;
 import it.unimi.dsi.fastutil.ints.*;
 
-public class ImmutableMatcher {
-	public static final ImmutableMatcher NULL = new ImmutableMatcher();
+public class ImmutableProbe {
+	public static final ImmutableProbe NULL = new ImmutableProbe();
 	public final ImmutableTemplate template;
-	public final Int2ObjectMap<List<IndexedEdge>> edgeHash;
-	private ImmutableMatcher() {
+	public final Int2ObjectMap<List<IndexedEdge>> hash;
+	private ImmutableProbe() {
 		template = ImmutableTemplate.EMPTY;
-		edgeHash = new Int2ObjectOpenHashMap<>();
+		hash = new Int2ObjectOpenHashMap<>();
 	}
-	public ImmutableMatcher(ImmutableTemplate template, Int2ObjectMap<List<IndexedEdge>> edgeHash) {
+	public ImmutableProbe(ImmutableTemplate template, Int2ObjectMap<List<IndexedEdge>> edgeHash) {
 		this.template = template;
-		this.edgeHash = edgeHash;
+		this.hash = edgeHash;
 	}
 }
