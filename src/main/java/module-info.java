@@ -35,5 +35,9 @@ module com.machinezoo.sourceafis {
 	/*
 	 * Serialization needs reflection access.
 	 */
-	opens com.machinezoo.sourceafis to com.fasterxml.jackson.databind, com.google.gson;
+	opens com.machinezoo.sourceafis.templates to com.fasterxml.jackson.databind, com.google.gson;
+	opens com.machinezoo.sourceafis.primitives to com.fasterxml.jackson.databind, com.google.gson;
+	opens com.machinezoo.sourceafis.features to com.fasterxml.jackson.databind, com.google.gson;
+	opens com.machinezoo.sourceafis.transparency to com.fasterxml.jackson.databind;
+	opens com.machinezoo.sourceafis.matcher to com.fasterxml.jackson.databind;
 }

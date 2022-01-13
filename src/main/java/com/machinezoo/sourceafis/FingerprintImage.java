@@ -3,6 +3,9 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 import javax.imageio.*;
+import com.machinezoo.sourceafis.configuration.*;
+import com.machinezoo.sourceafis.images.*;
+import com.machinezoo.sourceafis.primitives.*;
 
 /**
  * Pixels and metadata of the fingerprint image.
@@ -65,7 +68,7 @@ public class FingerprintImage {
 		if (options == null)
 			options = new FingerprintImageOptions();
 		dpi = options.dpi;
-		ImageDecoder.DecodedImage decoded = ImageDecoder.decodeAny(image);
+		DecodedImage decoded = ImageDecoder.decodeAny(image);
 		matrix = new DoubleMatrix(decoded.width, decoded.height);
 		for (int y = 0; y < decoded.height; ++y) {
 			for (int x = 0; x < decoded.width; ++x) {
@@ -198,7 +201,7 @@ public class FingerprintImage {
 	@Deprecated
 	public FingerprintImage decode(byte[] image) {
 		Objects.requireNonNull(image);
-		ImageDecoder.DecodedImage decoded = ImageDecoder.decodeAny(image);
+		DecodedImage decoded = ImageDecoder.decodeAny(image);
 		matrix = new DoubleMatrix(decoded.width, decoded.height);
 		for (int y = 0; y < decoded.height; ++y) {
 			for (int x = 0; x < decoded.width; ++x) {

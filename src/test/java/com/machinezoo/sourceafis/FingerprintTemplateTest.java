@@ -7,6 +7,10 @@ import java.io.*;
 import java.util.*;
 import javax.imageio.*;
 import org.junit.jupiter.api.*;
+import com.machinezoo.sourceafis.extractor.*;
+import com.machinezoo.sourceafis.features.*;
+import com.machinezoo.sourceafis.primitives.*;
+import com.machinezoo.sourceafis.templates.*;
 
 public class FingerprintTemplateTest {
 	public static FingerprintTemplate probe() {
@@ -60,7 +64,7 @@ public class FingerprintTemplateTest {
 		for (int i = 0; i < 10; ++i) {
 			DoubleMatrix clipped = clip(original, random.nextInt(clipY), random.nextInt(clipX), random.nextInt(clipY), random.nextInt(clipX));
 			double dpi = 500 + 2 * (random.nextDouble() - 0.5) * 200;
-			DoubleMatrix scaled = FeatureExtractor.scaleImage(clipped, 500 * 1 / (dpi / 500));
+			DoubleMatrix scaled = ImageResizer.resize(clipped, 500 * 1 / (dpi / 500));
 			byte[] reencoded = encodeImage(scaled);
 			FingerprintTemplate candidate = new FingerprintTemplate(
 				new FingerprintImage(reencoded, new FingerprintImageOptions()

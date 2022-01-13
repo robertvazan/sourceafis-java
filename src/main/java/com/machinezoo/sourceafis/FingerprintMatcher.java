@@ -2,7 +2,8 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import it.unimi.dsi.fastutil.ints.*;
+import com.machinezoo.sourceafis.matcher.*;
+import com.machinezoo.sourceafis.templates.*;
 
 /**
  * Fingerprint template representation optimized for fast 1:N matching.
@@ -55,7 +56,7 @@ public class FingerprintMatcher {
 	public FingerprintMatcher(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
-		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
+		immutable = new ImmutableMatcher(template, EdgeHash.build(template));
 	}
 	/**
 	 * @deprecated Use {@link #FingerprintMatcher(FingerprintTemplate)} constructor to fully initialize the matcher.
@@ -93,42 +94,8 @@ public class FingerprintMatcher {
 	public FingerprintMatcher index(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
-		immutable = new ImmutableMatcher(template, buildEdgeHash(template));
+		immutable = new ImmutableMatcher(template, EdgeHash.build(template));
 		return this;
-	}
-	private Int2ObjectMap<List<IndexedEdge>> buildEdgeHash(ImmutableTemplate template) {
-		Int2ObjectMap<List<IndexedEdge>> map = new Int2ObjectOpenHashMap<>();
-		for (int reference = 0; reference < template.minutiae.length; ++reference)
-			for (int neighbor = 0; neighbor < template.minutiae.length; ++neighbor)
-				if (reference != neighbor) {
-					IndexedEdge edge = new IndexedEdge(template.minutiae, reference, neighbor);
-					for (int hash : shapeCoverage(edge)) {
-						List<IndexedEdge> list = map.get(hash);
-						if (list == null)
-							map.put(hash, list = new ArrayList<>());
-						list.add(edge);
-					}
-				}
-		// https://sourceafis.machinezoo.com/transparency/edge-hash
-		FingerprintTransparency.current().logEdgeHash(map);
-		return map;
-	}
-	private List<Integer> shapeCoverage(EdgeShape edge) {
-		int minLengthBin = (edge.length - Parameters.MAX_DISTANCE_ERROR) / Parameters.MAX_DISTANCE_ERROR;
-		int maxLengthBin = (edge.length + Parameters.MAX_DISTANCE_ERROR) / Parameters.MAX_DISTANCE_ERROR;
-		int angleBins = (int)Math.ceil(2 * Math.PI / Parameters.MAX_ANGLE_ERROR);
-		int minReferenceBin = (int)(DoubleAngle.difference(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
-		int maxReferenceBin = (int)(DoubleAngle.add(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
-		int endReferenceBin = (maxReferenceBin + 1) % angleBins;
-		int minNeighborBin = (int)(DoubleAngle.difference(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
-		int maxNeighborBin = (int)(DoubleAngle.add(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
-		int endNeighborBin = (maxNeighborBin + 1) % angleBins;
-		List<Integer> coverage = new ArrayList<>();
-		for (int lengthBin = minLengthBin; lengthBin <= maxLengthBin; ++lengthBin)
-			for (int referenceBin = minReferenceBin; referenceBin != endReferenceBin; referenceBin = (referenceBin + 1) % angleBins)
-				for (int neighborBin = minNeighborBin; neighborBin != endNeighborBin; neighborBin = (neighborBin + 1) % angleBins)
-					coverage.add((referenceBin << 24) + (neighborBin << 16) + lengthBin);
-		return coverage;
 	}
 	/**
 	 * Matches candidate fingerprint to probe fingerprint and calculates similarity score.

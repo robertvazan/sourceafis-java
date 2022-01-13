@@ -5,7 +5,7 @@ import java.io.*;
 import org.apache.commons.io.*;
 import com.machinezoo.noexception.*;
 
-class TestResources {
+public class TestResources {
 	private static byte[] load(String name) {
 		return Exceptions.sneak().get(() -> {
 			try (InputStream input = TestResources.class.getResourceAsStream(name)) {
