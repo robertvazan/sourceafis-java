@@ -9,7 +9,10 @@ module com.machinezoo.sourceafis {
 	 * We only need ImageIO from the whole desktop module.
 	 */
 	requires java.desktop;
-	requires com.machinezoo.noexception;
+	/*
+	 * Transitivity only needed for CloseableScope. Should be removed once CloseableScope gets its own library.
+	 */
+	requires transitive com.machinezoo.noexception;
 	/*
 	 * Transitive, because we are using FingerprintIO types in the API.
 	 * It's just TemplateFormat at the moment, but it could be expanded with foreign template options in the future.

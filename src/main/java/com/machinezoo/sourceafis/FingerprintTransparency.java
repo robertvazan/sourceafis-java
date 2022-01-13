@@ -5,6 +5,7 @@ import java.io.*;
 import java.nio.*;
 import java.util.*;
 import java.util.function.*;
+import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.configuration.*;
 import com.machinezoo.sourceafis.transparency.*;
 
@@ -25,7 +26,7 @@ import com.machinezoo.sourceafis.transparency.*;
  *
  * @see <a href="https://sourceafis.machinezoo.com/transparency/">Algorithm transparency in SourceAFIS</a>
  */
-public abstract class FingerprintTransparency implements AutoCloseable {
+public abstract class FingerprintTransparency implements CloseableScope {
 	/*
 	 * API roadmap:
 	 * - log()
@@ -168,9 +169,6 @@ public abstract class FingerprintTransparency implements AutoCloseable {
 	 * Subclasses can override this method to perform cleanup.
 	 * Default implementation of this method performs deactivation.
 	 * It must be called by overriding methods for deactivation to work correctly.
-	 * <p>
-	 * This method does not declare any checked exceptions in order to spare callers of mandatory exception handling.
-	 * If your code needs to throw a checked exception, wrap it in an unchecked exception.
 	 * 
 	 * @see #FingerprintTransparency()
 	 */
