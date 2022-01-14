@@ -9,6 +9,7 @@ module com.machinezoo.sourceafis {
 	 * We only need ImageIO from the whole desktop module.
 	 */
 	requires java.desktop;
+	requires com.machinezoo.stagean;
 	/*
 	 * Transitivity only needed for CloseableScope. Should be removed once CloseableScope gets its own library.
 	 */

@@ -44,6 +44,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.machinezoo.stagean</groupId>
+			<artifactId>stagean</artifactId>
+			<version>1.2.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.machinezoo.fingerprintio</groupId>
 			<artifactId>fingerprintio</artifactId>
 			<version>1.2.0</version>

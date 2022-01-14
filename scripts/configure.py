@@ -18,6 +18,7 @@ pom_description = lambda: 'Fingerprint recognition engine that takes a pair of h
 inception_year = lambda: 2009
 homepage = lambda: website() + 'java'
 jdk_version = lambda: 11
+stagean_annotations = lambda: True
 
 def dependencies():
     use('com.machinezoo.fingerprintio:fingerprintio:1.2.0')

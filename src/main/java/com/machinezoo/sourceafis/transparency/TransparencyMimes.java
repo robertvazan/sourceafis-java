@@ -1,6 +1,9 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis.transparency;
 
+import com.machinezoo.stagean.*;
+
+@DraftCode("Use some existing MIME library.")
 public class TransparencyMimes {
 	/*
 	 * Specifying MIME type of the data allows construction of generic transparency data consumers.
