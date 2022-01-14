@@ -3,9 +3,9 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 import javax.imageio.*;
-import com.machinezoo.sourceafis.configuration.*;
-import com.machinezoo.sourceafis.images.*;
-import com.machinezoo.sourceafis.primitives.*;
+import com.machinezoo.sourceafis.engine.configuration.*;
+import com.machinezoo.sourceafis.engine.images.*;
+import com.machinezoo.sourceafis.engine.primitives.*;
 
 /**
  * Pixels and metadata of the fingerprint image.

@@ -5,7 +5,7 @@ import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.*;
-import com.machinezoo.sourceafis.primitives.*;
+import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class FingerprintImageTest {
 	@Test

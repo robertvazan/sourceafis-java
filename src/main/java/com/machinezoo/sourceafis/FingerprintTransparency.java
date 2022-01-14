@@ -6,8 +6,8 @@ import java.nio.*;
 import java.util.*;
 import java.util.function.*;
 import com.machinezoo.noexception.*;
-import com.machinezoo.sourceafis.configuration.*;
-import com.machinezoo.sourceafis.transparency.*;
+import com.machinezoo.sourceafis.engine.configuration.*;
+import com.machinezoo.sourceafis.engine.transparency.*;
 
 /**
  * Algorithm transparency API that can capture all intermediate data structures produced by SourceAFIS algorithm.

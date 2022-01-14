@@ -6,8 +6,8 @@ import java.nio.charset.*;
 import java.util.*;
 import org.slf4j.*;
 import com.machinezoo.fingerprintio.*;
-import com.machinezoo.sourceafis.configuration.*;
-import com.machinezoo.sourceafis.templates.*;
+import com.machinezoo.sourceafis.engine.configuration.*;
+import com.machinezoo.sourceafis.engine.templates.*;
 
 /**
  * Collection of methods for export and import of foreign fingerprint template formats.

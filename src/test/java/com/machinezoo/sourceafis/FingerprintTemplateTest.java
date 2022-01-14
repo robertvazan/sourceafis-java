@@ -7,10 +7,10 @@ import java.io.*;
 import java.util.*;
 import javax.imageio.*;
 import org.junit.jupiter.api.*;
-import com.machinezoo.sourceafis.extractor.*;
-import com.machinezoo.sourceafis.features.*;
-import com.machinezoo.sourceafis.primitives.*;
-import com.machinezoo.sourceafis.templates.*;
+import com.machinezoo.sourceafis.engine.extractor.*;
+import com.machinezoo.sourceafis.engine.features.*;
+import com.machinezoo.sourceafis.engine.primitives.*;
+import com.machinezoo.sourceafis.engine.templates.*;
 
 public class FingerprintTemplateTest {
 	public static FingerprintTemplate probe() {

@@ -2,8 +2,8 @@
 package com.machinezoo.sourceafis;
 
 import java.util.*;
-import com.machinezoo.sourceafis.matcher.*;
-import com.machinezoo.sourceafis.templates.*;
+import com.machinezoo.sourceafis.engine.matcher.*;
+import com.machinezoo.sourceafis.engine.templates.*;
 
 /**
  * Fingerprint template representation optimized for fast 1:N matching.

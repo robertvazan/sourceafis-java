@@ -11,9 +11,9 @@ import com.fasterxml.jackson.dataformat.cbor.*;
 import com.google.gson.*;
 import com.machinezoo.fingerprintio.*;
 import com.machinezoo.noexception.*;
-import com.machinezoo.sourceafis.configuration.*;
-import com.machinezoo.sourceafis.extractor.*;
-import com.machinezoo.sourceafis.templates.*;
+import com.machinezoo.sourceafis.engine.configuration.*;
+import com.machinezoo.sourceafis.engine.extractor.*;
+import com.machinezoo.sourceafis.engine.templates.*;
 
 /**
  * Biometric description of a fingerprint suitable for efficient matching.
