@@ -55,6 +55,16 @@ public class MatcherEngine {
 				}
 				pairing.clear();
 			}
+			if (best >= 0) {
+				pairing.supportEnabled = transparency.acceptsBestPairing();
+				spider.crawl(probe.template.edges, candidate.edges, pairing, roots.pairs[best]);
+				// https://sourceafis.machinezoo.com/transparency/pairing
+				transparency.logBestPairing(pairing);
+				scoring.compute(probe, candidate, pairing);
+				// https://sourceafis.machinezoo.com/transparency/score
+				transparency.logBestScore(scoring);
+				pairing.clear();
+			}
 			// https://sourceafis.machinezoo.com/transparency/best-match
 			transparency.logBestMatch(best);
 			return high;

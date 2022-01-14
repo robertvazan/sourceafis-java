@@ -104,13 +104,17 @@ public class TransparencySink implements CloseableScope {
 	private volatile boolean matcherOffered;
 	private volatile boolean acceptsRootPairs;
 	private volatile boolean acceptsPairing;
+	private volatile boolean acceptsBestPairing;
 	private volatile boolean acceptsScore;
+	private volatile boolean acceptsBestScore;
 	private volatile boolean acceptsBestMatch;
 	private void offerMatcher() {
 		if (!matcherOffered) {
 			acceptsRootPairs = transparency.accepts("root-pairs");
 			acceptsPairing = transparency.accepts("pairing");
+			acceptsBestPairing = transparency.accepts("best-pairing");
 			acceptsScore = transparency.accepts("score");
+			acceptsBestScore = transparency.accepts("best-score");
 			acceptsBestMatch = transparency.accepts("best-match");
 			matcherOffered = true;
 		}
@@ -128,17 +132,31 @@ public class TransparencySink implements CloseableScope {
 		offerMatcher();
 		return acceptsPairing;
 	}
+	public boolean acceptsBestPairing() {
+		offerMatcher();
+		return acceptsBestPairing;
+	}
 	// https://sourceafis.machinezoo.com/transparency/pairing
 	public void logPairing(PairingGraph pairing) {
 		offerMatcher();
 		if (acceptsPairing)
 			log("pairing", new ConsistentPairingGraph(pairing));
 	}
+	public void logBestPairing(PairingGraph pairing) {
+		offerMatcher();
+		if (acceptsBestPairing)
+			log("best-pairing", new ConsistentPairingGraph(pairing));
+	}
 	// https://sourceafis.machinezoo.com/transparency/score
 	public void logScore(Scoring score) {
 		offerMatcher();
 		if (acceptsScore)
 			log("score", score);
+	}
+	public void logBestScore(Scoring score) {
+		offerMatcher();
+		if (acceptsBestScore)
+			log("best-score", score);
 	}
 	// https://sourceafis.machinezoo.com/transparency/best-match
 	public void logBestMatch(int nth) {
