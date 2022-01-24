@@ -37,7 +37,7 @@ public class MatcherEngine {
 			 */
 			pairing.supportEnabled = transparency.acceptsPairing();
 			roots.enumerate(probe, candidate);
-			// https://sourceafis.machinezoo.com/transparency/root-pairs
+			// https://sourceafis.machinezoo.com/transparency/roots
 			transparency.logRootPairs(roots.count, roots.pairs);
 			double high = 0;
 			int best = -1;

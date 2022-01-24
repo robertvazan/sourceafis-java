@@ -110,7 +110,7 @@ public class TransparencySink implements CloseableScope {
 	private volatile boolean acceptsBestMatch;
 	private void offerMatcher() {
 		if (!matcherOffered) {
-			acceptsRootPairs = transparency.accepts("root-pairs");
+			acceptsRootPairs = transparency.accepts("roots");
 			acceptsPairing = transparency.accepts("pairing");
 			acceptsBestPairing = transparency.accepts("best-pairing");
 			acceptsScore = transparency.accepts("score");
