@@ -65,6 +65,8 @@ public class MatcherEngine {
 				transparency.logBestScore(scoring);
 				pairing.clear();
 			}
+			for (int i = 0; i < roots.count; ++i)
+				pool.release(roots.pairs[i]);
 			// https://sourceafis.machinezoo.com/transparency/best-match
 			transparency.logBestMatch(best);
 			return high;

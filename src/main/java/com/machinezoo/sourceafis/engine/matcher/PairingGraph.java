@@ -48,7 +48,13 @@ public class PairingGraph {
 		for (int i = 0; i < count; ++i) {
 			byProbe[tree[i].probe] = null;
 			byCandidate[tree[i].candidate] = null;
-			pool.release(tree[i]);
+			/*
+			 * Don't release root, just reset its supporting edge count.
+			 */
+			if (i > 0)
+				pool.release(tree[i]);
+			else
+				tree[0].supportingEdges = 0;
 			tree[i] = null;
 		}
 		count = 0;
