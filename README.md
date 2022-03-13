@@ -5,6 +5,8 @@
 [![Build status](https://github.com/robertvazan/sourceafis-java/workflows/build/badge.svg)](https://github.com/robertvazan/sourceafis-java/actions/workflows/build.yml)
 [![Test coverage](https://codecov.io/gh/robertvazan/sourceafis-java/branch/master/graph/badge.svg)](https://codecov.io/gh/robertvazan/sourceafis-java)
 
+[![SWUbanner](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md)
+
 SourceAFIS for Java is a pure Java port of [SourceAFIS](https://sourceafis.machinezoo.com/),
 an algorithm for recognition of human fingerprints.
 It can compare two fingerprints 1:1 or search a large database 1:N for matching fingerprint.
