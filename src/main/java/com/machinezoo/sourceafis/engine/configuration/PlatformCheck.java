@@ -31,8 +31,8 @@ public class PlatformCheck {
 			 * Parsing will not throw, because we constrain the version to [0-9]{1,k} in the regex.
 			 */
 			int major = Integer.parseInt(matcher.group(1));
-			if (major < 8)
-				throw new RuntimeException("SourceAFIS requires Java 8 or higher. Currently running JRE " + version + ".");
+			if (major < 11)
+				throw new RuntimeException("SourceAFIS requires Java 11 or higher. Currently running JRE " + version + ".");
 		}
 	}
 	/*
