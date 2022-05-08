@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
 import com.machinezoo.fingerprintio.iso19794p2v2011.*;
+import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
@@ -18,8 +19,8 @@ class Iso19794p2v2011Codec extends TemplateCodec {
 		return iotemplate.toByteArray();
 	}
 	@Override
-	public List<MutableTemplate> decode(byte[] serialized, boolean strict) {
-		Iso19794p2v2011Template iotemplate = new Iso19794p2v2011Template(serialized, strict);
+	public List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler) {
+		Iso19794p2v2011Template iotemplate = new Iso19794p2v2011Template(serialized, handler);
 		return iotemplate.fingerprints.stream()
 			.map(fp -> decode(fp))
 			.collect(toList());

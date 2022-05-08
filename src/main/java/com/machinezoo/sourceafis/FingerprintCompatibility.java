@@ -4,8 +4,8 @@ package com.machinezoo.sourceafis;
 import static java.util.stream.Collectors.*;
 import java.nio.charset.*;
 import java.util.*;
-import org.slf4j.*;
 import com.machinezoo.fingerprintio.*;
+import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.engine.configuration.*;
 import com.machinezoo.sourceafis.engine.templates.*;
 
@@ -34,7 +34,6 @@ public class FingerprintCompatibility {
 	static {
 		PlatformCheck.run();
 	}
-	private static final Logger logger = LoggerFactory.getLogger(FingerprintCompatibility.class);
 	private FingerprintCompatibility() {
 	}
 	private static String version = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
@@ -49,6 +48,69 @@ public class FingerprintCompatibility {
 		return version;
 	}
 	/**
+	 * Validates and then converts non-native fingerprint template to a list of native SourceAFIS templates.
+	 * Several native templates can be returned for one non-native template,
+	 * because many non-native template formats can contain multiple fingerprints
+	 * while native SourceAFIS templates always contain one fingerprint.
+	 * <p>
+	 * This method accepts <a href="https://templates.machinezoo.com/">publicly documented</a> template formats
+	 * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> library,
+	 * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
+	 * <p>
+	 * Recoverable parsing exceptions are passed to the provided exception handler.
+	 * Use {@link Exceptions#silence()} for permissive parsing and {@link Exceptions#propagate()} for strict parsing.
+	 * The former is equivalent to calling {@link #importTemplates(byte[])}.
+	 * <p>
+	 * If you just need to deserialize native SourceAFIS template,
+	 * call {@link FingerprintTemplate#FingerprintTemplate(byte[])} instead.
+	 * To create template from fingerprint image,
+	 * call {@link FingerprintTemplate#FingerprintTemplate(FingerprintImage)}.
+	 * 
+	 * @param template
+	 *            non-native template in one of the supported formats
+	 * @param handler
+	 *            exception handler for recoverable parsing exceptions
+	 * @return native templates containing fingerprints from the non-native template
+	 * @throws NullPointerException
+	 *             if {@code template} is {@code null}
+	 * @throws TemplateFormatException
+	 *             if {@code template} is in an unsupported format or it is corrupted
+	 *
+	 * @see #importTemplates(byte[])
+	 * @see #importTemplate(byte[])
+	 * @see #exportTemplates(TemplateFormat, FingerprintTemplate...)
+	 * @see <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>
+	 */
+	public static List<FingerprintTemplate> importTemplates(byte[] template, ExceptionHandler handler) {
+		Objects.requireNonNull(template);
+		try {
+			TemplateFormat format = TemplateFormat.identify(template);
+			if (format == null || !TemplateCodec.ALL.containsKey(format))
+				throw new TemplateFormatException("Unsupported template format.");
+			return TemplateCodec.ALL.get(format).decode(template, handler).stream()
+				.map(fp -> new FingerprintTemplate(new ImmutableTemplate(fp)))
+				.collect(toList());
+		} catch (Throwable ex) {
+			/*
+			 * If it's none of the known foreign formats, try our own native format
+			 * in case native template gets here by accident.
+			 */
+			try {
+				/*
+				 * Pass false to FingerprintTemplate constructor to prevent infinite recursion
+				 * between FingerprintTemplate and FingerprintCompatibility.
+				 */
+				new FingerprintTemplate(template, false);
+			} catch (Throwable ex2) {
+				/*
+				 * It's not a native template. Throw the original exception.
+				 */
+				throw ex;
+			}
+			throw new TemplateFormatException("Use FingerprintTemplate constructor to parse native templates.");
+		}
+	}
+	/**
 	 * Converts non-native fingerprint template to a list of native SourceAFIS templates.
 	 * Several native templates can be returned for one non-native template,
 	 * because many non-native template formats can contain multiple fingerprints
@@ -57,6 +119,9 @@ public class FingerprintCompatibility {
 	 * This method accepts <a href="https://templates.machinezoo.com/">publicly documented</a> template formats
 	 * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> library,
 	 * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
+	 * <p>
+	 * Template is parsed permissively. Recoverable errors are ignored.
+	 * To customize error handling, call {@link #importTemplates(byte[], ExceptionHandler)}.
 	 * <p>
 	 * If you just need to deserialize native SourceAFIS template,
 	 * call {@link FingerprintTemplate#FingerprintTemplate(byte[])} instead.
@@ -71,52 +136,25 @@ public class FingerprintCompatibility {
 	 * @throws TemplateFormatException
 	 *             if {@code template} is in an unsupported format or it is corrupted
 	 *
+	 * @see #importTemplates(byte[], ExceptionHandler)
 	 * @see #importTemplate(byte[])
 	 * @see #exportTemplates(TemplateFormat, FingerprintTemplate...)
 	 * @see <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a>
 	 */
 	public static List<FingerprintTemplate> importTemplates(byte[] template) {
-		Objects.requireNonNull(template);
-		try {
-			TemplateFormat format = TemplateFormat.identify(template);
-			if (format == null || !TemplateCodec.ALL.containsKey(format))
-				throw new TemplateFormatException("Unsupported template format.");
-			return TemplateCodec.ALL.get(format).decode(template).stream()
-				.map(fp -> new FingerprintTemplate(new ImmutableTemplate(fp)))
-				.collect(toList());
-		} catch (Throwable ex) {
-			/*
-			 * If it's none of the known foreign formats, try our own native format
-			 * in case native template gets here by accident.
-			 */
-			try {
-				/*
-				 * Pass false to FingerprintTemplate constructor to prevent infinite recursion
-				 * of mutual fallbacks between FingerprintTemplate and FingerprintCompatibility.
-				 */
-				List<FingerprintTemplate> deserialized = Arrays.asList(new FingerprintTemplate(template, false));
-				/*
-				 * It is an error to pass native template here, so at least log a warning.
-				 */
-				logger.warn("Native SourceAFIS template was passed to importTemplate() or importTemplates() in FingerprintCompatibility. " +
-					"It was accepted, but FingerprintTemplate constructor should be used instead.");
-				return deserialized;
-			} catch (Throwable ex2) {
-				/*
-				 * Throw the original exception. We don't want to hide it with exception from this fallback.
-				 */
-				throw ex;
-			}
-		}
+		return importTemplates(template, Exceptions.silence());
 	}
 	/**
 	 * Converts non-native fingerprint template to native SourceAFIS template.
-	 * This is a convenience wrapper around {@link #importTemplates(byte[])}
-	 * that returns the first fingerprint in the template or throws if there are none.
+	 * Single non-native template may contain multiple fingerprints. This method returns the first one.
+	 * Call {@link #importTemplates(byte[])} to convert all fingerprints in the template.
 	 * <p>
 	 * This method accepts <a href="https://templates.machinezoo.com/">publicly documented</a> template formats
 	 * implemented in <a href="https://fingerprintio.machinezoo.com/">FingerprintIO</a> library,
 	 * specifically ANSI 378 (2004, 2009, and 2009/Am1) and ISO 19794-2 (2005 and 2011 off-card variants).
+	 * <p>
+	 * Template is parsed permissively. Recoverable errors are ignored.
+	 * To customize error handling, call {@link #importTemplates(byte[], ExceptionHandler)}.
 	 * <p>
 	 * If you just need to deserialize native SourceAFIS template,
 	 * call {@link FingerprintTemplate#FingerprintTemplate(byte[])} instead.
@@ -142,7 +180,7 @@ public class FingerprintCompatibility {
 		Objects.requireNonNull(template);
 		return importTemplates(template).stream()
 			.findFirst()
-			.orElseThrow(() -> new IllegalArgumentException("No fingerprints found in the template"));
+			.orElseThrow(() -> new IllegalArgumentException("No fingerprints found in the template."));
 	}
 	/**
 	 * Converts one or more native templates to non-native template format.

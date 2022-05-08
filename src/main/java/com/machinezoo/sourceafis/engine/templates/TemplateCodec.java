@@ -3,17 +3,11 @@ package com.machinezoo.sourceafis.engine.templates;
 
 import java.util.*;
 import com.machinezoo.fingerprintio.*;
+import com.machinezoo.noexception.*;
 
 public abstract class TemplateCodec {
 	public abstract byte[] encode(List<MutableTemplate> templates);
-	public abstract List<MutableTemplate> decode(byte[] serialized, boolean strict);
-	public List<MutableTemplate> decode(byte[] serialized) {
-		try {
-			return decode(serialized, true);
-		} catch (Throwable ex) {
-			return decode(serialized, false);
-		}
-	}
+	public abstract List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler);
 	public static final Map<TemplateFormat, TemplateCodec> ALL = new HashMap<>();
 	static {
 		ALL.put(TemplateFormat.ANSI_378_2004, new Ansi378v2004Codec());

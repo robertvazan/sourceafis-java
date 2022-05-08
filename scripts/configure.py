@@ -21,7 +21,7 @@ jdk_version = lambda: 11
 stagean_annotations = lambda: True
 
 def dependencies():
-    use('com.machinezoo.fingerprintio:fingerprintio:1.2.0')
+    use('com.machinezoo.fingerprintio:fingerprintio:1.3.0')
     use_fastutil()
     use_commons_io()
     use_gson()
@@ -29,9 +29,10 @@ def dependencies():
     use('com.github.mhshams:jnbis:2.1.1')
     use_junit()
     use_hamcrest()
-    use_slf4j_test()
 
 javadoc_links = lambda: [
+    *standard_javadoc_links(),
+    'https://noexception.machinezoo.com/javadoc/',
     'https://fingerprintio.machinezoo.com/javadoc/'
 ]
 

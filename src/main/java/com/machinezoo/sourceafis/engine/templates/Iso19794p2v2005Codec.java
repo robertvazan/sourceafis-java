@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
 import com.machinezoo.fingerprintio.iso19794p2v2005.*;
+import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
@@ -23,8 +24,8 @@ class Iso19794p2v2005Codec extends TemplateCodec {
 		return iotemplate.toByteArray();
 	}
 	@Override
-	public List<MutableTemplate> decode(byte[] serialized, boolean strict) {
-		Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template(serialized, strict);
+	public List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler) {
+		Iso19794p2v2005Template iotemplate = new Iso19794p2v2005Template(serialized, handler);
 		TemplateResolution resolution = new TemplateResolution();
 		resolution.dpiX = iotemplate.resolutionX * 2.54;
 		resolution.dpiY = iotemplate.resolutionY * 2.54;

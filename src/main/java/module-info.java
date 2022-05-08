@@ -11,7 +11,7 @@ module com.machinezoo.sourceafis {
 	requires java.desktop;
 	requires com.machinezoo.stagean;
 	/*
-	 * Transitivity only needed for CloseableScope. Should be removed once CloseableScope gets its own library.
+	 * Transitive, because we expose ExceptionHandler in the API.
 	 */
 	requires transitive com.machinezoo.noexception;
 	/*
@@ -19,10 +19,6 @@ module com.machinezoo.sourceafis {
 	 * It's just TemplateFormat at the moment, but it could be expanded with foreign template options in the future.
 	 */
 	requires transitive com.machinezoo.fingerprintio;
-	/*
-	 * SLF4J is pulled in transitively via noexception, but the transitive dependency will be removed in future versions of noexception.
-	 */
-	requires org.slf4j;
 	/*
 	 * Needed for setVisibility(PropertyAccessor.FIELD, Visibility.ANY).
 	 */

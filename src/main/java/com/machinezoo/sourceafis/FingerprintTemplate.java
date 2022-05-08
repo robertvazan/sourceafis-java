@@ -3,7 +3,6 @@ package com.machinezoo.sourceafis;
 
 import java.util.*;
 import javax.imageio.*;
-import org.slf4j.*;
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.*;
 import com.fasterxml.jackson.databind.*;
@@ -82,7 +81,6 @@ public class FingerprintTemplate {
 	 * and FingerprintTemplate itself becomes immutable.
 	 */
 	volatile ImmutableTemplate immutable = ImmutableTemplate.EMPTY;
-	private static final Logger logger = LoggerFactory.getLogger(FingerprintTemplate.class);
 	/**
 	 * Creates fingerprint template from fingerprint image.
 	 * <p>
@@ -110,7 +108,7 @@ public class FingerprintTemplate {
 	 *            serialized fingerprint template in <a href="https://cbor.io/">CBOR</a> format produced by {@link #toByteArray()}
 	 * @throws NullPointerException
 	 *             if {@code serialized} is {@code null}
-	 * @throws RuntimeException
+	 * @throws IllegalArgumentException
 	 *             if {@code serialized} is not in the correct format or it is corrupted
 	 * 
 	 * @see #toByteArray()
@@ -132,20 +130,18 @@ public class FingerprintTemplate {
 		} catch (Throwable ex) {
 			if (!foreignToo)
 				throw new IllegalArgumentException("This is not a valid SourceAFIS template.", ex);
+			/*
+			 * If it's not a native template, try foreign templates.
+			 */
 			try {
-				FingerprintTemplate converted = FingerprintCompatibility.importTemplate(serialized);
-				immutable = converted.immutable;
-				/*
-				 * It is an error to pass foreign template here, so at least log a warning.
-				 */
-				logger.warn("Template in non-native format was passed to FingerprintTemplate constructor. "
-					+ "It was accepted, but FingerprintCompatibility.importTemplate() should be used instead.");
+				FingerprintCompatibility.importTemplates(serialized, Exceptions.silence());
 			} catch (Throwable ex2) {
 				/*
-				 * Throw the original exception. We don't want to hide it with exception from this fallback.
+				 * Not a foreign template either. Throw the original exception.
 				 */
 				throw new IllegalArgumentException("This is not a valid SourceAFIS template.", ex);
 			}
+			throw new IllegalArgumentException("Use FingerprintCompatibility.importTemplate() to parse non-native template.");
 		}
 	}
 	/**

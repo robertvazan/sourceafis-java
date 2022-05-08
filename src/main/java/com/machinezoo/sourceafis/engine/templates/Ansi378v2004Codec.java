@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
 import com.machinezoo.fingerprintio.ansi378v2004.*;
+import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
@@ -23,8 +24,8 @@ class Ansi378v2004Codec extends TemplateCodec {
 		return iotemplate.toByteArray();
 	}
 	@Override
-	public List<MutableTemplate> decode(byte[] serialized, boolean strict) {
-		Ansi378v2004Template iotemplate = new Ansi378v2004Template(serialized, strict);
+	public List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler) {
+		Ansi378v2004Template iotemplate = new Ansi378v2004Template(serialized, handler);
 		TemplateResolution resolution = new TemplateResolution();
 		resolution.dpiX = iotemplate.resolutionX * 2.54;
 		resolution.dpiY = iotemplate.resolutionY * 2.54;

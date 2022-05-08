@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.*;
 import java.util.*;
 import java.util.stream.*;
 import com.machinezoo.fingerprintio.ansi378v2009am1.*;
+import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
@@ -18,8 +19,8 @@ class Ansi378v2009Am1Codec extends TemplateCodec {
 		return iotemplate.toByteArray();
 	}
 	@Override
-	public List<MutableTemplate> decode(byte[] serialized, boolean strict) {
-		return new Ansi378v2009Am1Template(serialized, strict).fingerprints.stream()
+	public List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler) {
+		return new Ansi378v2009Am1Template(serialized, handler).fingerprints.stream()
 			.map(fp -> decode(fp))
 			.collect(toList());
 	}
