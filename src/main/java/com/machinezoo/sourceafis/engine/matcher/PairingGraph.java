@@ -5,7 +5,7 @@ import java.util.*;
 import com.machinezoo.sourceafis.engine.templates.*;
 
 public class PairingGraph {
-	private final MinutiaPairPool pool;
+	public final MinutiaPairPool pool;
 	public int count;
 	public MinutiaPair[] tree = new MinutiaPair[1];
 	public MinutiaPair[] byProbe = new MinutiaPair[1];

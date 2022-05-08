@@ -148,12 +148,12 @@ public class TransparencySink implements CloseableScope {
 			log("best-pairing", new ConsistentPairingGraph(pairing));
 	}
 	// https://sourceafis.machinezoo.com/transparency/score
-	public void logScore(Scoring score) {
+	public void logScore(ScoringData score) {
 		offerMatcher();
 		if (acceptsScore)
 			log("score", score);
 	}
-	public void logBestScore(Scoring score) {
+	public void logBestScore(ScoringData score) {
 		offerMatcher();
 		if (acceptsBestScore)
 			log("best-score", score);

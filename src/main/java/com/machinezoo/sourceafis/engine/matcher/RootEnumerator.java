@@ -5,22 +5,12 @@ import java.util.*;
 import com.machinezoo.sourceafis.engine.configuration.*;
 import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.templates.*;
-import it.unimi.dsi.fastutil.ints.*;
 
 public class RootEnumerator {
-	private final MinutiaPairPool pool;
-	public int count;
-	public MinutiaPair[] pairs = new MinutiaPair[Parameters.MAX_TRIED_ROOTS];
-	private final IntSet duplicates = new IntOpenHashSet();
-	public RootEnumerator(MinutiaPairPool pool) {
-		this.pool = pool;
-	}
-	public void enumerate(ImmutableProbe probe, ImmutableTemplate candidate) {
+	public static void enumerate(ImmutableProbe probe, ImmutableTemplate candidate, RootList roots) {
 		var cminutiae = candidate.minutiae;
-		count = 0;
 		int lookups = 0;
 		int tried = 0;
-		duplicates.clear();
 		for (boolean shortEdges : new boolean[] { false, true }) {
 			for (int period = 1; period < cminutiae.length; ++period) {
 				for (int phase = 0; phase <= period; ++phase) {
@@ -33,12 +23,11 @@ public class RootEnumerator {
 								for (IndexedEdge match : matches) {
 									if (EdgeHash.matching(match, candidateEdge)) {
 										int duplicateKey = (match.reference << 16) | candidateReference;
-										if (duplicates.add(duplicateKey)) {
-											MinutiaPair pair = pool.allocate();
+										if (roots.duplicates.add(duplicateKey)) {
+											MinutiaPair pair = roots.pool.allocate();
 											pair.probe = match.reference;
 											pair.candidate = candidateReference;
-											pairs[count] = pair;
-											++count;
+											roots.add(pair);
 										}
 										++tried;
 										if (tried >= Parameters.MAX_TRIED_ROOTS)

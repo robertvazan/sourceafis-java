@@ -5,74 +5,56 @@ import com.machinezoo.sourceafis.engine.templates.*;
 import com.machinezoo.sourceafis.engine.transparency.*;
 
 public class MatcherEngine {
-	private static final ThreadLocal<MatcherEngine> threads = new ThreadLocal<MatcherEngine>() {
+	public static double match(ImmutableProbe probe, ImmutableTemplate candidate) {
 		/*
-		 * ThreadLocal has method withInitial() that is more convenient,
-		 * but that method alone would force whole SourceAFIS to require Android API level 26 instead of 24.
+		 * Thread-local storage is fairly fast, but it's still a hash lookup,
+		 * so do not access TransparencySink.current() repeatedly in tight loops.
 		 */
-		@Override
-		protected MatcherEngine initialValue() {
-			return new MatcherEngine();
-		}
-	};
-	public static MatcherEngine current() {
-		return threads.get();
-	}
-	private final MinutiaPairPool pool = new MinutiaPairPool();
-	private final RootEnumerator roots = new RootEnumerator(pool);
-	private final PairingGraph pairing = new PairingGraph(pool);
-	private final EdgeSpider spider = new EdgeSpider(pool);
-	private final Scoring scoring = new Scoring();
-	public double match(ImmutableProbe probe, ImmutableTemplate candidate) {
+		var transparency = TransparencySink.current();
+		var thread = MatcherThread.current();
 		try {
-			/*
-			 * Thread-local storage is fairly fast, but it's still a hash lookup,
-			 * so do not access TransparencySink.current() repeatedly in tight loops.
-			 */
-			var transparency = TransparencySink.current();
-			pairing.reserveProbe(probe);
-			pairing.reserveCandidate(candidate);
+			thread.pairing.reserveProbe(probe);
+			thread.pairing.reserveCandidate(candidate);
 			/*
 			 * Collection of support edges is very slow. It must be disabled on matcher level for it to have no performance impact.
 			 */
-			pairing.supportEnabled = transparency.acceptsPairing();
-			roots.enumerate(probe, candidate);
+			thread.pairing.supportEnabled = transparency.acceptsPairing();
+			RootEnumerator.enumerate(probe, candidate, thread.roots);
 			// https://sourceafis.machinezoo.com/transparency/roots
-			transparency.logRootPairs(roots.count, roots.pairs);
+			transparency.logRootPairs(thread.roots.count, thread.roots.pairs);
 			double high = 0;
 			int best = -1;
-			for (int i = 0; i < roots.count; ++i) {
-				spider.crawl(probe.template.edges, candidate.edges, pairing, roots.pairs[i]);
+			for (int i = 0; i < thread.roots.count; ++i) {
+				EdgeSpider.crawl(probe.template.edges, candidate.edges, thread.pairing, thread.roots.pairs[i], thread.queue);
 				// https://sourceafis.machinezoo.com/transparency/pairing
-				transparency.logPairing(pairing);
-				scoring.compute(probe, candidate, pairing);
+				transparency.logPairing(thread.pairing);
+				Scoring.compute(probe, candidate, thread.pairing, thread.score);
 				// https://sourceafis.machinezoo.com/transparency/score
-				transparency.logScore(scoring);
-				double partial = scoring.shapedScore;
+				transparency.logScore(thread.score);
+				double partial = thread.score.shapedScore;
 				if (best < 0 || partial > high) {
 					high = partial;
 					best = i;
 				}
-				pairing.clear();
+				thread.pairing.clear();
 			}
 			if (best >= 0) {
-				pairing.supportEnabled = transparency.acceptsBestPairing();
-				spider.crawl(probe.template.edges, candidate.edges, pairing, roots.pairs[best]);
+				thread.pairing.supportEnabled = transparency.acceptsBestPairing();
+				EdgeSpider.crawl(probe.template.edges, candidate.edges, thread.pairing, thread.roots.pairs[best], thread.queue);
 				// https://sourceafis.machinezoo.com/transparency/pairing
-				transparency.logBestPairing(pairing);
-				scoring.compute(probe, candidate, pairing);
+				transparency.logBestPairing(thread.pairing);
+				Scoring.compute(probe, candidate, thread.pairing, thread.score);
 				// https://sourceafis.machinezoo.com/transparency/score
-				transparency.logBestScore(scoring);
-				pairing.clear();
+				transparency.logBestScore(thread.score);
+				thread.pairing.clear();
 			}
-			for (int i = 0; i < roots.count; ++i)
-				pool.release(roots.pairs[i]);
+			thread.roots.discard();
 			// https://sourceafis.machinezoo.com/transparency/best-match
 			transparency.logBestMatch(best);
 			return high;
-		} catch (Throwable e) {
-			threads.remove();
-			throw e;
+		} catch (Throwable ex) {
+			MatcherThread.kill();
+			throw ex;
 		}
 	}
 }

@@ -7,12 +7,7 @@ import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class EdgeSpider {
-	private final MinutiaPairPool pool;
-	private final PriorityQueue<MinutiaPair> queue = new PriorityQueue<>(Comparator.comparing(p -> p.distance));
-	public EdgeSpider(MinutiaPairPool pool) {
-		this.pool = pool;
-	}
-	private List<MinutiaPair> matchPairs(NeighborEdge[] pstar, NeighborEdge[] cstar) {
+	private static List<MinutiaPair> matchPairs(NeighborEdge[] pstar, NeighborEdge[] cstar, MinutiaPairPool pool) {
 		double complementaryAngleError = DoubleAngle.complementary(Parameters.MAX_ANGLE_ERROR);
 		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
@@ -42,11 +37,11 @@ public class EdgeSpider {
 		}
 		return results;
 	}
-	private void collectEdges(NeighborEdge[][] pedges, NeighborEdge[][] cedges, PairingGraph pairing) {
+	private static void collectEdges(NeighborEdge[][] pedges, NeighborEdge[][] cedges, PairingGraph pairing, PriorityQueue<MinutiaPair> queue) {
 		MinutiaPair reference = pairing.tree[pairing.count - 1];
 		NeighborEdge[] pstar = pedges[reference.probe];
 		NeighborEdge[] cstar = cedges[reference.candidate];
-		for (MinutiaPair pair : matchPairs(pstar, cstar)) {
+		for (MinutiaPair pair : matchPairs(pstar, cstar, pairing.pool)) {
 			pair.probeRef = reference.probe;
 			pair.candidateRef = reference.candidate;
 			if (pairing.byCandidate[pair.candidate] == null && pairing.byProbe[pair.probe] == null)
@@ -55,16 +50,16 @@ public class EdgeSpider {
 				pairing.support(pair);
 		}
 	}
-	private void skipPaired(PairingGraph pairing) {
+	private static void skipPaired(PairingGraph pairing, PriorityQueue<MinutiaPair> queue) {
 		while (!queue.isEmpty() && (pairing.byProbe[queue.peek().probe] != null || pairing.byCandidate[queue.peek().candidate] != null))
 			pairing.support(queue.remove());
 	}
-	public void crawl(NeighborEdge[][] pedges, NeighborEdge[][] cedges, PairingGraph pairing, MinutiaPair root) {
+	public static void crawl(NeighborEdge[][] pedges, NeighborEdge[][] cedges, PairingGraph pairing, MinutiaPair root, PriorityQueue<MinutiaPair> queue) {
 		queue.add(root);
 		do {
 			pairing.addPair(queue.remove());
-			collectEdges(pedges, cedges, pairing);
-			skipPaired(pairing);
+			collectEdges(pedges, cedges, pairing, queue);
+			skipPaired(pairing, queue);
 		} while (!queue.isEmpty());
 	}
 }

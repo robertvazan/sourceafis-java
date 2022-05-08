@@ -122,6 +122,6 @@ public class FingerprintMatcher {
 	 */
 	public double match(FingerprintTemplate candidate) {
 		Objects.requireNonNull(candidate);
-		return MatcherEngine.current().match(immutable, candidate.immutable);
+		return MatcherEngine.match(immutable, candidate.immutable);
 	}
 }

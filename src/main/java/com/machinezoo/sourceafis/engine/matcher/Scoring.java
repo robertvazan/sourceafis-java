@@ -7,79 +7,58 @@ import com.machinezoo.sourceafis.engine.primitives.*;
 import com.machinezoo.sourceafis.engine.templates.*;
 
 public class Scoring {
-	public int minutiaCount;
-	public double minutiaScore;
-	public double minutiaFractionInProbe;
-	public double minutiaFractionInCandidate;
-	public double minutiaFraction;
-	public double minutiaFractionScore;
-	public int supportingEdgeSum;
-	public int edgeCount;
-	public double edgeScore;
-	public int supportedMinutiaCount;
-	public double supportedMinutiaScore;
-	public int minutiaTypeHits;
-	public double minutiaTypeScore;
-	public int distanceErrorSum;
-	public int distanceAccuracySum;
-	public double distanceAccuracyScore;
-	public double angleErrorSum;
-	public double angleAccuracySum;
-	public double angleAccuracyScore;
-	public double totalScore;
-	public double shapedScore;
-	public void compute(ImmutableProbe probe, ImmutableTemplate candidate, PairingGraph pairing) {
+	public static void compute(ImmutableProbe probe, ImmutableTemplate candidate, PairingGraph pairing, ScoringData score) {
 		var pminutiae = probe.template.minutiae;
 		var cminutiae = candidate.minutiae;
-		minutiaCount = pairing.count;
-		minutiaScore = Parameters.MINUTIA_SCORE * minutiaCount;
-		minutiaFractionInProbe = pairing.count / (double)pminutiae.length;
-		minutiaFractionInCandidate = pairing.count / (double)cminutiae.length;
-		minutiaFraction = 0.5 * (minutiaFractionInProbe + minutiaFractionInCandidate);
-		minutiaFractionScore = Parameters.MINUTIA_FRACTION_SCORE * minutiaFraction;
-		supportingEdgeSum = 0;
-		supportedMinutiaCount = 0;
-		minutiaTypeHits = 0;
+		score.minutiaCount = pairing.count;
+		score.minutiaScore = Parameters.MINUTIA_SCORE * score.minutiaCount;
+		score.minutiaFractionInProbe = pairing.count / (double)pminutiae.length;
+		score.minutiaFractionInCandidate = pairing.count / (double)cminutiae.length;
+		score.minutiaFraction = 0.5 * (score.minutiaFractionInProbe + score.minutiaFractionInCandidate);
+		score.minutiaFractionScore = Parameters.MINUTIA_FRACTION_SCORE * score.minutiaFraction;
+		score.supportingEdgeSum = 0;
+		score.supportedMinutiaCount = 0;
+		score.minutiaTypeHits = 0;
 		for (int i = 0; i < pairing.count; ++i) {
 			MinutiaPair pair = pairing.tree[i];
-			supportingEdgeSum += pair.supportingEdges;
+			score.supportingEdgeSum += pair.supportingEdges;
 			if (pair.supportingEdges >= Parameters.MIN_SUPPORTING_EDGES)
-				++supportedMinutiaCount;
+				++score.supportedMinutiaCount;
 			if (pminutiae[pair.probe].type == cminutiae[pair.candidate].type)
-				++minutiaTypeHits;
+				++score.minutiaTypeHits;
 		}
-		edgeCount = pairing.count + supportingEdgeSum;
-		edgeScore = Parameters.EDGE_SCORE * edgeCount;
-		supportedMinutiaScore = Parameters.SUPPORTED_MINUTIA_SCORE * supportedMinutiaCount;
-		minutiaTypeScore = Parameters.MINUTIA_TYPE_SCORE * minutiaTypeHits;
+		score.edgeCount = pairing.count + score.supportingEdgeSum;
+		score.edgeScore = Parameters.EDGE_SCORE * score.edgeCount;
+		score.supportedMinutiaScore = Parameters.SUPPORTED_MINUTIA_SCORE * score.supportedMinutiaCount;
+		score.minutiaTypeScore = Parameters.MINUTIA_TYPE_SCORE * score.minutiaTypeHits;
 		int innerDistanceRadius = (int)Math.round(Parameters.DISTANCE_ERROR_FLATNESS * Parameters.MAX_DISTANCE_ERROR);
 		double innerAngleRadius = Parameters.ANGLE_ERROR_FLATNESS * Parameters.MAX_ANGLE_ERROR;
-		distanceErrorSum = 0;
-		angleErrorSum = 0;
+		score.distanceErrorSum = 0;
+		score.angleErrorSum = 0;
 		for (int i = 1; i < pairing.count; ++i) {
 			MinutiaPair pair = pairing.tree[i];
 			EdgeShape probeEdge = new EdgeShape(pminutiae[pair.probeRef], pminutiae[pair.probe]);
 			EdgeShape candidateEdge = new EdgeShape(cminutiae[pair.candidateRef], cminutiae[pair.candidate]);
-			distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
-			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
-			angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
+			score.distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
+			score.angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
+			score.angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
-		distanceAccuracyScore = 0;
-		angleAccuracyScore = 0;
+		score.distanceAccuracyScore = 0;
+		score.angleAccuracyScore = 0;
 		int distanceErrorPotential = Parameters.MAX_DISTANCE_ERROR * Math.max(0, pairing.count - 1);
-		distanceAccuracySum = distanceErrorPotential - distanceErrorSum;
-		distanceAccuracyScore = Parameters.DISTANCE_ACCURACY_SCORE * (distanceErrorPotential > 0 ? distanceAccuracySum / (double)distanceErrorPotential : 0);
+		score.distanceAccuracySum = distanceErrorPotential - score.distanceErrorSum;
+		score.distanceAccuracyScore = Parameters.DISTANCE_ACCURACY_SCORE * (distanceErrorPotential > 0 ? score.distanceAccuracySum / (double)distanceErrorPotential : 0);
 		double angleErrorPotential = Parameters.MAX_ANGLE_ERROR * Math.max(0, pairing.count - 1) * 2;
-		angleAccuracySum = angleErrorPotential - angleErrorSum;
-		angleAccuracyScore = Parameters.ANGLE_ACCURACY_SCORE * (angleErrorPotential > 0 ? angleAccuracySum / angleErrorPotential : 0);
-		totalScore = minutiaScore
-			+ minutiaFractionScore
-			+ supportedMinutiaScore
-			+ edgeScore
-			+ minutiaTypeScore
-			+ distanceAccuracyScore
-			+ angleAccuracyScore;
-		shapedScore = shape(totalScore);
+		score.angleAccuracySum = angleErrorPotential - score.angleErrorSum;
+		score.angleAccuracyScore = Parameters.ANGLE_ACCURACY_SCORE * (angleErrorPotential > 0 ? score.angleAccuracySum / angleErrorPotential : 0);
+		score.totalScore = score.minutiaScore
+			+ score.minutiaFractionScore
+			+ score.supportedMinutiaScore
+			+ score.edgeScore
+			+ score.minutiaTypeScore
+			+ score.distanceAccuracyScore
+			+ score.angleAccuracyScore;
+		score.shapedScore = shape(score.totalScore);
 	}
 	private static double shape(double raw) {
 		if (raw < Parameters.THRESHOLD_FMR_MAX)
