@@ -3,7 +3,6 @@ package com.machinezoo.sourceafis.engine.configuration;
 
 public class Parameters {
 	public static final int BLOCK_SIZE = 15;
-	public static final double DPI_TOLERANCE = 5;
 	public static final int HISTOGRAM_DEPTH = 256;
 	public static final double CLIPPED_CONTRAST = 0.08;
 	public static final double MIN_ABSOLUTE_CONTRAST = 17 / 255.0;

@@ -5,6 +5,8 @@ import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class ImageResizer {
 	private static DoubleMatrix resize(DoubleMatrix input, int newWidth, int newHeight) {
+		if (newWidth == input.width && newHeight == input.height)
+			return input;
 		DoubleMatrix output = new DoubleMatrix(newWidth, newHeight);
 		double scaleX = newWidth / (double)input.width;
 		double scaleY = newHeight / (double)input.height;

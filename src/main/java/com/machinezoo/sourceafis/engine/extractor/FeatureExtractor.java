@@ -14,8 +14,7 @@ public class FeatureExtractor {
 		MutableTemplate template = new MutableTemplate();
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		TransparencySink.current().log("decoded-image", raw);
-		if (Math.abs(dpi - 500) > Parameters.DPI_TOLERANCE)
-			raw = ImageResizer.resize(raw, dpi);
+		raw = ImageResizer.resize(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
 		TransparencySink.current().log("scaled-image", raw);
 		template.size = raw.size();
