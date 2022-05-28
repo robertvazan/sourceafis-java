@@ -7,8 +7,8 @@ import com.machinezoo.sourceafis.engine.primitives.*;
 import com.machinezoo.sourceafis.engine.templates.*;
 
 public class Scoring {
-	public static void compute(ImmutableProbe probe, ImmutableTemplate candidate, PairingGraph pairing, ScoringData score) {
-		var pminutiae = probe.template.minutiae;
+	public static void compute(ImmutableTemplate probe, ImmutableTemplate candidate, PairingGraph pairing, ScoringData score) {
+		var pminutiae = probe.minutiae;
 		var cminutiae = candidate.minutiae;
 		score.minutiaCount = pairing.count;
 		score.minutiaScore = Parameters.MINUTIA_SCORE * score.minutiaCount;

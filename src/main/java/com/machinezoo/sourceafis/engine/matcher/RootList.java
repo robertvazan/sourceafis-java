@@ -7,7 +7,7 @@ import it.unimi.dsi.fastutil.ints.*;
 public class RootList {
 	public final MinutiaPairPool pool;
 	public int count;
-	public MinutiaPair[] pairs = new MinutiaPair[Parameters.MAX_TRIED_ROOTS];
+	public final MinutiaPair[] pairs = new MinutiaPair[Parameters.MAX_TRIED_ROOTS];
 	public final IntSet duplicates = new IntOpenHashSet();
 	public RootList(MinutiaPairPool pool) {
 		this.pool = pool;

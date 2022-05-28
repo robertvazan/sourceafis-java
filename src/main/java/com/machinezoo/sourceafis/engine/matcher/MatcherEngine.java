@@ -28,7 +28,7 @@ public class MatcherEngine {
 				EdgeSpider.crawl(probe.template.edges, candidate.edges, thread.pairing, thread.roots.pairs[i], thread.queue);
 				// https://sourceafis.machinezoo.com/transparency/pairing
 				transparency.logPairing(thread.pairing);
-				Scoring.compute(probe, candidate, thread.pairing, thread.score);
+				Scoring.compute(probe.template, candidate, thread.pairing, thread.score);
 				// https://sourceafis.machinezoo.com/transparency/score
 				transparency.logScore(thread.score);
 				double partial = thread.score.shapedScore;
@@ -43,7 +43,7 @@ public class MatcherEngine {
 				EdgeSpider.crawl(probe.template.edges, candidate.edges, thread.pairing, thread.roots.pairs[best], thread.queue);
 				// https://sourceafis.machinezoo.com/transparency/pairing
 				transparency.logBestPairing(thread.pairing);
-				Scoring.compute(probe, candidate, thread.pairing, thread.score);
+				Scoring.compute(probe.template, candidate, thread.pairing, thread.score);
 				// https://sourceafis.machinezoo.com/transparency/score
 				transparency.logBestScore(thread.score);
 				thread.pairing.clear();

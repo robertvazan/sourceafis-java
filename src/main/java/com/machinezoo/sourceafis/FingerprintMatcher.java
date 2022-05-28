@@ -56,7 +56,7 @@ public class FingerprintMatcher {
 	public FingerprintMatcher(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
-		immutable = new ImmutableProbe(template, EdgeHash.build(template));
+		immutable = new ImmutableProbe(template, EdgeHashes.build(template));
 	}
 	/**
 	 * @deprecated Use {@link #FingerprintMatcher(FingerprintTemplate)} constructor to fully initialize the matcher.
@@ -94,7 +94,7 @@ public class FingerprintMatcher {
 	public FingerprintMatcher index(FingerprintTemplate probe) {
 		Objects.requireNonNull(probe);
 		ImmutableTemplate template = probe.immutable;
-		immutable = new ImmutableProbe(template, EdgeHash.build(template));
+		immutable = new ImmutableProbe(template, EdgeHashes.build(template));
 		return this;
 	}
 	/**

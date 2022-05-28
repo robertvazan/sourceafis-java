@@ -24,7 +24,7 @@ public class OrientedSmoothing {
 		}
 		return result;
 	}
-	private static DoubleMatrix smoothRidges(DoubleMatrix input, DoubleMatrix orientation, BooleanMatrix mask, BlockMap blocks, double angle, IntPoint[][] lines) {
+	private static DoubleMatrix smooth(DoubleMatrix input, DoubleMatrix orientation, BooleanMatrix mask, BlockMap blocks, double angle, IntPoint[][] lines) {
 		DoubleMatrix output = new DoubleMatrix(input.size());
 		for (IntPoint block : blocks.primary.blocks) {
 			if (mask.get(block)) {
@@ -47,14 +47,14 @@ public class OrientedSmoothing {
 	}
 	public static DoubleMatrix parallel(DoubleMatrix input, DoubleMatrix orientation, BooleanMatrix mask, BlockMap blocks) {
 		var lines = lines(Parameters.PARALLEL_SMOOTHING_RESOLUTION, Parameters.PARALLEL_SMOOTHING_RADIUS, Parameters.PARALLEL_SMOOTHING_STEP);
-		var smoothed = smoothRidges(input, orientation, mask, blocks, 0, lines);
+		var smoothed = smooth(input, orientation, mask, blocks, 0, lines);
 		// https://sourceafis.machinezoo.com/transparency/parallel-smoothing
 		TransparencySink.current().log("parallel-smoothing", smoothed);
 		return smoothed;
 	}
 	public static DoubleMatrix orthogonal(DoubleMatrix input, DoubleMatrix orientation, BooleanMatrix mask, BlockMap blocks) {
 		var lines = lines(Parameters.ORTHOGONAL_SMOOTHING_RESOLUTION, Parameters.ORTHOGONAL_SMOOTHING_RADIUS, Parameters.ORTHOGONAL_SMOOTHING_STEP);
-		var smoothed = smoothRidges(input, orientation, mask, blocks, Math.PI, lines);
+		var smoothed = smooth(input, orientation, mask, blocks, Math.PI, lines);
 		// https://sourceafis.machinezoo.com/transparency/orthogonal-smoothing
 		TransparencySink.current().log("orthogonal-smoothing", smoothed);
 		return smoothed;

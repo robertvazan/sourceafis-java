@@ -10,7 +10,7 @@ public class PairingGraph {
 	public MinutiaPair[] tree = new MinutiaPair[1];
 	public MinutiaPair[] byProbe = new MinutiaPair[1];
 	public MinutiaPair[] byCandidate = new MinutiaPair[1];
-	public List<MinutiaPair> support = new ArrayList<>();
+	public final List<MinutiaPair> support = new ArrayList<>();
 	public boolean supportEnabled;
 	public PairingGraph(MinutiaPairPool pool) {
 		this.pool = pool;

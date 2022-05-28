@@ -9,7 +9,7 @@ import com.machinezoo.sourceafis.engine.templates.*;
 import com.machinezoo.sourceafis.engine.transparency.*;
 import it.unimi.dsi.fastutil.ints.*;
 
-public class EdgeHash {
+public class EdgeHashes {
 	public static int hash(EdgeShape edge) {
 		int lengthBin = edge.length / Parameters.MAX_DISTANCE_ERROR;
 		int referenceAngleBin = (int)(edge.referenceAngle / Parameters.MAX_ANGLE_ERROR);
