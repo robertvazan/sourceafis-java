@@ -20,14 +20,14 @@ public class EdgeSpider {
 				end = start;
 			while (end < pstar.length && pstar[end].length <= cedge.length + Parameters.MAX_DISTANCE_ERROR)
 				++end;
-			for (int probeIndex = start; probeIndex < end; ++probeIndex) {
-				NeighborEdge probeEdge = pstar[probeIndex];
-				double referenceDiff = DoubleAngle.difference(probeEdge.referenceAngle, cedge.referenceAngle);
-				if (referenceDiff <= Parameters.MAX_ANGLE_ERROR || referenceDiff >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
-					double neighborDiff = DoubleAngle.difference(probeEdge.neighborAngle, cedge.neighborAngle);
-					if (neighborDiff <= Parameters.MAX_ANGLE_ERROR || neighborDiff >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
+			for (int pindex = start; pindex < end; ++pindex) {
+				var pedge = pstar[pindex];
+				double rdiff = DoubleAngle.difference(pedge.referenceAngle, cedge.referenceAngle);
+				if (rdiff <= Parameters.MAX_ANGLE_ERROR || rdiff >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
+					double ndiff = DoubleAngle.difference(pedge.neighborAngle, cedge.neighborAngle);
+					if (ndiff <= Parameters.MAX_ANGLE_ERROR || ndiff >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
 						MinutiaPair pair = pool.allocate();
-						pair.probe = probeEdge.neighbor;
+						pair.probe = pedge.neighbor;
 						pair.candidate = cedge.neighbor;
 						pair.distance = cedge.length;
 						results.add(pair);

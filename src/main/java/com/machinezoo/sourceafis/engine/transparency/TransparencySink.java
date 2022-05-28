@@ -127,6 +127,7 @@ public class TransparencySink implements CloseableScope {
 	}
 	/*
 	 * Expose fast method to check whether pairing should be logged, so that we can easily skip support edge logging.
+	 * Do the same for best score, so that we can skip reevaluation of the best pairing.
 	 */
 	public boolean acceptsPairing() {
 		offerMatcher();
@@ -135,6 +136,10 @@ public class TransparencySink implements CloseableScope {
 	public boolean acceptsBestPairing() {
 		offerMatcher();
 		return acceptsBestPairing;
+	}
+	public boolean acceptsBestScore() {
+		offerMatcher();
+		return acceptsBestScore;
 	}
 	// https://sourceafis.machinezoo.com/transparency/pairing
 	public void logPairing(PairingGraph pairing) {

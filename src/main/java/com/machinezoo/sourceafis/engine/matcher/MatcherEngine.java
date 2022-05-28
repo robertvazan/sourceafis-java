@@ -38,7 +38,7 @@ public class MatcherEngine {
 				}
 				thread.pairing.clear();
 			}
-			if (best >= 0) {
+			if (best >= 0 && (transparency.acceptsBestPairing() || transparency.acceptsBestScore())) {
 				thread.pairing.supportEnabled = transparency.acceptsBestPairing();
 				EdgeSpider.crawl(probe.template.edges, candidate.edges, thread.pairing, thread.roots.pairs[best], thread.queue);
 				// https://sourceafis.machinezoo.com/transparency/pairing
