@@ -12,20 +12,20 @@ public class FingerprintImageTest {
 	public void decodePNG() {
 		new FingerprintImage(TestResources.png());
 	}
-	private void assertSimilar(DoubleMatrix map, DoubleMatrix reference) {
-		assertEquals(reference.width, map.width);
-		assertEquals(reference.height, map.height);
+	private void assertSimilar(DoubleMatrix matrix, DoubleMatrix reference) {
+		assertEquals(reference.width, matrix.width);
+		assertEquals(reference.height, matrix.height);
 		double delta = 0, max = -1, min = 1;
-		for (int x = 0; x < map.width; ++x) {
-			for (int y = 0; y < map.height; ++y) {
-				delta += Math.abs(map.get(x, y) - reference.get(x, y));
-				max = Math.max(max, map.get(x, y));
-				min = Math.min(min, map.get(x, y));
+		for (int x = 0; x < matrix.width; ++x) {
+			for (int y = 0; y < matrix.height; ++y) {
+				delta += Math.abs(matrix.get(x, y) - reference.get(x, y));
+				max = Math.max(max, matrix.get(x, y));
+				min = Math.min(min, matrix.get(x, y));
 			}
 		}
 		assertTrue(max > 0.75);
 		assertTrue(min < 0.1);
-		assertTrue(delta / (map.width * map.height) < 0.01);
+		assertTrue(delta / (matrix.width * matrix.height) < 0.01);
 	}
 	private void assertSimilar(byte[] image, byte[] reference) {
 		assertSimilar(new FingerprintImage(image).matrix, new FingerprintImage(reference).matrix);

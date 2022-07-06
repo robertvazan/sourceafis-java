@@ -60,6 +60,7 @@ public class FingerprintImage {
 	 *             if the image format is unsupported or the image is corrupted
 	 * 
 	 * @see #FingerprintImage(int, int, byte[], FingerprintImageOptions)
+	 * @see #FingerprintImage(byte[])
 	 * @see FingerprintCompatibility#convert(byte[])
 	 * @see FingerprintTemplate#FingerprintTemplate(byte[])
 	 */
@@ -90,6 +91,7 @@ public class FingerprintImage {
 	 * @throws IllegalArgumentException
 	 *             if the image format is unsupported or the image is corrupted
 	 * 
+	 * @see #FingerprintImage(byte[], FingerprintImageOptions)
 	 * @see #FingerprintImage(int, int, byte[])
 	 * @see FingerprintCompatibility#convert(byte[])
 	 * @see FingerprintTemplate#FingerprintTemplate(byte[])
@@ -122,6 +124,7 @@ public class FingerprintImage {
 	 *             if {@code width} or {@code height} is not positive or if {@code pixels} length is not {@code width * height}
 	 * 
 	 * @see #FingerprintImage(byte[], FingerprintImageOptions)
+	 * @see #FingerprintImage(int, int, byte[])
 	 * @see FingerprintCompatibility#convert(byte[])
 	 * @see FingerprintTemplate#FingerprintTemplate(byte[])
 	 */
@@ -139,6 +142,8 @@ public class FingerprintImage {
 	}
 	/**
 	 * Reads raw grayscale fingerprint image from byte array using default options.
+	 * This constructor is equivalent to calling {@link #FingerprintImage(int, int, byte[], FingerprintImageOptions)}
+	 * with default {@link FingerprintImageOptions}.
 	 * 
 	 * @param width
 	 *            width of the image
@@ -151,6 +156,7 @@ public class FingerprintImage {
 	 * @throws IndexOutOfBoundsException
 	 *             if {@code width} or {@code height} is not positive or if {@code pixels} length is not {@code width * height}
 	 * 
+	 * @see #FingerprintImage(int, int, byte[], FingerprintImageOptions)
 	 * @see #FingerprintImage(byte[])
 	 * @see FingerprintCompatibility#convert(byte[])
 	 * @see FingerprintTemplate#FingerprintTemplate(byte[])
