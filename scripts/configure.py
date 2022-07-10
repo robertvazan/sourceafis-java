@@ -2,11 +2,10 @@
 
 # We are assuming that project-config is available in sibling directory.
 # Checkout from https://github.com/robertvazan/project-config
-import os.path
-import sys
-sys.path.append(os.path.normpath(os.path.join(__file__, '../../../project-config/src')))
-
-from java import *
+import pathlib
+project_directory = lambda: pathlib.Path(__file__).parent.parent
+config_directory = lambda: project_directory().parent/'project-config'
+exec((config_directory()/'src'/'java.py').read_text())
 
 project_script_path = __file__
 repository_name = lambda: 'sourceafis-java'
@@ -42,4 +41,4 @@ def documentation_links():
     yield 'SourceAFIS overview', 'https://sourceafis.machinezoo.com/'
     yield 'Algorithm', 'https://sourceafis.machinezoo.com/algorithm'
 
-generate(globals())
+generate()

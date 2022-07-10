@@ -9,6 +9,7 @@
 
 	<name>SourceAFIS</name>
 	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score. Supports efficient 1:N search.</description>
+
 	<url>https://sourceafis.machinezoo.com/java</url>
 	<inceptionYear>2009</inceptionYear>
 
@@ -71,12 +72,12 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.13.1</version>
+			<version>2.13.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-cbor</artifactId>
-			<version>2.13.1</version>
+			<version>2.13.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.mhshams</groupId>
