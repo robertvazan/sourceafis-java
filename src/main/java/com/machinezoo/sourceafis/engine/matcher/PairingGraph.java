@@ -15,14 +15,14 @@ public class PairingGraph {
 	public PairingGraph(MinutiaPairPool pool) {
 		this.pool = pool;
 	}
-	public void reserveProbe(ImmutableProbe probe) {
+	public void reserveProbe(Probe probe) {
 		int capacity = probe.template.minutiae.length;
 		if (capacity > tree.length) {
 			tree = new MinutiaPair[capacity];
 			byProbe = new MinutiaPair[capacity];
 		}
 	}
-	public void reserveCandidate(ImmutableTemplate candidate) {
+	public void reserveCandidate(SearchTemplate candidate) {
 		int capacity = candidate.minutiae.length;
 		if (byCandidate.length < capacity)
 			byCandidate = new MinutiaPair[capacity];

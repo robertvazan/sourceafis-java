@@ -80,7 +80,7 @@ public class FingerprintTemplate {
 	 * We should drop this indirection once deprecated methods are dropped
 	 * and FingerprintTemplate itself becomes immutable.
 	 */
-	volatile ImmutableTemplate immutable = ImmutableTemplate.EMPTY;
+	volatile SearchTemplate inner = SearchTemplate.EMPTY;
 	/**
 	 * Creates fingerprint template from fingerprint image.
 	 * <p>
@@ -94,7 +94,7 @@ public class FingerprintTemplate {
 	 */
 	public FingerprintTemplate(FingerprintImage image) {
 		Objects.requireNonNull(image);
-		immutable = new ImmutableTemplate(FeatureExtractor.extract(image.matrix, image.dpi));
+		inner = new SearchTemplate(FeatureExtractor.extract(image.matrix, image.dpi));
 	}
 	/**
 	 * Deserializes fingerprint template from byte array.
@@ -126,7 +126,7 @@ public class FingerprintTemplate {
 			Objects.requireNonNull(serialized);
 			PersistentTemplate persistent = mapper.readValue(serialized, PersistentTemplate.class);
 			persistent.validate();
-			immutable = new ImmutableTemplate(persistent.mutable());
+			inner = new SearchTemplate(persistent.mutable());
 		} catch (Throwable ex) {
 			if (!foreignToo)
 				throw new IllegalArgumentException("This is not a valid SourceAFIS template.", ex);
@@ -164,9 +164,9 @@ public class FingerprintTemplate {
 	public static FingerprintTemplate empty() {
 		return EMPTY;
 	}
-	private static final FingerprintTemplate EMPTY = new FingerprintTemplate(ImmutableTemplate.EMPTY);
-	FingerprintTemplate(ImmutableTemplate immutable) {
-		this.immutable = immutable;
+	private static final FingerprintTemplate EMPTY = new FingerprintTemplate(SearchTemplate.EMPTY);
+	FingerprintTemplate(SearchTemplate immutable) {
+		this.inner = immutable;
 	}
 	/**
 	 * @deprecated Use thread-local instance of {@link FingerprintTransparency} instead.
@@ -207,7 +207,7 @@ public class FingerprintTemplate {
 	 */
 	@Deprecated
 	public FingerprintTemplate create(byte[] image) {
-		immutable = new ImmutableTemplate(FeatureExtractor.extract(new FingerprintImage(image).matrix, dpi));
+		inner = new SearchTemplate(FeatureExtractor.extract(new FingerprintImage(image).matrix, dpi));
 		return this;
 	}
 	/**
@@ -228,7 +228,7 @@ public class FingerprintTemplate {
 		Objects.requireNonNull(json);
 		PersistentTemplate persistent = new Gson().fromJson(json, PersistentTemplate.class);
 		persistent.validate();
-		immutable = new ImmutableTemplate(persistent.mutable());
+		inner = new SearchTemplate(persistent.mutable());
 		return this;
 	}
 	/**
@@ -253,7 +253,7 @@ public class FingerprintTemplate {
 	 * @see FingerprintCompatibility#exportTemplates(TemplateFormat, FingerprintTemplate...)
 	 */
 	public byte[] toByteArray() {
-		PersistentTemplate persistent = new PersistentTemplate(immutable.mutable());
+		PersistentTemplate persistent = new PersistentTemplate(inner.features());
 		return Exceptions.wrap().get(() -> mapper.writeValueAsBytes(persistent));
 	}
 	/**
@@ -265,7 +265,7 @@ public class FingerprintTemplate {
 	 */
 	@Deprecated
 	public String serialize() {
-		return new Gson().toJson(new PersistentTemplate(immutable.mutable()));
+		return new Gson().toJson(new PersistentTemplate(inner.features()));
 	}
 	/**
 	 * @deprecated Use {@link FingerprintCompatibility} methods to import other template formats.
@@ -278,7 +278,7 @@ public class FingerprintTemplate {
 	 */
 	@Deprecated
 	public FingerprintTemplate convert(byte[] template) {
-		immutable = FingerprintCompatibility.convert(template).immutable;
+		inner = FingerprintCompatibility.convert(template).inner;
 		return this;
 	}
 }

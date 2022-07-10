@@ -11,7 +11,7 @@ import com.machinezoo.sourceafis.engine.primitives.*;
 
 class Iso19794p2v2011Codec extends TemplateCodec {
 	@Override
-	public byte[] encode(List<MutableTemplate> templates) {
+	public byte[] encode(List<FeatureTemplate> templates) {
 		Iso19794p2v2011Template iotemplate = new Iso19794p2v2011Template();
 		iotemplate.fingerprints = IntStream.range(0, templates.size())
 			.mapToObj(n -> encode(n, templates.get(n)))
@@ -19,13 +19,13 @@ class Iso19794p2v2011Codec extends TemplateCodec {
 		return iotemplate.toByteArray();
 	}
 	@Override
-	public List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler) {
+	public List<FeatureTemplate> decode(byte[] serialized, ExceptionHandler handler) {
 		Iso19794p2v2011Template iotemplate = new Iso19794p2v2011Template(serialized, handler);
 		return iotemplate.fingerprints.stream()
 			.map(fp -> decode(fp))
 			.collect(toList());
 	}
-	private static Iso19794p2v2011Fingerprint encode(int offset, MutableTemplate template) {
+	private static Iso19794p2v2011Fingerprint encode(int offset, FeatureTemplate template) {
 		int resolution = (int)Math.round(500 / 2.54);
 		Iso19794p2v2011Fingerprint iofingerprint = new Iso19794p2v2011Fingerprint();
 		iofingerprint.view = offset;
@@ -39,18 +39,17 @@ class Iso19794p2v2011Codec extends TemplateCodec {
 			.collect(toList());
 		return iofingerprint;
 	}
-	private static MutableTemplate decode(Iso19794p2v2011Fingerprint iofingerprint) {
+	private static FeatureTemplate decode(Iso19794p2v2011Fingerprint iofingerprint) {
 		TemplateResolution resolution = new TemplateResolution();
 		resolution.dpiX = iofingerprint.resolutionX * 2.54;
 		resolution.dpiY = iofingerprint.resolutionY * 2.54;
-		MutableTemplate template = new MutableTemplate();
-		template.size = resolution.decode(iofingerprint.width, iofingerprint.height);
-		template.minutiae = iofingerprint.minutiae.stream()
-			.map(m -> decode(m, resolution))
-			.collect(toList());
-		return template;
+		return new FeatureTemplate(
+			resolution.decode(iofingerprint.width, iofingerprint.height),
+			iofingerprint.minutiae.stream()
+				.map(m -> decode(m, resolution))
+				.collect(toList()));
 	}
-	private static Iso19794p2v2011Minutia encode(MutableMinutia minutia) {
+	private static Iso19794p2v2011Minutia encode(FeatureMinutia minutia) {
 		Iso19794p2v2011Minutia iominutia = new Iso19794p2v2011Minutia();
 		iominutia.positionX = minutia.position.x;
 		iominutia.positionY = minutia.position.y;
@@ -58,12 +57,11 @@ class Iso19794p2v2011Codec extends TemplateCodec {
 		iominutia.type = encode(minutia.type);
 		return iominutia;
 	}
-	private static MutableMinutia decode(Iso19794p2v2011Minutia iominutia, TemplateResolution resolution) {
-		MutableMinutia minutia = new MutableMinutia();
-		minutia.position = resolution.decode(iominutia.positionX, iominutia.positionY);
-		minutia.direction = decodeAngle(iominutia.angle);
-		minutia.type = decode(iominutia.type);
-		return minutia;
+	private static FeatureMinutia decode(Iso19794p2v2011Minutia iominutia, TemplateResolution resolution) {
+		return new FeatureMinutia(
+			resolution.decode(iominutia.positionX, iominutia.positionY),
+			decodeAngle(iominutia.angle),
+			decode(iominutia.type));
 	}
 	private static int encodeAngle(double angle) {
 		return (int)Math.round(DoubleAngle.complementary(angle) * DoubleAngle.INV_PI2 * 256) & 0xff;
@@ -73,9 +71,9 @@ class Iso19794p2v2011Codec extends TemplateCodec {
 	}
 	private static Iso19794p2v2011MinutiaType encode(MinutiaType type) {
 		switch (type) {
-			case ENDING :
+			case ENDING:
 				return Iso19794p2v2011MinutiaType.ENDING;
-			case BIFURCATION :
+			case BIFURCATION:
 				return Iso19794p2v2011MinutiaType.BIFURCATION;
 			default :
 				return Iso19794p2v2011MinutiaType.ENDING;
@@ -83,9 +81,9 @@ class Iso19794p2v2011Codec extends TemplateCodec {
 	}
 	private static MinutiaType decode(Iso19794p2v2011MinutiaType iotype) {
 		switch (iotype) {
-			case ENDING :
+			case ENDING:
 				return MinutiaType.ENDING;
-			case BIFURCATION :
+			case BIFURCATION:
 				return MinutiaType.BIFURCATION;
 			default :
 				return MinutiaType.ENDING;

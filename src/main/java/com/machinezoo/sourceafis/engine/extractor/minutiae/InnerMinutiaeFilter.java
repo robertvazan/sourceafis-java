@@ -7,7 +7,7 @@ import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class InnerMinutiaeFilter {
-	public static void apply(List<MutableMinutia> minutiae, BooleanMatrix mask) {
+	public static void apply(List<FeatureMinutia> minutiae, BooleanMatrix mask) {
 		minutiae.removeIf(minutia -> {
 			IntPoint arrow = DoubleAngle.toVector(minutia.direction).multiply(-Parameters.MASK_DISPLACEMENT).round();
 			return !mask.get(minutia.position.plus(arrow), false);

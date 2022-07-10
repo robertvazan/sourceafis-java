@@ -37,16 +37,16 @@ public class FingerprintTemplateTest {
 	}
 	@Test
 	public void roundTripSerialization() {
-		MutableTemplate mt = new MutableTemplate();
-		mt.size = new IntPoint(800, 600);
-		mt.minutiae = new ArrayList<>();
-		mt.minutiae.add(new MutableMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION));
-		mt.minutiae.add(new MutableMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING));
-		FingerprintTemplate t = new FingerprintTemplate(new ImmutableTemplate(mt));
+		var mt = new FeatureTemplate(
+			new IntPoint(800, 600),
+			List.of(
+				new FeatureMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION),
+				new FeatureMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)));
+		FingerprintTemplate t = new FingerprintTemplate(new SearchTemplate(mt));
 		t = new FingerprintTemplate(t.toByteArray());
-		assertEquals(2, t.immutable.minutiae.length);
-		ImmutableMinutia a = t.immutable.minutiae[0];
-		ImmutableMinutia b = t.immutable.minutiae[1];
+		assertEquals(2, t.inner.minutiae.length);
+		FeatureMinutia a = t.inner.minutiae[0];
+		FeatureMinutia b = t.inner.minutiae[1];
 		assertEquals(new IntPoint(100, 200), a.position);
 		assertEquals(Math.PI, a.direction, 0.0000001);
 		assertEquals(MinutiaType.BIFURCATION, a.type);

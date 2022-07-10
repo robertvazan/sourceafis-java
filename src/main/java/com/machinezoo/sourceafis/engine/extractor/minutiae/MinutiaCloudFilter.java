@@ -8,7 +8,7 @@ import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class MinutiaCloudFilter {
-	public static void apply(List<MutableMinutia> minutiae) {
+	public static void apply(List<FeatureMinutia> minutiae) {
 		int radiusSq = Integers.sq(Parameters.MINUTIA_CLOUD_RADIUS);
 		minutiae.removeAll(minutiae.stream()
 			.filter(minutia -> Parameters.MAX_CLOUD_SIZE < minutiae.stream()

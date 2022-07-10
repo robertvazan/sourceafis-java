@@ -16,17 +16,17 @@ public class PersistentTemplate {
 	public String types;
 	public PersistentTemplate() {
 	}
-	public PersistentTemplate(MutableTemplate mutable) {
+	public PersistentTemplate(FeatureTemplate features) {
 		version = FingerprintCompatibility.version();
-		width = mutable.size.x;
-		height = mutable.size.y;
-		int count = mutable.minutiae.size();
+		width = features.size.x;
+		height = features.size.y;
+		int count = features.minutiae.size();
 		positionsX = new int[count];
 		positionsY = new int[count];
 		directions = new double[count];
 		char[] chars = new char[count];
 		for (int i = 0; i < count; ++i) {
-			MutableMinutia minutia = mutable.minutiae.get(i);
+			var minutia = features.minutiae.get(i);
 			positionsX[i] = minutia.position.x;
 			positionsY[i] = minutia.position.y;
 			directions[i] = minutia.direction;
@@ -34,15 +34,13 @@ public class PersistentTemplate {
 		}
 		types = new String(chars);
 	}
-	public MutableTemplate mutable() {
-		MutableTemplate mutable = new MutableTemplate();
-		mutable.size = new IntPoint(width, height);
-		mutable.minutiae = new ArrayList<>();
+	public FeatureTemplate mutable() {
+		var minutiae = new ArrayList<FeatureMinutia>();
 		for (int i = 0; i < types.length(); ++i) {
 			MinutiaType type = types.charAt(i) == 'B' ? MinutiaType.BIFURCATION : MinutiaType.ENDING;
-			mutable.minutiae.add(new MutableMinutia(new IntPoint(positionsX[i], positionsY[i]), directions[i], type));
+			minutiae.add(new FeatureMinutia(new IntPoint(positionsX[i], positionsY[i]), directions[i], type));
 		}
-		return mutable;
+		return new FeatureTemplate(new IntPoint(width, height), minutiae);
 	}
 	public void validate() {
 		/*

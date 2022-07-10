@@ -4,7 +4,7 @@ package com.machinezoo.sourceafis.engine.features;
 public class IndexedEdge extends EdgeShape {
 	public final int reference;
 	public final int neighbor;
-	public IndexedEdge(ImmutableMinutia[] minutiae, int reference, int neighbor) {
+	public IndexedEdge(FeatureMinutia[] minutiae, int reference, int neighbor) {
 		super(minutiae[reference], minutiae[neighbor]);
 		this.reference = reference;
 		this.neighbor = neighbor;

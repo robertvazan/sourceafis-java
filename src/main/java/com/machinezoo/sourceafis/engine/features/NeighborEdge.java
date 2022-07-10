@@ -8,11 +8,11 @@ import com.machinezoo.sourceafis.engine.transparency.*;
 
 public class NeighborEdge extends EdgeShape {
 	public final int neighbor;
-	public NeighborEdge(ImmutableMinutia[] minutiae, int reference, int neighbor) {
+	public NeighborEdge(FeatureMinutia[] minutiae, int reference, int neighbor) {
 		super(minutiae[reference], minutiae[neighbor]);
 		this.neighbor = neighbor;
 	}
-	public static NeighborEdge[][] buildTable(ImmutableMinutia[] minutiae) {
+	public static NeighborEdge[][] buildTable(FeatureMinutia[] minutiae) {
 		NeighborEdge[][] edges = new NeighborEdge[minutiae.length][];
 		List<NeighborEdge> star = new ArrayList<>();
 		int[] allSqDistances = new int[minutiae.length];

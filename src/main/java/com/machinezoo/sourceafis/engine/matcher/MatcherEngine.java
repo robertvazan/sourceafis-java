@@ -5,7 +5,7 @@ import com.machinezoo.sourceafis.engine.templates.*;
 import com.machinezoo.sourceafis.engine.transparency.*;
 
 public class MatcherEngine {
-	public static double match(ImmutableProbe probe, ImmutableTemplate candidate) {
+	public static double match(Probe probe, SearchTemplate candidate) {
 		/*
 		 * Thread-local storage is fairly fast, but it's still a hash lookup,
 		 * so do not access TransparencySink.current() repeatedly in tight loops.

@@ -7,11 +7,11 @@ import com.machinezoo.sourceafis.engine.configuration.*;
 import com.machinezoo.sourceafis.engine.features.*;
 
 public class TopMinutiaeFilter {
-	public static List<MutableMinutia> apply(List<MutableMinutia> minutiae) {
+	public static List<FeatureMinutia> apply(List<FeatureMinutia> minutiae) {
 		if (minutiae.size() <= Parameters.MAX_MINUTIAE)
 			return minutiae;
 		return minutiae.stream()
-			.sorted(Comparator.<MutableMinutia>comparingInt(
+			.sorted(Comparator.<FeatureMinutia>comparingInt(
 				minutia -> minutiae.stream()
 					.mapToInt(neighbor -> minutia.position.minus(neighbor.position).lengthSq())
 					.sorted()

@@ -46,7 +46,7 @@ public class EdgeHashes {
 					coverage.add((referenceBin << 24) + (neighborBin << 16) + lengthBin);
 		return coverage;
 	}
-	public static Int2ObjectMap<List<IndexedEdge>> build(ImmutableTemplate template) {
+	public static Int2ObjectMap<List<IndexedEdge>> build(SearchTemplate template) {
 		Int2ObjectMap<List<IndexedEdge>> map = new Int2ObjectOpenHashMap<>();
 		for (int reference = 0; reference < template.minutiae.length; ++reference)
 			for (int neighbor = 0; neighbor < template.minutiae.length; ++neighbor)

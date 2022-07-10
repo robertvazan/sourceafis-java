@@ -6,7 +6,7 @@ import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.templates.*;
 
 public class RootEnumerator {
-	public static void enumerate(ImmutableProbe probe, ImmutableTemplate candidate, RootList roots) {
+	public static void enumerate(Probe probe, SearchTemplate candidate, RootList roots) {
 		var cminutiae = candidate.minutiae;
 		int lookups = 0;
 		int tried = 0;

@@ -26,7 +26,7 @@ public class EdgeShape {
 		this.referenceAngle = referenceAngle;
 		this.neighborAngle = neighborAngle;
 	}
-	public EdgeShape(ImmutableMinutia reference, ImmutableMinutia neighbor) {
+	public EdgeShape(FeatureMinutia reference, FeatureMinutia neighbor) {
 		IntPoint vector = neighbor.position.minus(reference.position);
 		double quadrant = 0;
 		int x = vector.x;

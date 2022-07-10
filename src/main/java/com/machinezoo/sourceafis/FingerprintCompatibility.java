@@ -88,7 +88,7 @@ public class FingerprintCompatibility {
 			if (format == null || !TemplateCodec.ALL.containsKey(format))
 				throw new TemplateFormatException("Unsupported template format.");
 			return TemplateCodec.ALL.get(format).decode(template, handler).stream()
-				.map(fp -> new FingerprintTemplate(new ImmutableTemplate(fp)))
+				.map(fp -> new FingerprintTemplate(new SearchTemplate(fp)))
 				.collect(toList());
 		} catch (Throwable ex) {
 			/*
@@ -216,7 +216,7 @@ public class FingerprintCompatibility {
 		Objects.requireNonNull(templates);
 		if (!TemplateCodec.ALL.containsKey(format))
 			throw new TemplateFormatException("Unsupported template format.");
-		return TemplateCodec.ALL.get(format).encode(Arrays.stream(templates).map(t -> t.immutable.mutable()).collect(toList()));
+		return TemplateCodec.ALL.get(format).encode(Arrays.stream(templates).map(t -> t.inner.features()).collect(toList()));
 	}
 	/**
 	 * @deprecated Use {@link #importTemplates(byte[])} instead.

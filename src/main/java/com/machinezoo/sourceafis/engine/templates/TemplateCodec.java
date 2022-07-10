@@ -6,8 +6,8 @@ import com.machinezoo.fingerprintio.*;
 import com.machinezoo.noexception.*;
 
 public abstract class TemplateCodec {
-	public abstract byte[] encode(List<MutableTemplate> templates);
-	public abstract List<MutableTemplate> decode(byte[] serialized, ExceptionHandler handler);
+	public abstract byte[] encode(List<FeatureTemplate> templates);
+	public abstract List<FeatureTemplate> decode(byte[] serialized, ExceptionHandler handler);
 	public static final Map<TemplateFormat, TemplateCodec> ALL = new HashMap<>();
 	static {
 		ALL.put(TemplateFormat.ANSI_378_2004, new Ansi378v2004Codec());

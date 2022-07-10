@@ -10,14 +10,12 @@ import com.machinezoo.sourceafis.engine.templates.*;
 import com.machinezoo.sourceafis.engine.transparency.*;
 
 public class FeatureExtractor {
-	public static MutableTemplate extract(DoubleMatrix raw, double dpi) {
-		MutableTemplate template = new MutableTemplate();
+	public static FeatureTemplate extract(DoubleMatrix raw, double dpi) {
 		// https://sourceafis.machinezoo.com/transparency/decoded-image
 		TransparencySink.current().log("decoded-image", raw);
 		raw = ImageResizer.resize(raw, dpi);
 		// https://sourceafis.machinezoo.com/transparency/scaled-image
 		TransparencySink.current().log("scaled-image", raw);
-		template.size = raw.size();
 		BlockMap blocks = new BlockMap(raw.width, raw.height, Parameters.BLOCK_SIZE);
 		// https://sourceafis.machinezoo.com/transparency/blocks
 		TransparencySink.current().log("blocks", blocks);
@@ -35,7 +33,7 @@ public class FeatureExtractor {
 		BooleanMatrix innerMask = SegmentationMask.inner(pixelMask);
 		Skeleton ridges = Skeletons.create(binary, SkeletonType.RIDGES);
 		Skeleton valleys = Skeletons.create(inverted, SkeletonType.VALLEYS);
-		template.minutiae = MinutiaCollector.collect(ridges, valleys);
+		var template = new FeatureTemplate(raw.size(), MinutiaCollector.collect(ridges, valleys));
 		// https://sourceafis.machinezoo.com/transparency/skeleton-minutiae
 		TransparencySink.current().log("skeleton-minutiae", template);
 		InnerMinutiaeFilter.apply(template.minutiae, innerMask);
@@ -44,7 +42,7 @@ public class FeatureExtractor {
 		MinutiaCloudFilter.apply(template.minutiae);
 		// https://sourceafis.machinezoo.com/transparency/removed-minutia-clouds
 		TransparencySink.current().log("removed-minutia-clouds", template);
-		template.minutiae = TopMinutiaeFilter.apply(template.minutiae);
+		template = new FeatureTemplate(template.size, TopMinutiaeFilter.apply(template.minutiae));
 		// https://sourceafis.machinezoo.com/transparency/top-minutiae
 		TransparencySink.current().log("top-minutiae", template);
 		return template;
