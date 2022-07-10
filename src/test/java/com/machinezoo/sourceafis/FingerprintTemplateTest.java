@@ -45,12 +45,14 @@ public class FingerprintTemplateTest {
 		FingerprintTemplate t = new FingerprintTemplate(new SearchTemplate(mt));
 		t = new FingerprintTemplate(t.toByteArray());
 		assertEquals(2, t.inner.minutiae.length);
-		FeatureMinutia a = t.inner.minutiae[0];
-		FeatureMinutia b = t.inner.minutiae[1];
-		assertEquals(new IntPoint(100, 200), a.position);
+		var a = t.inner.minutiae[0];
+		var b = t.inner.minutiae[1];
+		assertEquals(100, a.x);
+		assertEquals(200, a.y);
 		assertEquals(Math.PI, a.direction, 0.0000001);
 		assertEquals(MinutiaType.BIFURCATION, a.type);
-		assertEquals(new IntPoint(300, 400), b.position);
+		assertEquals(300, b.x);
+		assertEquals(400, b.y);
 		assertEquals(0.5 * Math.PI, b.direction, 0.0000001);
 		assertEquals(MinutiaType.ENDING, b.type);
 	}

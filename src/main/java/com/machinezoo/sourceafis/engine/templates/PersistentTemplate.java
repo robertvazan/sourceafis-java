@@ -8,27 +8,27 @@ import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class PersistentTemplate {
 	public String version;
-	public int width;
-	public int height;
-	public int[] positionsX;
-	public int[] positionsY;
+	public short width;
+	public short height;
+	public short[] positionsX;
+	public short[] positionsY;
 	public float[] directions;
 	public String types;
 	public PersistentTemplate() {
 	}
 	public PersistentTemplate(FeatureTemplate features) {
 		version = "SourceAFIS for Java " + FingerprintCompatibility.version();
-		width = features.size.x;
-		height = features.size.y;
+		width = (short)features.size.x;
+		height = (short)features.size.y;
 		int count = features.minutiae.size();
-		positionsX = new int[count];
-		positionsY = new int[count];
+		positionsX = new short[count];
+		positionsY = new short[count];
 		directions = new float[count];
 		char[] chars = new char[count];
 		for (int i = 0; i < count; ++i) {
 			var minutia = features.minutiae.get(i);
-			positionsX[i] = minutia.position.x;
-			positionsY[i] = minutia.position.y;
+			positionsX[i] = (short)minutia.position.x;
+			positionsY[i] = (short)minutia.position.y;
 			directions[i] = minutia.direction;
 			chars[i] = minutia.type == MinutiaType.BIFURCATION ? 'B' : 'E';
 		}

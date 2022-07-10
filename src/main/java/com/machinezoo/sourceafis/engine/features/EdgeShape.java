@@ -26,11 +26,10 @@ public class EdgeShape {
 		this.referenceAngle = referenceAngle;
 		this.neighborAngle = neighborAngle;
 	}
-	public EdgeShape(FeatureMinutia reference, FeatureMinutia neighbor) {
-		IntPoint vector = neighbor.position.minus(reference.position);
+	public EdgeShape(SearchMinutia reference, SearchMinutia neighbor) {
 		float quadrant = 0;
-		int x = vector.x;
-		int y = vector.y;
+		int x = neighbor.x - reference.x;
+		int y = neighbor.y - reference.y;
 		if (y < 0) {
 			x = -x;
 			y = -y;
