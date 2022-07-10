@@ -6,6 +6,10 @@ import com.machinezoo.sourceafis.engine.features.*;
 
 @SuppressWarnings("unused")
 public class ConsistentHashEntry {
-	public int key;
-	public List<IndexedEdge> edges;
+	public final int key;
+	public final List<IndexedEdge> edges;
+	public ConsistentHashEntry(int key, List<IndexedEdge> edges) {
+		this.key = key;
+		this.edges = edges;
+	}
 }

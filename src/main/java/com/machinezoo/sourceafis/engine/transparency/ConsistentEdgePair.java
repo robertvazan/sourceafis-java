@@ -4,10 +4,10 @@ package com.machinezoo.sourceafis.engine.transparency;
 import com.machinezoo.sourceafis.engine.matcher.*;
 
 public class ConsistentEdgePair {
-	public int probeFrom;
-	public int probeTo;
-	public int candidateFrom;
-	public int candidateTo;
+	public final int probeFrom;
+	public final int probeTo;
+	public final int candidateFrom;
+	public final int candidateTo;
 	public ConsistentEdgePair(MinutiaPair pair) {
 		probeFrom = pair.probeRef;
 		probeTo = pair.probe;

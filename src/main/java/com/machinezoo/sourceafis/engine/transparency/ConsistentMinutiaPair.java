@@ -6,8 +6,8 @@ import java.util.*;
 import com.machinezoo.sourceafis.engine.matcher.*;
 
 public class ConsistentMinutiaPair {
-	public int probe;
-	public int candidate;
+	public final int probe;
+	public final int candidate;
 	public ConsistentMinutiaPair(int probe, int candidate) {
 		this.probe = probe;
 		this.candidate = candidate;

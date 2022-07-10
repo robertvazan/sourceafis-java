@@ -5,7 +5,12 @@ import java.util.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class ConsistentSkeletonRidge {
-	public int start;
-	public int end;
-	public List<IntPoint> points;
+	public final int start;
+	public final int end;
+	public final List<IntPoint> points;
+	public ConsistentSkeletonRidge(int start, int end, List<IntPoint> points) {
+		this.start = start;
+		this.end = end;
+		this.points = points;
+	}
 }

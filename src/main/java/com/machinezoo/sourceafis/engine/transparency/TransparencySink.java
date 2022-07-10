@@ -88,12 +88,7 @@ public class TransparencySink implements CloseableScope {
 		log("edge-hash", () -> {
 			return Arrays.stream(hash.keySet().toIntArray())
 				.sorted()
-				.mapToObj(key -> {
-					ConsistentHashEntry entry = new ConsistentHashEntry();
-					entry.key = key;
-					entry.edges = hash.get(key);
-					return entry;
-				})
+				.mapToObj(key -> new ConsistentHashEntry(key, hash.get(key)))
 				.collect(toList());
 		});
 	}

@@ -7,10 +7,10 @@ import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class ConsistentSkeleton {
-	public int width;
-	public int height;
-	public List<IntPoint> minutiae;
-	public List<ConsistentSkeletonRidge> ridges;
+	public final int width;
+	public final int height;
+	public final List<IntPoint> minutiae;
+	public final List<ConsistentSkeletonRidge> ridges;
 	public ConsistentSkeleton(Skeleton skeleton) {
 		width = skeleton.size.x;
 		height = skeleton.size.y;
@@ -21,13 +21,7 @@ public class ConsistentSkeleton {
 		ridges = skeleton.minutiae.stream()
 			.flatMap(m -> m.ridges.stream()
 				.filter(r -> r.points instanceof CircularList)
-				.map(r -> {
-					ConsistentSkeletonRidge jr = new ConsistentSkeletonRidge();
-					jr.start = offsets.get(r.start());
-					jr.end = offsets.get(r.end());
-					jr.points = r.points;
-					return jr;
-				}))
+				.map(r -> new ConsistentSkeletonRidge(offsets.get(r.start()), offsets.get(r.end()), r.points)))
 			.collect(toList());
 	}
 }
