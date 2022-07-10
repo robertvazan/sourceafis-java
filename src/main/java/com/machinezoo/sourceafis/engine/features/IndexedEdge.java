@@ -2,11 +2,17 @@
 package com.machinezoo.sourceafis.engine.features;
 
 public class IndexedEdge extends EdgeShape {
-	public final int reference;
-	public final int neighbor;
+	private final byte reference;
+	private final byte neighbor;
 	public IndexedEdge(FeatureMinutia[] minutiae, int reference, int neighbor) {
 		super(minutiae[reference], minutiae[neighbor]);
-		this.reference = reference;
-		this.neighbor = neighbor;
+		this.reference = (byte)reference;
+		this.neighbor = (byte)neighbor;
+	}
+	public int reference() {
+		return Byte.toUnsignedInt(reference);
+	}
+	public int neighbor() {
+		return Byte.toUnsignedInt(neighbor);
 	}
 }

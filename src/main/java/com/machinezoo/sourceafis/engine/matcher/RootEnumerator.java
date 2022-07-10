@@ -21,10 +21,10 @@ public class RootEnumerator {
 							if (matches != null) {
 								for (var match : matches) {
 									if (EdgeHashes.matching(match, cedge)) {
-										int duplicateKey = (match.reference << 16) | creference;
+										int duplicateKey = (match.reference() << 16) | creference;
 										if (roots.duplicates.add(duplicateKey)) {
 											MinutiaPair pair = roots.pool.allocate();
-											pair.probe = match.reference;
+											pair.probe = match.reference();
 											pair.candidate = creference;
 											roots.add(pair);
 										}

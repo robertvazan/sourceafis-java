@@ -7,10 +7,10 @@ import com.machinezoo.sourceafis.engine.primitives.*;
 import com.machinezoo.sourceafis.engine.transparency.*;
 
 public class NeighborEdge extends EdgeShape {
-	public final int neighbor;
+	public final short neighbor;
 	public NeighborEdge(FeatureMinutia[] minutiae, int reference, int neighbor) {
 		super(minutiae[reference], minutiae[neighbor]);
-		this.neighbor = neighbor;
+		this.neighbor = (short)neighbor;
 	}
 	public static NeighborEdge[][] buildTable(FeatureMinutia[] minutiae) {
 		NeighborEdge[][] edges = new NeighborEdge[minutiae.length][];

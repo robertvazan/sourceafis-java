@@ -8,7 +8,7 @@ public class EdgeShape {
 	private static final int POLAR_CACHE_RADIUS = 1 << POLAR_CACHE_BITS;
 	private static final int[] POLAR_DISTANCE_CACHE = new int[Integers.sq(POLAR_CACHE_RADIUS)];
 	private static final float[] POLAR_ANGLE_CACHE = new float[Integers.sq(POLAR_CACHE_RADIUS)];
-	public final int length;
+	public final short length;
 	public final float referenceAngle;
 	public final float neighborAngle;
 	static {
@@ -21,7 +21,7 @@ public class EdgeShape {
 					POLAR_ANGLE_CACHE[y * POLAR_CACHE_RADIUS + x] = 0;
 			}
 	}
-	public EdgeShape(int length, float referenceAngle, float neighborAngle) {
+	public EdgeShape(short length, float referenceAngle, float neighborAngle) {
 		this.length = length;
 		this.referenceAngle = referenceAngle;
 		this.neighborAngle = neighborAngle;
@@ -44,7 +44,7 @@ public class EdgeShape {
 		}
 		int shift = 32 - Integer.numberOfLeadingZeros((x | y) >>> POLAR_CACHE_BITS);
 		int offset = (y >> shift) * POLAR_CACHE_RADIUS + (x >> shift);
-		length = POLAR_DISTANCE_CACHE[offset] << shift;
+		length = (short)(POLAR_DISTANCE_CACHE[offset] << shift);
 		float angle = POLAR_ANGLE_CACHE[offset] + quadrant;
 		referenceAngle = FloatAngle.difference(reference.direction, angle);
 		neighborAngle = FloatAngle.difference(neighbor.direction, FloatAngle.opposite(angle));
