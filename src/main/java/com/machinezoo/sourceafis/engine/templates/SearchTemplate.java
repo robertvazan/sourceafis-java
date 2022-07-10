@@ -27,9 +27,9 @@ public class SearchTemplate {
 			.map(SearchMinutia::new)
 			.sorted(Comparator
 				.comparingInt((SearchMinutia m) -> ((m.x * PRIME) + m.y) * PRIME)
-				.thenComparing(m -> m.x)
-				.thenComparing(m -> m.y)
-				.thenComparing(m -> m.direction)
+				.thenComparingInt(m -> m.x)
+				.thenComparingInt(m -> m.y)
+				.thenComparingDouble(m -> m.direction)
 				.thenComparing(m -> m.type))
 			.toArray(SearchMinutia[]::new);
 		// https://sourceafis.machinezoo.com/transparency/shuffled-minutiae
