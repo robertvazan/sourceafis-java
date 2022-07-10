@@ -12,7 +12,7 @@ public class PersistentTemplate {
 	public int height;
 	public int[] positionsX;
 	public int[] positionsY;
-	public double[] directions;
+	public float[] directions;
 	public String types;
 	public PersistentTemplate() {
 	}
@@ -23,7 +23,7 @@ public class PersistentTemplate {
 		int count = features.minutiae.size();
 		positionsX = new int[count];
 		positionsY = new int[count];
-		directions = new double[count];
+		directions = new float[count];
 		char[] chars = new char[count];
 		for (int i = 0; i < count; ++i) {
 			var minutia = features.minutiae.get(i);
@@ -55,7 +55,7 @@ public class PersistentTemplate {
 		for (int i = 0; i < types.length(); ++i) {
 			if (Math.abs(positionsX[i]) > 10_000 || Math.abs(positionsY[i]) > 10_000)
 				throw new IllegalArgumentException("Minutia position out of range.");
-			if (!DoubleAngle.normalized(directions[i]))
+			if (!FloatAngle.normalized(directions[i]))
 				throw new IllegalArgumentException("Denormalized minutia direction.");
 			if (types.charAt(i) != 'E' && types.charAt(i) != 'B')
 				throw new IllegalArgumentException("Unknown minutia type.");

@@ -7,7 +7,7 @@ import com.machinezoo.sourceafis.engine.features.*;
 import com.machinezoo.sourceafis.engine.primitives.*;
 
 public class EdgeSpider {
-	private static final double COMPLEMENTARY_MAX_ANGLE_ERROR = DoubleAngle.complementary(Parameters.MAX_ANGLE_ERROR);
+	private static final float COMPLEMENTARY_MAX_ANGLE_ERROR = FloatAngle.complementary(Parameters.MAX_ANGLE_ERROR);
 	private static List<MinutiaPair> matchPairs(NeighborEdge[] pstar, NeighborEdge[] cstar, MinutiaPairPool pool) {
 		List<MinutiaPair> results = new ArrayList<>();
 		int start = 0;
@@ -22,9 +22,9 @@ public class EdgeSpider {
 				++end;
 			for (int pindex = start; pindex < end; ++pindex) {
 				var pedge = pstar[pindex];
-				double rdiff = DoubleAngle.difference(pedge.referenceAngle, cedge.referenceAngle);
+				float rdiff = FloatAngle.difference(pedge.referenceAngle, cedge.referenceAngle);
 				if (rdiff <= Parameters.MAX_ANGLE_ERROR || rdiff >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
-					double ndiff = DoubleAngle.difference(pedge.neighborAngle, cedge.neighborAngle);
+					float ndiff = FloatAngle.difference(pedge.neighborAngle, cedge.neighborAngle);
 					if (ndiff <= Parameters.MAX_ANGLE_ERROR || ndiff >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
 						MinutiaPair pair = pool.allocate();
 						pair.probe = pedge.neighbor;

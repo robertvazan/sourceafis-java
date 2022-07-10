@@ -32,7 +32,7 @@ public class Scoring {
 		score.supportedMinutiaScore = Parameters.SUPPORTED_MINUTIA_SCORE * score.supportedMinutiaCount;
 		score.minutiaTypeScore = Parameters.MINUTIA_TYPE_SCORE * score.minutiaTypeHits;
 		int innerDistanceRadius = (int)Math.round(Parameters.DISTANCE_ERROR_FLATNESS * Parameters.MAX_DISTANCE_ERROR);
-		double innerAngleRadius = Parameters.ANGLE_ERROR_FLATNESS * Parameters.MAX_ANGLE_ERROR;
+		float innerAngleRadius = (float)(Parameters.ANGLE_ERROR_FLATNESS * Parameters.MAX_ANGLE_ERROR);
 		score.distanceErrorSum = 0;
 		score.angleErrorSum = 0;
 		for (int i = 1; i < pairing.count; ++i) {
@@ -40,15 +40,15 @@ public class Scoring {
 			EdgeShape probeEdge = new EdgeShape(pminutiae[pair.probeRef], pminutiae[pair.probe]);
 			EdgeShape candidateEdge = new EdgeShape(cminutiae[pair.candidateRef], cminutiae[pair.candidate]);
 			score.distanceErrorSum += Math.max(innerDistanceRadius, Math.abs(probeEdge.length - candidateEdge.length));
-			score.angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
-			score.angleErrorSum += Math.max(innerAngleRadius, DoubleAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
+			score.angleErrorSum += Math.max(innerAngleRadius, FloatAngle.distance(probeEdge.referenceAngle, candidateEdge.referenceAngle));
+			score.angleErrorSum += Math.max(innerAngleRadius, FloatAngle.distance(probeEdge.neighborAngle, candidateEdge.neighborAngle));
 		}
 		score.distanceAccuracyScore = 0;
 		score.angleAccuracyScore = 0;
 		int distanceErrorPotential = Parameters.MAX_DISTANCE_ERROR * Math.max(0, pairing.count - 1);
 		score.distanceAccuracySum = distanceErrorPotential - score.distanceErrorSum;
 		score.distanceAccuracyScore = Parameters.DISTANCE_ACCURACY_SCORE * (distanceErrorPotential > 0 ? score.distanceAccuracySum / (double)distanceErrorPotential : 0);
-		double angleErrorPotential = Parameters.MAX_ANGLE_ERROR * Math.max(0, pairing.count - 1) * 2;
+		float angleErrorPotential = Parameters.MAX_ANGLE_ERROR * Math.max(0, pairing.count - 1) * 2;
 		score.angleAccuracySum = angleErrorPotential - score.angleErrorSum;
 		score.angleAccuracyScore = Parameters.ANGLE_ACCURACY_SCORE * (angleErrorPotential > 0 ? score.angleAccuracySum / angleErrorPotential : 0);
 		score.totalScore = score.minutiaScore

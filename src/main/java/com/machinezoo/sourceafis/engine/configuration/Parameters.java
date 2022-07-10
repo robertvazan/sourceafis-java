@@ -1,6 +1,8 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
 package com.machinezoo.sourceafis.engine.configuration;
 
+import com.machinezoo.sourceafis.engine.primitives.*;
+
 public class Parameters {
 	public static final int BLOCK_SIZE = 15;
 	public static final int HISTOGRAM_DEPTH = 256;
@@ -48,7 +50,7 @@ public class Parameters {
 	public static final int MIN_TAIL_LENGTH = 21;
 	public static final int MIN_FRAGMENT_LENGTH = 22;
 	public static final int MAX_DISTANCE_ERROR = 13;
-	public static final double MAX_ANGLE_ERROR = Math.toRadians(10);
+	public static final float MAX_ANGLE_ERROR = FloatAngle.PI / 180 * 10;
 	public static final double MAX_GAP_ANGLE = Math.toRadians(45);
 	public static final int RIDGE_DIRECTION_SAMPLE = 21;
 	public static final int RIDGE_DIRECTION_SKIP = 1;

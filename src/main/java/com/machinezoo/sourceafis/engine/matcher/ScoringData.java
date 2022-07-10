@@ -18,8 +18,8 @@ public class ScoringData {
 	public int distanceErrorSum;
 	public int distanceAccuracySum;
 	public double distanceAccuracyScore;
-	public double angleErrorSum;
-	public double angleAccuracySum;
+	public float angleErrorSum;
+	public float angleAccuracySum;
 	public double angleAccuracyScore;
 	public double totalScore;
 	public double shapedScore;

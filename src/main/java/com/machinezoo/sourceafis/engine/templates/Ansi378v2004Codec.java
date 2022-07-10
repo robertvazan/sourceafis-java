@@ -62,11 +62,11 @@ class Ansi378v2004Codec extends TemplateCodec {
 			decodeAngle(iominutia.angle),
 			decode(iominutia.type));
 	}
-	private static int encodeAngle(double angle) {
+	private static int encodeAngle(float angle) {
 		return (int)Math.ceil(DoubleAngle.complementary(angle) * DoubleAngle.INV_PI2 * 360 / 2) % 180;
 	}
-	private static double decodeAngle(int ioangle) {
-		return DoubleAngle.complementary(((2 * ioangle - 1 + 360) % 360) / 360.0 * DoubleAngle.PI2);
+	private static float decodeAngle(int ioangle) {
+		return FloatAngle.complementary(((2 * ioangle - 1 + 360) % 360) / 360.0f * FloatAngle.PI2);
 	}
 	private static Ansi378v2004MinutiaType encode(MinutiaType type) {
 		switch (type) {

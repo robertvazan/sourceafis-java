@@ -40,8 +40,8 @@ public class FingerprintTemplateTest {
 		var mt = new FeatureTemplate(
 			new IntPoint(800, 600),
 			List.of(
-				new FeatureMinutia(new IntPoint(100, 200), Math.PI, MinutiaType.BIFURCATION),
-				new FeatureMinutia(new IntPoint(300, 400), 0.5 * Math.PI, MinutiaType.ENDING)));
+				new FeatureMinutia(new IntPoint(100, 200), FloatAngle.PI, MinutiaType.BIFURCATION),
+				new FeatureMinutia(new IntPoint(300, 400), FloatAngle.HALF_PI, MinutiaType.ENDING)));
 		FingerprintTemplate t = new FingerprintTemplate(new SearchTemplate(mt));
 		t = new FingerprintTemplate(t.toByteArray());
 		assertEquals(2, t.inner.minutiae.length);

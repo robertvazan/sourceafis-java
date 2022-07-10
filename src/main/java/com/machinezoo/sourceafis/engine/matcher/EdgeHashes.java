@@ -10,6 +10,7 @@ import com.machinezoo.sourceafis.engine.transparency.*;
 import it.unimi.dsi.fastutil.ints.*;
 
 public class EdgeHashes {
+	private static final float COMPLEMENTARY_MAX_ANGLE_ERROR = FloatAngle.complementary(Parameters.MAX_ANGLE_ERROR);
 	public static int hash(EdgeShape edge) {
 		int lengthBin = edge.length / Parameters.MAX_DISTANCE_ERROR;
 		int referenceAngleBin = (int)(edge.referenceAngle / Parameters.MAX_ANGLE_ERROR);
@@ -19,11 +20,10 @@ public class EdgeHashes {
 	public static boolean matching(EdgeShape probe, EdgeShape candidate) {
 		int lengthDelta = probe.length - candidate.length;
 		if (lengthDelta >= -Parameters.MAX_DISTANCE_ERROR && lengthDelta <= Parameters.MAX_DISTANCE_ERROR) {
-			double complementaryAngleError = DoubleAngle.complementary(Parameters.MAX_ANGLE_ERROR);
-			double referenceDelta = DoubleAngle.difference(probe.referenceAngle, candidate.referenceAngle);
-			if (referenceDelta <= Parameters.MAX_ANGLE_ERROR || referenceDelta >= complementaryAngleError) {
-				double neighborDelta = DoubleAngle.difference(probe.neighborAngle, candidate.neighborAngle);
-				if (neighborDelta <= Parameters.MAX_ANGLE_ERROR || neighborDelta >= complementaryAngleError)
+			float referenceDelta = FloatAngle.difference(probe.referenceAngle, candidate.referenceAngle);
+			if (referenceDelta <= Parameters.MAX_ANGLE_ERROR || referenceDelta >= COMPLEMENTARY_MAX_ANGLE_ERROR) {
+				float neighborDelta = FloatAngle.difference(probe.neighborAngle, candidate.neighborAngle);
+				if (neighborDelta <= Parameters.MAX_ANGLE_ERROR || neighborDelta >= COMPLEMENTARY_MAX_ANGLE_ERROR)
 					return true;
 			}
 		}
@@ -33,11 +33,11 @@ public class EdgeHashes {
 		int minLengthBin = (edge.length - Parameters.MAX_DISTANCE_ERROR) / Parameters.MAX_DISTANCE_ERROR;
 		int maxLengthBin = (edge.length + Parameters.MAX_DISTANCE_ERROR) / Parameters.MAX_DISTANCE_ERROR;
 		int angleBins = (int)Math.ceil(2 * Math.PI / Parameters.MAX_ANGLE_ERROR);
-		int minReferenceBin = (int)(DoubleAngle.difference(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
-		int maxReferenceBin = (int)(DoubleAngle.add(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
+		int minReferenceBin = (int)(FloatAngle.difference(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
+		int maxReferenceBin = (int)(FloatAngle.add(edge.referenceAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
 		int endReferenceBin = (maxReferenceBin + 1) % angleBins;
-		int minNeighborBin = (int)(DoubleAngle.difference(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
-		int maxNeighborBin = (int)(DoubleAngle.add(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
+		int minNeighborBin = (int)(FloatAngle.difference(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
+		int maxNeighborBin = (int)(FloatAngle.add(edge.neighborAngle, Parameters.MAX_ANGLE_ERROR) / Parameters.MAX_ANGLE_ERROR);
 		int endNeighborBin = (maxNeighborBin + 1) % angleBins;
 		List<Integer> coverage = new ArrayList<>();
 		for (int lengthBin = minLengthBin; lengthBin <= maxLengthBin; ++lengthBin)

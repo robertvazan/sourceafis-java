@@ -47,7 +47,7 @@ public class SkeletonRidge {
 		start(null);
 		end(null);
 	}
-	public double direction() {
+	public float direction() {
 		int first = Parameters.RIDGE_DIRECTION_SKIP;
 		int last = Parameters.RIDGE_DIRECTION_SKIP + Parameters.RIDGE_DIRECTION_SAMPLE - 1;
 		if (last >= points.size()) {
@@ -57,6 +57,6 @@ public class SkeletonRidge {
 		}
 		if (first < 0)
 			first = 0;
-		return DoubleAngle.atan(points.get(first), points.get(last));
+		return (float)DoubleAngle.atan(points.get(first), points.get(last));
 	}
 }

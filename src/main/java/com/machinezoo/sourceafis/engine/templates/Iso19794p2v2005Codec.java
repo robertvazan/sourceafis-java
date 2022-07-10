@@ -62,11 +62,11 @@ class Iso19794p2v2005Codec extends TemplateCodec {
 			decodeAngle(iominutia.angle),
 			decode(iominutia.type));
 	}
-	private static int encodeAngle(double angle) {
+	private static int encodeAngle(float angle) {
 		return (int)Math.round(DoubleAngle.complementary(angle) * DoubleAngle.INV_PI2 * 256) & 0xff;
 	}
-	private static double decodeAngle(int ioangle) {
-		return DoubleAngle.complementary(ioangle / 256.0 * DoubleAngle.PI2);
+	private static float decodeAngle(int ioangle) {
+		return FloatAngle.complementary(ioangle / 256.0f * FloatAngle.PI2);
 	}
 	private static Iso19794p2v2005MinutiaType encode(MinutiaType type) {
 		switch (type) {
