@@ -17,7 +17,7 @@ public class PersistentTemplate {
 	public PersistentTemplate() {
 	}
 	public PersistentTemplate(FeatureTemplate features) {
-		version = "SourceAFIS for Java " + FingerprintCompatibility.version();
+		version = FingerprintCompatibility.version() + "-java";
 		width = (short)features.size.x;
 		height = (short)features.size.y;
 		int count = features.minutiae.size();
