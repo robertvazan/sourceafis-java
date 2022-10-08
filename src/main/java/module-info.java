@@ -1,8 +1,11 @@
 // Part of SourceAFIS for Java: https://sourceafis.machinezoo.com/java
+import com.machinezoo.stagean.*;
+
 /**
  * Java implementation of SourceAFIS fingerprint recognition algorithm.
  * See {@link com.machinezoo.sourceafis} package.
  */
+@CodeIssue("Integrate prototype code into public library.")
 module com.machinezoo.sourceafis {
 	exports com.machinezoo.sourceafis;
 	/*

@@ -36,7 +36,7 @@ public class FingerprintCompatibility {
 	}
 	private FingerprintCompatibility() {
 	}
-	private static String version = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
+	private static final String VERSION = new String(PlatformCheck.resource("version.txt"), StandardCharsets.UTF_8).trim();
 	/**
 	 * Gets version of the currently running SourceAFIS.
 	 * This is useful during upgrades when the application has to deal
@@ -45,7 +45,7 @@ public class FingerprintCompatibility {
 	 * @return SourceAFIS version in a three-part 1.2.3 format
 	 */
 	public static String version() {
-		return version;
+		return VERSION;
 	}
 	/**
 	 * Validates and then converts non-native fingerprint template to a list of native SourceAFIS templates.
