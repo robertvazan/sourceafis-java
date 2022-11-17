@@ -31,7 +31,7 @@ def dependencies():
 
 javadoc_links = lambda: [
     *standard_javadoc_links(),
-    'https://noexception.machinezoo.com/javadoc/',
+    'https://noexception.machinezoo.com/javadocs/core/',
     'https://fingerprintio.machinezoo.com/javadoc/'
 ]
 
