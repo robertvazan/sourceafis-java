@@ -18,6 +18,7 @@ inception_year = lambda: 2009
 homepage = lambda: website() + 'java'
 jdk_version = lambda: 11
 stagean_annotations = lambda: True
+project_status = lambda: stable_status()
 
 def dependencies():
     use('com.machinezoo.fingerprintio:fingerprintio:1.3.0')
@@ -31,7 +32,7 @@ def dependencies():
 
 javadoc_links = lambda: [
     *standard_javadoc_links(),
-    'https://noexception.machinezoo.com/javadocs/core/',
+    'https://noexception.machinezoo.com/javadoc/',
     'https://fingerprintio.machinezoo.com/javadoc/'
 ]
 
