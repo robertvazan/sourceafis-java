@@ -3,7 +3,7 @@ name: release
 on: workflow_dispatch
 jobs:
   release:
-    uses: robertvazan/project-config/.github/workflows/java-release.yml@master
+    uses: robertvazan/rvscaffold/.github/workflows/java-release.yml@master
     with:
       java-version: 11
     secrets:
