@@ -50,6 +50,16 @@
 			<version>1.3.0</version>
 		</dependency>
 		<dependency>
+			<groupId>com.machinezoo.closeablescope</groupId>
+			<artifactId>closeablescope</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.machinezoo.noexception</groupId>
+			<artifactId>noexception</artifactId>
+			<version>1.9.0</version>
+		</dependency>
+		<dependency>
 			<groupId>com.machinezoo.fingerprintio</groupId>
 			<artifactId>fingerprintio</artifactId>
 			<version>1.3.0</version>
@@ -145,7 +155,8 @@
 					</bottom>
 					<links>
 						<link>https://stagean.machinezoo.com/javadoc/</link>
-						<link>https://noexception.machinezoo.com/javadoc/</link>
+						<link>https://closeablescope.machinezoo.com/javadoc/</link>
+						<link>https://noexception.machinezoo.com/javadocs/core/</link>
 						<link>https://fingerprintio.machinezoo.com/javadoc/</link>
 					</links>
 				</configuration>

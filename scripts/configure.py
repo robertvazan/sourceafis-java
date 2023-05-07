@@ -16,6 +16,8 @@ class Project(scaffold.Java):
     
     def dependencies(self):
         yield from super().dependencies()
+        yield self.use_closeablescope()
+        yield self.use_noexception()
         yield self.use('com.machinezoo.fingerprintio:fingerprintio:1.3.0')
         yield self.use_fastutil()
         yield self.use_commons_io()
@@ -27,7 +29,8 @@ class Project(scaffold.Java):
     
     def javadoc_links(self):
         yield from super().javadoc_links()
-        yield 'https://noexception.machinezoo.com/javadoc/'
+        yield 'https://closeablescope.machinezoo.com/javadoc/'
+        yield 'https://noexception.machinezoo.com/javadocs/core/'
         yield 'https://fingerprintio.machinezoo.com/javadoc/'
     
     def documentation_links(self):
