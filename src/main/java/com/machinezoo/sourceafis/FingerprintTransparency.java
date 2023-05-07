@@ -5,7 +5,7 @@ import java.io.*;
 import java.nio.*;
 import java.util.*;
 import java.util.function.*;
-import com.machinezoo.noexception.*;
+import com.machinezoo.closeablescope.*;
 import com.machinezoo.sourceafis.engine.configuration.*;
 import com.machinezoo.sourceafis.engine.transparency.*;
 

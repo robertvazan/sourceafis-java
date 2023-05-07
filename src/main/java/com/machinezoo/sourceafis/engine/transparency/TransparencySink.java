@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.cbor.*;
+import com.machinezoo.closeablescope.CloseableScope;
 import com.machinezoo.noexception.*;
 import com.machinezoo.sourceafis.*;
 import com.machinezoo.sourceafis.engine.features.*;
