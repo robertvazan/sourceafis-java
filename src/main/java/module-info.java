@@ -14,6 +14,10 @@ module com.machinezoo.sourceafis {
 	requires java.desktop;
 	requires com.machinezoo.stagean;
 	/*
+	 * Transitive, because FingerprintTransparency implements it.
+	 */
+	requires transitive com.machinezoo.closeablescope;
+	/*
 	 * Transitive, because we expose ExceptionHandler in the API.
 	 */
 	requires transitive com.machinezoo.noexception;
