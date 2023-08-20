@@ -5,7 +5,7 @@
 
 	<groupId>com.machinezoo.sourceafis</groupId>
 	<artifactId>sourceafis</artifactId>
-	<version>3.17.1</version>
+	<version>3.18.0</version>
 
 	<name>SourceAFIS</name>
 	<description>Fingerprint recognition engine that takes a pair of human fingerprint images and returns their similarity score. Supports efficient 1:N search.</description>
