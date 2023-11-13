@@ -3,7 +3,7 @@
 
 # SourceAFIS for Java
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.machinezoo.sourceafis/sourceafis)](https://search.maven.org/artifact/com.machinezoo.sourceafis/sourceafis)
+[![Maven Central](https://img.shields.io/maven-central/v/com.machinezoo.sourceafis/sourceafis)](https://central.sonatype.com/artifact/com.machinezoo.sourceafis/sourceafis)
 [![Build status](https://github.com/robertvazan/sourceafis-java/workflows/build/badge.svg)](https://github.com/robertvazan/sourceafis-java/actions/workflows/build.yml)
 [![Test coverage](https://codecov.io/gh/robertvazan/sourceafis-java/branch/master/graph/badge.svg)](https://codecov.io/gh/robertvazan/sourceafis-java)
 

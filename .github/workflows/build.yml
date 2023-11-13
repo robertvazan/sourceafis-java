@@ -8,7 +8,20 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    uses: robertvazan/rvscaffold/.github/workflows/java-build.yml@master
-    with:
-      java-version: 11
-      test-coverage: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 11
+          cache: maven
+      - name: Maven
+        run: |
+          # GPG must be skipped, because CI server does not have release GPG key.
+          # Failure on javadoc warnings is enabled only in CI builds,
+          # so that warnings specific to one JDK version do not break independent builds.
+          # Printing maven version (-V) helps diagnose CI-specific build behavior.
+          # JaCoCo phase is needed to create code coverage report that will be later uploaded to Codecov.
+          mvn install jacoco:report -Dgpg.skip=true -Dmaven.javadoc.failOnWarnings=true -B -V
+      - uses: codecov/codecov-action@v2

@@ -3,10 +3,23 @@ name: release
 on: workflow_dispatch
 jobs:
   release:
-    uses: robertvazan/rvscaffold/.github/workflows/java-release.yml@master
-    with:
-      java-version: 11
-    secrets:
-      server-password: ${{ secrets.MAVEN_SERVER_PASSWORD }}
-      signing-key: ${{ secrets.MAVEN_SIGNING_KEY }}
-      signing-password: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 11
+          server-id: ossrh
+          server-username: MAVEN_SERVER_USERNAME
+          server-password: MAVEN_SERVER_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_SIGNING_KEY }}
+          gpg-passphrase: MAVEN_SIGNING_PASSWORD
+          cache: maven
+      - name: Maven
+        # Printing maven version (-V) helps diagnose GitHub-specific build behavior.
+        run: mvn -B -V deploy
+        env:
+          MAVEN_SERVER_USERNAME: robertvazan
+          MAVEN_SERVER_PASSWORD: ${{ secrets.MAVEN_SERVER_PASSWORD }}
+          MAVEN_SIGNING_PASSWORD: ${{ secrets.MAVEN_SIGNING_PASSWORD }}
